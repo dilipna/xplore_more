@@ -32,6 +32,8 @@ const (
 	seenRetention  = 21 * 24 * time.Hour
 	seenPerSource  = 3000
 	maxConcurrency = 8
+	// fetchBudgetPercent of PerSourceTimout is for fetching; the rest is reserved to publish.
+	fetchBudgetPercent = 75
 )
 
 // Poller wires sources to the event bus.
@@ -120,24 +122,28 @@ func (p *Poller) pollSource(ctx context.Context, src sources.Source, st *SourceS
 	prevETag, prevLastModified := local.ETag, local.LastModified
 
 	now := p.Now().UTC()
+	// Fetching gets a share of the source budget so publishing always has time left. A
+	// fetch that used the whole deadline once made every publish fail on an expired context.
+	fetchCtx, cancelFetch := context.WithTimeout(srcCtx, p.PerSourceTimout*fetchBudgetPercent/100)
 	var items []Item
 	var err error
 	switch src.Kind {
 	case sources.KindHN:
-		items, err = fetchHN(srcCtx, p.Client, src, local, p.UserAgent)
+		items, err = fetchHN(fetchCtx, p.Client, src, local, p.UserAgent)
 	case sources.KindHNAlgolia:
-		items, err = fetchHNAlgolia(srcCtx, p.Client, src, p.UserAgent, now)
+		items, err = fetchHNAlgolia(fetchCtx, p.Client, src, p.UserAgent, now)
 	case sources.KindHNComments:
-		items, err = fetchHNComments(srcCtx, p.Client, src, local, p.UserAgent, now)
+		items, err = fetchHNComments(fetchCtx, p.Client, src, local, p.UserAgent, now)
 	case sources.KindGitHubIssues:
-		items, err = fetchGitHubIssues(srcCtx, p.Client, src, p.UserAgent, p.GitHubToken, now)
+		items, err = fetchGitHubIssues(fetchCtx, p.Client, src, p.UserAgent, p.GitHubToken, now)
 	case sources.KindLobsters:
-		items, err = fetchLobsters(srcCtx, p.Client, src, local, p.UserAgent, now)
+		items, err = fetchLobsters(fetchCtx, p.Client, src, local, p.UserAgent, now)
 	case sources.KindStackExchange:
-		items, err = fetchStackExchange(srcCtx, p.Client, src, p.UserAgent, now)
+		items, err = fetchStackExchange(fetchCtx, p.Client, src, p.UserAgent, now)
 	default:
-		items, err = fetchFeed(srcCtx, p.Client, src, local, p.UserAgent)
+		items, err = fetchFeed(fetchCtx, p.Client, src, local, p.UserAgent)
 	}
+	cancelFetch()
 
 	defer func() {
 		mu.Lock()
@@ -193,6 +199,7 @@ func (p *Poller) pollSource(ctx context.Context, src sources.Source, st *SourceS
 		env := events.NewDiscovered(sourceName, data, now)
 		if err := bus.PublishJSON(srcCtx, p.Publisher, p.DiscoveredTopic, env.Type, env); err != nil {
 			report.Error = "publish: " + err.Error()
+			p.Log.Warn("publish failed; remaining items stay unseen", "source_id", src.ID, "error", err)
 			// Unpublished items stay unseen. Restoring the validators forces a full
 			// re-fetch next run; keeping the new ETag would get a 304 and lose them.
 			local.ETag, local.LastModified = prevETag, prevLastModified

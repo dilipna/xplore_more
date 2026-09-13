@@ -185,6 +185,46 @@ func TestHNCommentsRankByRepliesAndCompleteThreads(t *testing.T) {
 	}
 }
 
+// ctxPublisher fails when its context is done, as the real Pub/Sub client does.
+type ctxPublisher struct{ *bus.Memory }
+
+func (c ctxPublisher) Publish(ctx context.Context, topic string, data []byte, attrs map[string]string) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	return c.Memory.Publish(ctx, topic, data, attrs)
+}
+
+func TestSlowThreadLeavesTimeToPublishGatheredItems(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/search":
+			_, _ = w.Write([]byte(`{"hits":[{"objectID":"1"},{"objectID":"2"}]}`))
+		case "/items/1":
+			fmt.Fprintf(w, `{"id":1,"type":"story","title":"Fast","children":[{"id":10,"type":"comment","author":"a","text":"%s","children":[]}]}`, longText)
+		case "/items/2":
+			select { // a huge thread: slower than the whole source budget
+			case <-r.Context().Done():
+			case <-time.After(3 * time.Second):
+			}
+		}
+	}))
+	defer srv.Close()
+
+	mem := &bus.Memory{}
+	p := newPoller(t, ctxPublisher{mem})
+	p.PerSourceTimout = 800 * time.Millisecond
+	src := discussionSource(t, srv.URL, `{id: hn-comments, kind: hn_comments, name: x, authority: 0.5}`)
+	reports, err := p.RunOnce(context.Background(), []sources.Source{src})
+	if err != nil {
+		t.Fatal(err)
+	}
+	r := reports[0]
+	if r.Error != "" || r.Warning == "" || r.Published != 1 || len(mem.Snapshot()) != 1 {
+		t.Fatalf("gathered items must still publish after a fetch timeout: %+v", r)
+	}
+}
+
 func TestGitHubQueriesFitTheSearchLimitAndCoverEveryRepo(t *testing.T) {
 	repos := make([]string, 40)
 	for i := range repos {
