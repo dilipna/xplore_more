@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xploremore.dev/contracts/events/article.discovered.v1.schema.json",
+  "title": "data payload of xm.article.discovered.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["article_id", "url", "canonical_url", "source_id", "discovered_at"],
+  "properties": {
+    "article_id": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "sha256(canonical_url)." },
+    "url": { "type": "string", "format": "uri", "maxLength": 2048 },
+    "canonical_url": { "type": "string", "format": "uri", "maxLength": 2048 },
+    "source_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]{1,63}$" },
+    "discovered_at": { "type": "string", "format": "date-time" },
+    "published_at": { "type": ["string", "null"], "format": "date-time" },
+    "feed_title": { "type": ["string", "null"], "maxLength": 500 },
+    "feed_summary": { "type": ["string", "null"], "maxLength": 2000 },
+    "signals": { "$ref": "signals.v1.schema.json" }
+  }
+}

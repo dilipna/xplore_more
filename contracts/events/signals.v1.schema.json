@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xploremore.dev/contracts/events/signals.v1.schema.json",
+  "title": "External engagement signals observed at emission time (as-of values, used for point-in-time features)",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "hn_item_id": { "type": ["integer", "null"], "minimum": 1 },
+    "hn_points": { "type": ["integer", "null"], "minimum": 0 },
+    "hn_comments": { "type": ["integer", "null"], "minimum": 0 },
+    "observed_at": { "type": ["string", "null"], "format": "date-time" }
+  }
+}

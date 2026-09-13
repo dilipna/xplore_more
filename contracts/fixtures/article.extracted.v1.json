@@ -1,0 +1,26 @@
+{
+  "id": "0192f3a4-5b6c-7d8e-9f01-23456789abce",
+  "type": "xm.article.extracted.v1",
+  "source": "edge/ingestor",
+  "subject": "b04282bca8097bb4ac7437d061f91672961e10629743138024b551df1964669f",
+  "time": "2026-09-13T10:00:05Z",
+  "schema_version": 1,
+  "idempotency_key": "75eaa55ab98be0b29276cae26642cbccc640de1af70754151102cdf8e61ffd6d",
+  "caused_by": "0192f3a4-5b6c-7d8e-9f01-23456789abcd",
+  "data": {
+    "article_id": "b04282bca8097bb4ac7437d061f91672961e10629743138024b551df1964669f",
+    "canonical_url": "https://www.anthropic.com/news/claude-example",
+    "final_url": "https://www.anthropic.com/news/claude-example",
+    "source_id": "anthropic-news",
+    "title": "Introducing a Claude example",
+    "lede": "claude example launch text",
+    "text_uri": "gs://xm-prod-text/2026/09/13/b04282bca8097bb4ac7437d061f91672961e10629743138024b551df1964669f.txt.gz",
+    "content_hash": "13fc1fd81e4b4454383d04373bb3ceba058e0d6c288554f25b309aa5d9777549",
+    "lang": "en",
+    "word_count": 4,
+    "published_at": "2026-09-13T09:30:00Z",
+    "discovered_at": "2026-09-13T10:00:00Z",
+    "extracted_at": "2026-09-13T10:00:05Z",
+    "signals": { "hn_item_id": null, "hn_points": null, "hn_comments": null, "observed_at": null }
+  }
+}

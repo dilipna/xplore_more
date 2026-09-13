@@ -1,0 +1,21 @@
+{
+  "id": "0192f3a4-5b6c-7d8e-9f01-23456789abcd",
+  "type": "xm.article.discovered.v1",
+  "source": "edge/poller",
+  "subject": "b04282bca8097bb4ac7437d061f91672961e10629743138024b551df1964669f",
+  "time": "2026-09-13T10:00:00Z",
+  "schema_version": 1,
+  "idempotency_key": "bc8ea94983039f375caeceed2819957a77551ed3219e102447e64f053dfd4ba9",
+  "caused_by": null,
+  "data": {
+    "article_id": "b04282bca8097bb4ac7437d061f91672961e10629743138024b551df1964669f",
+    "url": "https://www.anthropic.com/news/claude-example?utm_source=rss",
+    "canonical_url": "https://www.anthropic.com/news/claude-example",
+    "source_id": "anthropic-news",
+    "discovered_at": "2026-09-13T10:00:00Z",
+    "published_at": "2026-09-13T09:30:00Z",
+    "feed_title": "Introducing a Claude example",
+    "feed_summary": "An example announcement used as a contract fixture.",
+    "signals": { "hn_item_id": null, "hn_points": null, "hn_comments": null, "observed_at": null }
+  }
+}

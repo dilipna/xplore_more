@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# Secrets — never commit credentials of any kind
+.env
+.env.*
+!.env.example
+*.pem
+*-key.json
+service_account*.json
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+.terraform.lock.hcl.bak
+
+# Go
+apps/edge-go/bin/
+
+# Node
+node_modules/
+.next/
+out/
+
+# ML artifacts (published to GCS, not git)
+artifacts/
+models/*.txt
+*.onnx
+*.joblib
+
+# Load-test scratch (committed summaries live in loadtest/results/)
+loadtest/tmp/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json

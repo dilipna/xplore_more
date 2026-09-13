@@ -1,0 +1,18 @@
+[project]
+name = "xm-core"
+version = "0.1.0"
+description = "XploreMore core: settings, event contracts, database models, idempotency, message bus."
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "pydantic>=2.10",
+    "pydantic-settings>=2.6",
+    "sqlalchemy[asyncio]>=2.0.36",
+    "psycopg[binary]>=3.2",
+    "pgvector>=0.3.6",
+    "alembic>=1.14",
+    "google-cloud-pubsub>=2.27",
+]
+
+[build-system]
+requires = ["uv_build>=0.8,<0.12"]
+build-backend = "uv_build"
