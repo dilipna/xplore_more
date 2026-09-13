@@ -1,0 +1,10 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
+  "schedule": ["before 6am on monday"],
+  "packageRules": [
+    { "matchManagers": ["github-actions"], "groupName": "github actions" },
+    { "matchManagers": ["gomod"], "groupName": "go modules", "postUpdateOptions": ["gomodTidy"] },
+    { "matchManagers": ["pep621"], "groupName": "python dependencies" }
+  ]
+}
