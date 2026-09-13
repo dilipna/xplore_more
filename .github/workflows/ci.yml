@@ -1,0 +1,116 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Actions are pinned to full commit SHAs (tag in trailing comment). A moved or
+# compromised tag cannot change what runs here. Renovate proposes updates.
+
+jobs:
+  python:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: xm
+          POSTGRES_PASSWORD: xm
+          POSTGRES_DB: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U xm" --health-interval 2s --health-timeout 3s --health-retries 30
+    env:
+      XM_TEST_DATABASE_URL: postgresql+psycopg://xm:xm@localhost:5432/xploremore_test
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          enable-cache: true
+      - run: uv sync --frozen
+      - name: Lint
+        run: uv run ruff check . && uv run ruff format --check .
+      - name: Type check
+        run: uv run pyright
+      - name: Tests (contracts, guarantees, schema drift)
+        run: uv run pytest -q
+
+  go:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: apps/edge-go
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: apps/edge-go/go.mod
+          cache-dependency-path: apps/edge-go/go.sum
+      - name: gofmt
+        run: test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }
+      - run: go vet ./...
+      - name: Tests with race detector
+        run: go test -race -count=1 ./...
+      - name: Fuzz canonicalization (short)
+        run: go test ./internal/canon -run '^$' -fuzz FuzzURLIsIdempotent -fuzztime 30s
+
+  security:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Secret scan
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Dependency and IaC scan (fs)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scanners: vuln,misconfig,secret
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+
+  images:
+    runs-on: ubuntu-24.04
+    needs: [python, go]
+    strategy:
+      matrix:
+        image:
+          - { name: edge, dockerfile: apps/edge-go/Dockerfile }
+          - { name: indexer, dockerfile: apps/indexer/Dockerfile }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+      - name: Build
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          file: ${{ matrix.image.dockerfile }}
+          tags: xploremore-${{ matrix.image.name }}:ci
+          load: true
+          cache-from: type=gha,scope=${{ matrix.image.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image.name }}
+      - name: Image vulnerability scan
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: xploremore-${{ matrix.image.name }}:ci
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+      - name: SBOM (SPDX)
+        uses: anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.24.2
+        with:
+          image: xploremore-${{ matrix.image.name }}:ci
+          format: spdx-json
+          artifact-name: sbom-${{ matrix.image.name }}.spdx.json
