@@ -81,6 +81,33 @@ jobs:
           ignore-unfixed: true
           exit-code: "1"
 
+  terraform:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        dir: [bootstrap, environments/prod]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: 1.16.2
+      - name: fmt
+        run: terraform fmt -check -recursive infra/terraform
+      - name: validate
+        working-directory: infra/terraform/${{ matrix.dir }}
+        run: terraform init -backend=false -input=false && terraform validate
+      - uses: terraform-linters/setup-tflint@1cf010d3c7aef302051ccdb68c14c5dc2efa34ef # v6.3.1
+      - name: tflint
+        working-directory: infra/terraform/${{ matrix.dir }}
+        run: tflint --init && tflint --recursive --no-color
+      - name: checkov
+        uses: bridgecrewio/checkov-action@a8664e3a0549367977f0cda990a34311835c87c0 # v12.3123.0
+        with:
+          directory: infra/terraform
+          framework: terraform
+          quiet: true
+          compact: true
+
   images:
     runs-on: ubuntu-24.04
     needs: [python, go]
