@@ -23,7 +23,7 @@ echo "==> building and starting ingestor"
 
 echo "==> migrating database and syncing sources"
 uv run xm-indexer migrate
-uv run xm-indexer seed-sources --file config/sources.yaml
+uv run xm-indexer seed-sources   # all registries: syncing one alone disables the other's sources
 
 echo "==> polling live sources"
 CONFIG_DIR="$(pwd)/config"

@@ -26,10 +26,15 @@ def load_registry(path: Path) -> list[dict[str, Any]]:
     return list(doc["sources"])
 
 
-def sync_sources(settings: Settings, registry: Path) -> int:
-    """Upsert registry entries. Sources removed from the file are disabled, never deleted:
-    articles reference them, and history must stay attributable."""
-    entries = load_registry(registry)
+def sync_sources(settings: Settings, registries: list[Path]) -> int:
+    """Upsert entries from ALL registries at once. Sources absent from every file are
+    disabled, never deleted: articles reference them, and history must stay attributable.
+    Syncing one registry alone would disable the other registry's sources, so the full set
+    is required."""
+    entries = [entry for path in registries for entry in load_registry(path)]
+    ids = [s["id"] for s in entries]
+    if len(ids) != len(set(ids)):
+        raise ValueError("a source id appears in more than one registry")
     engine = create_engine(settings.database_url.get_secret_value())
     try:
         with engine.begin() as conn:
@@ -53,7 +58,7 @@ def sync_sources(settings: Settings, registry: Path) -> int:
                 )
             conn.execute(
                 text("UPDATE sources SET enabled = false WHERE NOT (id = ANY(:ids))"),
-                {"ids": [s["id"] for s in entries]},
+                {"ids": ids},
             )
     finally:
         engine.dispose()

@@ -102,7 +102,8 @@ async def sessionmaker(migrated_database: str) -> AsyncIterator[async_sessionmak
                 "INSERT INTO sources (id, kind, name, url, authority_prior) VALUES "
                 "('anthropic-news', 'rss', 'Anthropic News', 'https://www.anthropic.com/news', 0.95),"
                 "('techcrunch-ai', 'rss', 'TechCrunch AI', 'https://techcrunch.com/ai/feed/', 0.8),"
-                "('hacker-news', 'hn', 'Hacker News', 'https://hacker-news.firebaseio.com/v0', 0.7)"
+                "('hacker-news', 'hn', 'Hacker News', 'https://hacker-news.firebaseio.com/v0', 0.7),"
+                "('hn-comments', 'hn_comments', 'Hacker News comments', 'https://hn.algolia.com/api/v1', 0.6)"
             )
         )
     yield async_sessionmaker(engine, expire_on_commit=False)

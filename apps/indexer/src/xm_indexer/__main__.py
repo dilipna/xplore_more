@@ -2,7 +2,7 @@
 
 xm-indexer run [--max-batches N]         drain the subscription in micro-batches, then exit
 xm-indexer migrate                       apply database migrations
-xm-indexer seed-sources --file PATH      sync config/sources.yaml into the sources table
+xm-indexer seed-sources [--file PATH]... sync all source registries into the sources table
 """
 
 from __future__ import annotations
@@ -117,7 +117,12 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--max-batches", type=int, default=50)
     sub.add_parser("migrate", help="apply database migrations")
     seed = sub.add_parser("seed-sources", help="sync the source registry")
-    seed.add_argument("--file", type=Path, default=Path("config/sources.yaml"))
+    seed.add_argument(
+        "--file",
+        type=Path,
+        action="append",
+        help="registry file; repeat for each (default: config/sources.yaml + config/problem_sources.yaml)",
+    )
     backfill = sub.add_parser("backfill-clusters", help="assign stories to unclustered articles")
     backfill.add_argument("--reset", action="store_true", help="drop clustering state and replay")
     args = parser.parse_args(argv)
@@ -131,7 +136,8 @@ def main(argv: list[str] | None = None) -> int:
             log.info(json.dumps({"event": "migrated"}))
             return 0
         case "seed-sources":
-            count = sync_sources(settings, args.file)
+            files = args.file or [Path("config/sources.yaml"), Path("config/problem_sources.yaml")]
+            count = sync_sources(settings, files)
             log.info(json.dumps({"event": "sources_synced", "count": count}))
             return 0
         case "backfill-clusters":

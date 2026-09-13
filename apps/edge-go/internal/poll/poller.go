@@ -44,6 +44,12 @@ type Poller struct {
 	Log             *slog.Logger
 	Now             func() time.Time
 	PerSourceTimout time.Duration
+
+	// AuthorSalt keys author_hash for discussion sources. Without it author_hash is null
+	// and distinct voices cannot be counted downstream.
+	AuthorSalt string
+	// GitHubToken is optional; it raises the search quota from 10 to 30 requests/minute.
+	GitHubToken string
 }
 
 // SourceReport summarizes one source's poll.
@@ -54,6 +60,7 @@ type SourceReport struct {
 	Skipped   int    `json:"skipped_seen"`
 	Invalid   int    `json:"invalid_url"`
 	NotMod    bool   `json:"not_modified,omitempty"`
+	Warning   string `json:"warning,omitempty"` // partial result (e.g. quota), items still published
 	Error     string `json:"error,omitempty"`
 }
 
@@ -112,16 +119,26 @@ func (p *Poller) pollSource(ctx context.Context, src sources.Source, st *SourceS
 	mu.Unlock()
 	prevETag, prevLastModified := local.ETag, local.LastModified
 
+	now := p.Now().UTC()
 	var items []Item
 	var err error
 	switch src.Kind {
 	case sources.KindHN:
 		items, err = fetchHN(srcCtx, p.Client, src, local, p.UserAgent)
+	case sources.KindHNAlgolia:
+		items, err = fetchHNAlgolia(srcCtx, p.Client, src, p.UserAgent, now)
+	case sources.KindHNComments:
+		items, err = fetchHNComments(srcCtx, p.Client, src, local, p.UserAgent, now)
+	case sources.KindGitHubIssues:
+		items, err = fetchGitHubIssues(srcCtx, p.Client, src, p.UserAgent, p.GitHubToken, now)
+	case sources.KindLobsters:
+		items, err = fetchLobsters(srcCtx, p.Client, src, local, p.UserAgent, now)
+	case sources.KindStackExchange:
+		items, err = fetchStackExchange(srcCtx, p.Client, src, p.UserAgent, now)
 	default:
 		items, err = fetchFeed(srcCtx, p.Client, src, local, p.UserAgent)
 	}
 
-	now := p.Now().UTC()
 	defer func() {
 		mu.Lock()
 		defer mu.Unlock()
@@ -139,10 +156,14 @@ func (p *Poller) pollSource(ctx context.Context, src sources.Source, st *SourceS
 		}
 	}()
 
+	var partial *partialError
 	switch {
 	case errors.Is(err, errNotModified):
 		report.NotMod = true
 		return report
+	case errors.As(err, &partial):
+		report.Warning = err.Error()
+		p.Log.Warn("source poll partial", "source_id", src.ID, "error", err)
 	case err != nil:
 		report.Error = err.Error()
 		p.Log.Warn("source poll failed", "source_id", src.ID, "error", err)
@@ -164,7 +185,12 @@ func (p *Poller) pollSource(ctx context.Context, src sources.Source, st *SourceS
 			}
 			continue
 		}
-		env := events.NewDiscovered(sourceName, p.discoveredData(src, it, canonicalURL, articleID, now), now)
+		data, ok := p.discoveredData(src, it, canonicalURL, articleID, now)
+		if !ok {
+			report.Invalid++
+			continue
+		}
+		env := events.NewDiscovered(sourceName, data, now)
 		if err := bus.PublishJSON(srcCtx, p.Publisher, p.DiscoveredTopic, env.Type, env); err != nil {
 			report.Error = "publish: " + err.Error()
 			// Unpublished items stay unseen. Restoring the validators forces a full
@@ -181,13 +207,16 @@ func (p *Poller) pollSource(ctx context.Context, src sources.Source, st *SourceS
 	return report
 }
 
-func (p *Poller) discoveredData(src sources.Source, it Item, canonicalURL, articleID string, now time.Time) events.ArticleDiscovered {
+// discoveredData maps an item to the contract. ok is false when a discussion's thread or
+// parent URL cannot be canonicalized.
+func (p *Poller) discoveredData(src sources.Source, it Item, canonicalURL, articleID string, now time.Time) (events.ArticleDiscovered, bool) {
 	d := events.ArticleDiscovered{
 		ArticleID:    articleID,
 		URL:          truncate(it.URL, 2048),
 		CanonicalURL: canonicalURL,
 		SourceID:     src.ID,
 		DiscoveredAt: events.Timestamp(now),
+		DocKind:      events.KindArticle,
 	}
 	if it.PublishedAt != nil {
 		ts := events.Timestamp(*it.PublishedAt)
@@ -196,14 +225,57 @@ func (p *Poller) discoveredData(src sources.Source, it Item, canonicalURL, artic
 	if title := truncate(strings.Join(strings.Fields(it.Title), " "), titleRunes); title != "" {
 		d.FeedTitle = &title
 	}
-	if summary := truncate(strings.Join(strings.Fields(stripTags(it.Summary)), " "), summaryRunes); summary != "" {
+	summary := it.Summary
+	if it.Discussion == nil {
+		summary = stripTags(summary) // discussion text is already plain; "a < b" must survive
+	}
+	if summary := truncate(strings.Join(strings.Fields(summary), " "), summaryRunes); summary != "" {
 		d.FeedSummary = &summary
 	}
 	if it.HNItemID != nil {
 		observed := events.Timestamp(now)
 		d.Signals = events.Signals{HNItemID: it.HNItemID, HNPoints: it.HNPoints, HNComments: it.HNComments, ObservedAt: &observed}
 	}
-	return d
+	if it.Discussion != nil {
+		disc, ok := p.discussion(it.Discussion)
+		if !ok || d.FeedTitle == nil || d.FeedSummary == nil {
+			return d, false
+		}
+		d.DocKind, d.Discussion = events.KindDiscussion, disc
+	}
+	return d, true
+}
+
+func (p *Poller) discussion(m *discussionMeta) (*events.Discussion, bool) {
+	thread, err := canon.URL(m.ThreadURL)
+	if err != nil {
+		return nil, false
+	}
+	disc := &events.Discussion{
+		Platform:   m.Platform,
+		ThreadURL:  thread,
+		AuthorHash: p.authorHash(m.Platform, m.Author),
+		Engagement: events.Engagement{Points: m.Points, Comments: m.Comments, Reactions: m.Reactions},
+	}
+	if m.ParentURL != "" {
+		parent, err := canon.URL(m.ParentURL)
+		if err != nil {
+			return nil, false
+		}
+		disc.ParentURL = &parent
+	}
+	return disc, true
+}
+
+// authorHash implements discussion.v1: sha256(salt | platform | lowercase handle). The
+// platform is part of the key because equal handles on two sites need not be one person.
+func (p *Poller) authorHash(platform, handle string) *string {
+	handle = strings.ToLower(strings.TrimSpace(handle))
+	if handle == "" || p.AuthorSalt == "" {
+		return nil
+	}
+	h := events.Sha256Hex(p.AuthorSalt + "|" + platform + "|" + handle)
+	return &h
 }
 
 func truncate(s string, n int) string {

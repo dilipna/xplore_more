@@ -8,8 +8,10 @@ Guarantees (each covered by a test in tests/):
   G4  Re-extraction with changed content updates the article (new idempotency key) and
       keeps its story.
   G5  Identical content under a different URL is linked via duplicate_of (first seen wins).
-  G6  Every newly indexed article is assigned to exactly one story in the same transaction,
-      under an advisory lock, so concurrent indexers cannot split one event into two stories.
+  G6  Every newly indexed doc_kind=article document is assigned to exactly one story in the
+      same transaction, under an advisory lock, so concurrent indexers cannot split one event
+      into two stories. Discussions are stored with provenance but never join news stories:
+      a comment about a release is not coverage of it. They feed problem clustering.
 """
 
 from __future__ import annotations
@@ -62,6 +64,7 @@ class BatchResult:
     failed: int = 0
     stories_created: int = 0
     stories_joined: int = 0
+    discussions: int = 0
 
 
 def embedding_text(article: ArticleExtracted) -> str:
@@ -83,6 +86,7 @@ async def _upsert_article(
 ) -> tuple[str | None, int | None]:
     """Insert or update; returns (duplicate_of, existing story_id)."""
     duplicate_of = await _find_content_duplicate(session, article)
+    disc = article.discussion
     values = {
         "id": article.article_id,
         "canonical_url": article.canonical_url,
@@ -104,6 +108,14 @@ async def _upsert_article(
         "hn_points": article.signals.hn_points,
         "hn_comments": article.signals.hn_comments,
         "signals_observed_at": article.signals.observed_at,
+        "doc_kind": article.doc_kind,
+        "platform": disc.platform if disc else None,
+        "thread_url": disc.thread_url if disc else None,
+        "parent_url": disc.parent_url if disc else None,
+        "author_hash": disc.author_hash if disc else None,
+        "engagement_points": disc.engagement.points if disc else None,
+        "engagement_comments": disc.engagement.comments if disc else None,
+        "engagement_reactions": disc.engagement.reactions if disc else None,
     }
     stmt = insert(Article).values(**values)
     # discovered_at is deliberately not updated: first sighting is a point-in-time fact.
@@ -159,7 +171,9 @@ async def process_batch(
                         article = envelope.data
                         duplicate_of, existing_story = await _upsert_article(session, article, vector)
                         result.applied += 1
-                        if existing_story is None:
+                        if article.doc_kind == "discussion":
+                            result.discussions += 1
+                        elif existing_story is None:
                             outcome = await assign(
                                 session,
                                 _for_clustering(article, vector, duplicate_of, clusterer),

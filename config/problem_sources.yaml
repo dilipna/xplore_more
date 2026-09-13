@@ -1,0 +1,117 @@
+# Discussion registry for Problem Intelligence (poller --sources config/problem_sources.yaml).
+#
+# Why discussions: news is mostly announcements; people describe problems in threads,
+# issues and questions. Every source here is a documented public API, read without login.
+# Excluded on purpose: Reddit (API terms and cost) and anything behind a login.
+#
+# Schedule this registry HOURLY as its own job with its own state object
+# (XM_STATE_OBJECT=poller/problem-state.json). Budgets that drive the caps below:
+#   - GitHub search: 10 req/min unauthenticated, 30 req/min with GITHUB_TOKEN. Repos are
+#     packed into as few <=256-char queries as possible (about 6 per run for 40 repos).
+#   - Stack Exchange: 300 anonymous requests/day per IP; one request per tag per run,
+#     so 6 tags x 24 runs = 144/day.
+#   - Algolia HN and Lobsters: no published quota; a few requests per run, run hourly.
+#
+# Engagement is observed ONCE, when an item is between min_age_hours and max_age_hours
+# old, so scores are comparable (matured) instead of "whatever it had at minute one".
+#
+# authority: prior (0-1) that a voice from this platform is a real practitioner problem.
+# Hand-set cold-start priors, same caveat as config/sources.yaml.
+
+sources:
+  - id: hn-ask
+    kind: hn_algolia
+    name: Ask HN
+    url: "https://hn.algolia.com/api/v1"
+    authority: 0.7
+    tags: [ask_hn]
+    max_items: 100
+
+  - id: hn-comments
+    kind: hn_comments
+    name: Hacker News comments
+    url: "https://hn.algolia.com/api/v1"
+    authority: 0.6
+    min_points: 150
+    max_threads: 15
+    per_thread: 8
+    min_age_hours: 8
+    max_age_hours: 48
+    max_items: 120
+
+  - id: github-issues-ai
+    kind: github_issues
+    name: GitHub issues (AI and infra repos)
+    url: "https://api.github.com"
+    authority: 0.8
+    max_items: 30   # per query chunk
+    min_age_hours: 1
+    max_age_hours: 720  # issues updated in the last 30 days
+    repos:
+      - vllm-project/vllm
+      - ollama/ollama
+      - ggml-org/llama.cpp
+      - huggingface/transformers
+      - huggingface/text-generation-inference
+      - langchain-ai/langchain
+      - langchain-ai/langgraph
+      - run-llama/llama_index
+      - microsoft/autogen
+      - crewAIInc/crewAI
+      - openai/openai-python
+      - anthropics/anthropic-sdk-python
+      - modelcontextprotocol/python-sdk
+      - modelcontextprotocol/servers
+      - BerriAI/litellm
+      - sgl-project/sglang
+      - NVIDIA/TensorRT-LLM
+      - pytorch/pytorch
+      - ray-project/ray
+      - mlflow/mlflow
+      - chroma-core/chroma
+      - qdrant/qdrant
+      - weaviate/weaviate
+      - milvus-io/milvus
+      - pgvector/pgvector
+      - unslothai/unsloth
+      - axolotl-ai-cloud/axolotl
+      - open-webui/open-webui
+      - continuedev/continue
+      - Aider-AI/aider
+      - stanfordnlp/dspy
+      - pydantic/pydantic-ai
+      - kubernetes/kubernetes
+      - argoproj/argo-cd
+      - grafana/grafana
+      - open-telemetry/opentelemetry-collector
+      - temporalio/temporal
+      - duckdb/duckdb
+      - supabase/supabase
+      - vercel/ai
+
+  - id: lobsters-ask
+    kind: lobsters
+    name: Lobsters
+    url: "https://lobste.rs"
+    authority: 0.65
+    tags: [ask, devops, ai, databases, programming]
+    min_points: 5
+    max_threads: 10
+    per_thread: 6
+    min_age_hours: 8
+    max_age_hours: 72
+    max_items: 80
+
+  - id: stackoverflow-ai-infra
+    kind: stackexchange
+    name: Stack Overflow (AI and infra tags)
+    url: "https://api.stackexchange.com/2.3"
+    authority: 0.55
+    site: stackoverflow
+    tags: [large-language-model, langchain, ollama, vector-database, pgvector, kubernetes]
+    # Measured 2026-09-13: the newest [kubernetes] question was ~27 days old and the
+    # newest [large-language-model] one ~6 days old, so a 72h window returned nothing.
+    # Stack Overflow is now a low-volume source; read the full 30-day problem window.
+    min_age_hours: 24
+    max_age_hours: 720
+    max_items: 40

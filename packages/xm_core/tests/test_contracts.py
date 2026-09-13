@@ -91,6 +91,44 @@ def test_naive_datetime_is_rejected() -> None:
         Envelope[ArticleExtracted].model_validate(message)
 
 
+def test_legacy_message_without_doc_kind_is_still_accepted() -> None:
+    """Additive rule: a producer that predates doc_kind keeps working during a rollout."""
+    message = json.loads((FIXTURES / "legacy" / "article.discovered.v1.pre-doc-kind.json").read_text())
+    _validator("article.discovered.v1.schema.json").validate(message["data"])
+    envelope = Envelope[ArticleDiscovered].model_validate(message)
+    assert envelope.data.doc_kind == "article"
+    assert envelope.data.discussion is None
+
+
+@pytest.mark.parametrize(
+    "schema_file", ["article.discovered.v1.schema.json", "article.extracted.v1.schema.json"]
+)
+def test_discussion_kind_requires_provenance(schema_file: str) -> None:
+    fixture = (
+        "discussion.discovered.v1.json" if "discovered" in schema_file else "discussion.extracted.v1.json"
+    )
+    model = ArticleDiscovered if "discovered" in schema_file else ArticleExtracted
+    data = json.loads((FIXTURES / fixture).read_text())["data"]
+
+    missing = {**data, "discussion": None}
+    assert not _validator(schema_file).is_valid(missing)
+    with pytest.raises(ValidationError):
+        model.model_validate(missing)
+
+    article_with_provenance = {**data, "doc_kind": "article"}
+    assert not _validator(schema_file).is_valid(article_with_provenance)
+    with pytest.raises(ValidationError):
+        model.model_validate(article_with_provenance)
+
+
+def test_discussion_discovered_requires_text() -> None:
+    data = json.loads((FIXTURES / "discussion.discovered.v1.json").read_text())["data"]
+    no_text = {**data, "feed_summary": None}
+    assert not _validator("article.discovered.v1.schema.json").is_valid(no_text)
+    with pytest.raises(ValidationError):
+        ArticleDiscovered.model_validate(no_text)
+
+
 def test_uuid7_is_version_7_and_time_ordered() -> None:
     ids = [uuid7() for _ in range(200)]
     assert all(u.version == 7 and u.variant == uuid.RFC_4122 for u in ids)

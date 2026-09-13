@@ -14,6 +14,19 @@
     "published_at": { "type": ["string", "null"], "format": "date-time" },
     "feed_title": { "type": ["string", "null"], "maxLength": 500 },
     "feed_summary": { "type": ["string", "null"], "maxLength": 2000 },
-    "signals": { "$ref": "signals.v1.schema.json" }
-  }
+    "signals": { "$ref": "signals.v1.schema.json" },
+    "doc_kind": {
+      "type": "string",
+      "enum": ["article", "discussion"],
+      "default": "article",
+      "description": "Added 2026-09-13 (additive). A discussion carries its text in feed_summary (from the platform API) and is never fetched as HTML."
+    },
+    "discussion": {
+      "oneOf": [{ "type": "null" }, { "$ref": "discussion.v1.schema.json" }],
+      "default": null
+    }
+  },
+  "if": { "properties": { "doc_kind": { "const": "discussion" } }, "required": ["doc_kind"] },
+  "then": { "required": ["discussion", "feed_title", "feed_summary"], "properties": { "discussion": { "$ref": "discussion.v1.schema.json" }, "feed_title": { "type": "string", "minLength": 1 }, "feed_summary": { "type": "string", "minLength": 1 } } },
+  "else": { "properties": { "discussion": { "type": "null" } } }
 }

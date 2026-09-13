@@ -1,0 +1,44 @@
+{
+  "id": "0192f3a4-5b6c-7d8e-9f01-23456789abd1",
+  "type": "xm.article.extracted.v1",
+  "source": "edge/ingestor",
+  "subject": "bb5b0dac3780d151312aecc7e0e79d904a30c7548dd1b24cf672c6ba3b789303",
+  "time": "2026-09-13T10:00:05Z",
+  "schema_version": 1,
+  "idempotency_key": "5012daf7e9417fbd0ebc17de81d3407271ed37056ebd6f0fd5a1bae15e01a11f",
+  "caused_by": "0192f3a4-5b6c-7d8e-9f01-23456789abd0",
+  "data": {
+    "article_id": "bb5b0dac3780d151312aecc7e0e79d904a30c7548dd1b24cf672c6ba3b789303",
+    "canonical_url": "https://news.ycombinator.com/item?id=49688984",
+    "final_url": "https://news.ycombinator.com/item?id=49688984",
+    "source_id": "hn-comments",
+    "title": "Comment on: Ask HN: How do you evaluate RAG pipelines in production?",
+    "lede": "We keep struggling with this. Our retrieval evals pass offline but answers regress silently after every index rebuild, and there is no tool that tells us which chunk changed.",
+    "text_uri": "gs://xm-prod-text/2026/09/13/bb5b0dac3780d151312aecc7e0e79d904a30c7548dd1b24cf672c6ba3b789303.txt.gz",
+    "content_hash": "73a2d9eeafe6a9a7806f7986835d3acad49da4695f72855a05dcbb53386d564c",
+    "lang": "en",
+    "word_count": 29,
+    "content_origin": "feed",
+    "published_at": "2026-09-12T21:30:00Z",
+    "discovered_at": "2026-09-13T10:00:00Z",
+    "extracted_at": "2026-09-13T10:00:05Z",
+    "signals": {
+      "hn_item_id": null,
+      "hn_points": null,
+      "hn_comments": null,
+      "observed_at": null
+    },
+    "doc_kind": "discussion",
+    "discussion": {
+      "platform": "hn",
+      "thread_url": "https://news.ycombinator.com/item?id=49688861",
+      "parent_url": "https://news.ycombinator.com/item?id=49688861",
+      "author_hash": "43bf635a7899e460efceb4649a7052d965337a99cff65082c5421562a2cf1498",
+      "engagement": {
+        "points": null,
+        "comments": 4,
+        "reactions": null
+      }
+    }
+  }
+}
