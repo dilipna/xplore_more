@@ -46,7 +46,8 @@ def _ensure_database_exists() -> None:
     admin = create_engine(f"{admin_url}/postgres", isolation_level="AUTOCOMMIT")
     try:
         with admin.connect() as conn:
-            exists = conn.execute(text("SELECT 1 FROM pg_database WHERE datname = :n"), {"n": db_name}).first()
+            query = text("SELECT 1 FROM pg_database WHERE datname = :n")
+            exists = conn.execute(query, {"n": db_name}).first()
             if not exists:
                 conn.execute(text(f'CREATE DATABASE "{db_name}"'))
     finally:
