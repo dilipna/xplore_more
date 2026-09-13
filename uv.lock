@@ -4,6 +4,7 @@ requires-python = "==3.13.*"
 
 [manifest]
 members = [
+    "xm-cluster",
     "xm-core",
     "xm-indexer",
     "xploremore",
@@ -1202,6 +1203,23 @@ wheels = [
 ]
 
 [[package]]
+name = "xm-cluster"
+version = "0.1.0"
+source = { editable = "packages/xm_cluster" }
+dependencies = [
+    { name = "numpy" },
+    { name = "pyyaml" },
+    { name = "xm-core" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "numpy", specifier = ">=2.1" },
+    { name = "pyyaml", specifier = ">=6.0.2" },
+    { name = "xm-core", editable = "packages/xm_core" },
+]
+
+[[package]]
 name = "xm-core"
 version = "0.1.0"
 source = { editable = "packages/xm_core" }
@@ -1234,12 +1252,14 @@ version = "0.1.0"
 source = { editable = "apps/indexer" }
 dependencies = [
     { name = "fastembed" },
+    { name = "xm-cluster" },
     { name = "xm-core" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "fastembed", specifier = ">=0.4" },
+    { name = "xm-cluster", editable = "packages/xm_cluster" },
     { name = "xm-core", editable = "packages/xm_core" },
 ]
 
@@ -1248,6 +1268,7 @@ name = "xploremore"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "xm-cluster" },
     { name = "xm-core" },
     { name = "xm-indexer" },
 ]
@@ -1265,6 +1286,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "xm-cluster", editable = "packages/xm_cluster" },
     { name = "xm-core", editable = "packages/xm_core" },
     { name = "xm-indexer", editable = "apps/indexer" },
 ]

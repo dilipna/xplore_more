@@ -1,0 +1,103 @@
+# Tech entity gazetteer used for story clustering and ranking features.
+#
+# Why a gazetteer rather than a general NER model: tech news is dominated by a
+# long-but-enumerable set of organizations, products, models and projects whose surface
+# forms are ambiguous to generic NER ("Llama", "Gemini", "Go", "Rust"). A curated alias list
+# is precise, fast (no model in the hot path) and auditable. Generic NER can be layered on
+# later for unknown entities (tracked as a gap in docs/clustering.md).
+#
+# Aliases are matched case-insensitively on word boundaries, except where `case_sensitive`
+# is true (short or common-word aliases like "Go", "Rust", "Arc").
+
+entities:
+  # --- AI labs & companies ---
+  - {id: anthropic, kind: org, aliases: [Anthropic]}
+  - {id: openai, kind: org, aliases: [OpenAI, Open AI]}
+  - {id: google, kind: org, aliases: [Google, Alphabet]}
+  - {id: google-deepmind, kind: org, aliases: [DeepMind, Google DeepMind]}
+  - {id: meta, kind: org, aliases: [Meta Platforms, Facebook, Meta AI, FAIR]}
+  - {id: microsoft, kind: org, aliases: [Microsoft]}
+  - {id: amazon, kind: org, aliases: [Amazon, AWS, Amazon Web Services]}
+  - {id: apple, kind: org, aliases: [Apple Inc, Apple Intelligence], case_sensitive: true}
+  - {id: nvidia, kind: org, aliases: [NVIDIA, Nvidia]}
+  - {id: amd, kind: org, aliases: [AMD], case_sensitive: true}
+  - {id: intel, kind: org, aliases: [Intel], case_sensitive: true}
+  - {id: mistral, kind: org, aliases: [Mistral AI, Mistral]}
+  - {id: xai, kind: org, aliases: [xAI], case_sensitive: true}
+  - {id: deepseek, kind: org, aliases: [DeepSeek]}
+  - {id: alibaba, kind: org, aliases: [Alibaba, Qwen team]}
+  - {id: huggingface, kind: org, aliases: [Hugging Face, HuggingFace]}
+  - {id: cohere, kind: org, aliases: [Cohere], case_sensitive: true}
+  - {id: perplexity, kind: org, aliases: [Perplexity AI, Perplexity], case_sensitive: true}
+  - {id: databricks, kind: org, aliases: [Databricks]}
+  - {id: snowflake, kind: org, aliases: [Snowflake], case_sensitive: true}
+  - {id: cloudflare, kind: org, aliases: [Cloudflare]}
+  - {id: github, kind: org, aliases: [GitHub]}
+  - {id: gitlab, kind: org, aliases: [GitLab]}
+  - {id: tsmc, kind: org, aliases: [TSMC]}
+  - {id: samsung, kind: org, aliases: [Samsung]}
+  - {id: tesla, kind: org, aliases: [Tesla], case_sensitive: true}
+  - {id: ibm, kind: org, aliases: [IBM], case_sensitive: true}
+  - {id: oracle, kind: org, aliases: [Oracle], case_sensitive: true}
+  - {id: salesforce, kind: org, aliases: [Salesforce]}
+  - {id: stripe, kind: org, aliases: [Stripe], case_sensitive: true}
+  - {id: netflix, kind: org, aliases: [Netflix]}
+  - {id: uber, kind: org, aliases: [Uber], case_sensitive: true}
+  - {id: linux-foundation, kind: org, aliases: [Linux Foundation]}
+  - {id: cncf, kind: org, aliases: [CNCF, Cloud Native Computing Foundation]}
+  - {id: eu, kind: org, aliases: [European Commission, European Union, EU AI Act], case_sensitive: true}
+  - {id: ftc, kind: org, aliases: [FTC, Federal Trade Commission]}
+
+  # --- Models & AI products ---
+  - {id: claude, kind: product, aliases: [Claude, Claude Code, Claude Opus, Claude Sonnet, Claude Haiku]}
+  - {id: chatgpt, kind: product, aliases: [ChatGPT]}
+  - {id: gpt, kind: model, aliases: [GPT-4, GPT-4o, GPT-5, GPT-5.1, GPT-OSS, gpt-oss]}
+  - {id: codex, kind: product, aliases: [Codex], case_sensitive: true}
+  - {id: gemini, kind: model, aliases: [Gemini], case_sensitive: true}
+  - {id: gemma, kind: model, aliases: [Gemma], case_sensitive: true}
+  - {id: llama, kind: model, aliases: [Llama], case_sensitive: true}
+  - {id: qwen, kind: model, aliases: [Qwen, Qwen2, Qwen3]}
+  - {id: grok, kind: model, aliases: [Grok], case_sensitive: true}
+  - {id: sora, kind: product, aliases: [Sora], case_sensitive: true}
+  - {id: copilot, kind: product, aliases: [Copilot, GitHub Copilot]}
+  - {id: cursor, kind: product, aliases: [Cursor IDE, Cursor editor]}
+  - {id: phi, kind: model, aliases: [Phi-3, Phi-4]}
+  - {id: stable-diffusion, kind: model, aliases: [Stable Diffusion]}
+  - {id: whisper, kind: model, aliases: [Whisper], case_sensitive: true}
+
+  # --- ML / infra projects ---
+  - {id: pytorch, kind: project, aliases: [PyTorch]}
+  - {id: tensorflow, kind: project, aliases: [TensorFlow]}
+  - {id: jax, kind: project, aliases: [JAX], case_sensitive: true}
+  - {id: transformers, kind: project, aliases: [Hugging Face Transformers, transformers library]}
+  - {id: vllm, kind: project, aliases: [vLLM]}
+  - {id: sglang, kind: project, aliases: [SGLang]}
+  - {id: llama-cpp, kind: project, aliases: [llama.cpp]}
+  - {id: ollama, kind: project, aliases: [Ollama]}
+  - {id: tensorrt, kind: project, aliases: [TensorRT, TensorRT-LLM]}
+  - {id: triton, kind: project, aliases: [Triton Inference Server, OpenAI Triton]}
+  - {id: cuda, kind: project, aliases: [CUDA], case_sensitive: true}
+  - {id: langchain, kind: project, aliases: [LangChain, LangGraph]}
+  - {id: mcp, kind: project, aliases: [Model Context Protocol, MCP], case_sensitive: true}
+  - {id: kubernetes, kind: project, aliases: [Kubernetes, K8s]}
+  - {id: docker, kind: project, aliases: [Docker], case_sensitive: true}
+  - {id: terraform, kind: project, aliases: [Terraform, OpenTofu]}
+  - {id: kafka, kind: project, aliases: [Apache Kafka, Kafka], case_sensitive: true}
+  - {id: spark, kind: project, aliases: [Apache Spark]}
+  - {id: postgres, kind: project, aliases: [PostgreSQL, Postgres]}
+  - {id: redis, kind: project, aliases: [Redis, Valkey]}
+  - {id: linux, kind: project, aliases: [Linux kernel, Linux], case_sensitive: true}
+  - {id: rust, kind: language, aliases: [Rust], case_sensitive: true}
+  - {id: python, kind: language, aliases: [Python], case_sensitive: true}
+  - {id: go-lang, kind: language, aliases: [Golang, Go 1.2, Go 1.3], case_sensitive: true}
+  - {id: typescript, kind: language, aliases: [TypeScript]}
+  - {id: wasm, kind: project, aliases: [WebAssembly, WASM]}
+
+  # --- Hardware & platforms ---
+  - {id: h100, kind: hardware, aliases: [H100, H200, B200, GB200, Blackwell], case_sensitive: true}
+  - {id: tpu, kind: hardware, aliases: [TPU, TPUs, Ironwood], case_sensitive: true}
+  - {id: android, kind: platform, aliases: [Android], case_sensitive: true}
+  - {id: ios, kind: platform, aliases: [iOS, macOS], case_sensitive: true}
+  - {id: windows, kind: platform, aliases: [Windows 11, Windows], case_sensitive: true}
+  - {id: chrome, kind: platform, aliases: [Chrome, Chromium], case_sensitive: true}
+  - {id: arxiv, kind: platform, aliases: [arXiv], case_sensitive: true}

@@ -1,0 +1,17 @@
+[project]
+name = "xm-cluster"
+version = "0.1.0"
+description = "Online story clustering: MinHash-LSH + dense candidates, pair scoring, concurrency-safe assignment."
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "xm-core",
+    "numpy>=2.1",
+    "pyyaml>=6.0.2",
+]
+
+[tool.uv.sources]
+xm-core = { workspace = true }
+
+[build-system]
+requires = ["uv_build>=0.8,<0.12"]
+build-backend = "uv_build"

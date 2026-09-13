@@ -19,13 +19,14 @@ from sqlalchemy import (
     DateTime,
     Float,
     ForeignKey,
+    Identity,
     Index,
     Integer,
     String,
     Text,
     func,
 )
-from sqlalchemy.dialects.postgresql import TSVECTOR, UUID
+from sqlalchemy.dialects.postgresql import ARRAY, BYTEA, TSVECTOR, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 EMBEDDING_DIM = 384
@@ -83,11 +84,18 @@ class Article(Base):
     hn_points: Mapped[int | None] = mapped_column(Integer)
     hn_comments: Mapped[int | None] = mapped_column(Integer)
     signals_observed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Clustering state (xm_cluster.assign)
+    story_id: Mapped[int | None] = mapped_column(BigInteger, ForeignKey("stories.id", ondelete="SET NULL"))
+    minhash: Mapped[bytes | None] = mapped_column(BYTEA)
+    entities: Mapped[list[str] | None] = mapped_column(ARRAY(Text))
+    cluster_probability: Mapped[float | None] = mapped_column(Float)
 
     __table_args__ = (
         CheckConstraint("content_origin IN ('page', 'feed')", name="content_origin_valid"),
         Index("ix_articles_content_hash", "content_hash"),
         Index("ix_articles_discovered_at", "discovered_at"),
+        Index("ix_articles_story_id", "story_id"),
+        Index("ix_articles_entities", "entities", postgresql_using="gin"),
         Index("ix_articles_tsv", "tsv", postgresql_using="gin"),
         Index(
             "ix_articles_embedding_hnsw",
@@ -96,6 +104,44 @@ class Article(Base):
             postgresql_ops={"embedding": "halfvec_cosine_ops"},
         ),
     )
+
+
+class Story(Base):
+    """A real-world event; articles are its coverage (see xm_cluster.scoring for the policy)."""
+
+    __tablename__ = "stories"
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    first_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    last_updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    size: Mapped[int] = mapped_column(Integer)
+    source_count: Mapped[int] = mapped_column(Integer)
+    centroid: Mapped[list[float]] = mapped_column(HALFVEC(EMBEDDING_DIM))
+    title: Mapped[str] = mapped_column(Text)
+    representative_article_id: Mapped[str] = mapped_column(String(64))
+    version: Mapped[int] = mapped_column(Integer)
+    published_version: Mapped[int] = mapped_column(Integer, server_default="0")
+    merged_into: Mapped[int | None] = mapped_column(BigInteger, ForeignKey("stories.id"))
+    importance: Mapped[float | None] = mapped_column(Float)
+
+    __table_args__ = (
+        CheckConstraint("size >= 1", name="story_size_positive"),
+        Index("ix_stories_last_updated_at", "last_updated_at"),
+    )
+
+
+class ArticleLshBand(Base):
+    """Inverted index from MinHash band key to articles, for near-duplicate candidates."""
+
+    __tablename__ = "article_lsh_bands"
+
+    band_key: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    article_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey("articles.id", ondelete="CASCADE"), primary_key=True
+    )
+    discovered_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+    __table_args__ = (Index("ix_article_lsh_bands_discovered_at", "discovered_at"),)
 
 
 class ProcessedEvent(Base):
