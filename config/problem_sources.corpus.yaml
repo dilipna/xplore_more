@@ -1,0 +1,46 @@
+# One-off corpus collection for the pain-point labeled set (evals/problems). NOT scheduled.
+#
+#   E2E_SOURCES=problem_sources.corpus.yaml E2E_MAX_BATCHES=80 scripts/e2e_local.sh
+#
+# Same ids and kinds as problem_sources.yaml (so seed-sources and provenance are unchanged)
+# but wider maturity windows and caps, to draw a stratified sample across more than one
+# day of each platform. Budget: about 15 GitHub search requests (under the 10/min limit
+# only because the requests are sequential and small; set GITHUB_TOKEN if it trips) and
+# 6 Stack Exchange requests.
+
+sources:
+  - {id: hn-ask, kind: hn_algolia, name: Ask HN, url: "https://hn.algolia.com/api/v1", authority: 0.7,
+     tags: [ask_hn], max_items: 600, min_age_hours: 12, max_age_hours: 720}
+
+  - {id: hn-comments, kind: hn_comments, name: Hacker News comments, url: "https://hn.algolia.com/api/v1",
+     authority: 0.6, min_points: 150, max_threads: 60, per_thread: 6, min_age_hours: 8, max_age_hours: 720,
+     max_items: 400}
+
+  - id: github-issues-ai
+    kind: github_issues
+    name: GitHub issues (AI and infra repos)
+    url: "https://api.github.com"
+    authority: 0.8
+    max_items: 60
+    min_age_hours: 1
+    max_age_hours: 720
+    repos: [vllm-project/vllm, ollama/ollama, ggml-org/llama.cpp, huggingface/transformers,
+            huggingface/text-generation-inference, langchain-ai/langchain, langchain-ai/langgraph,
+            run-llama/llama_index, microsoft/autogen, crewAIInc/crewAI, openai/openai-python,
+            anthropics/anthropic-sdk-python, modelcontextprotocol/python-sdk, modelcontextprotocol/servers,
+            BerriAI/litellm, sgl-project/sglang, NVIDIA/TensorRT-LLM, pytorch/pytorch, ray-project/ray,
+            mlflow/mlflow, chroma-core/chroma, qdrant/qdrant, weaviate/weaviate, milvus-io/milvus,
+            pgvector/pgvector, unslothai/unsloth, axolotl-ai-cloud/axolotl, open-webui/open-webui,
+            continuedev/continue, Aider-AI/aider, stanfordnlp/dspy, pydantic/pydantic-ai,
+            kubernetes/kubernetes, argoproj/argo-cd, grafana/grafana,
+            open-telemetry/opentelemetry-collector, temporalio/temporal, duckdb/duckdb,
+            supabase/supabase, vercel/ai]
+
+  - {id: lobsters-ask, kind: lobsters, name: Lobsters, url: "https://lobste.rs", authority: 0.65,
+     tags: [ask, devops, ai, databases, programming, practices, testing, performance],
+     min_points: 3, max_threads: 60, per_thread: 5, min_age_hours: 8, max_age_hours: 720, max_items: 300}
+
+  - {id: stackoverflow-ai-infra, kind: stackexchange, name: Stack Overflow (AI and infra tags),
+     url: "https://api.stackexchange.com/2.3", authority: 0.55, site: stackoverflow,
+     tags: [large-language-model, langchain, ollama, vector-database, pgvector, kubernetes],
+     min_age_hours: 24, max_age_hours: 2160, max_items: 60}

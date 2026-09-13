@@ -24,6 +24,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 	"unicode/utf8"
 
@@ -112,6 +113,30 @@ func finishThread(st *SourceState, key string, thread []Item, now time.Time) []I
 	return thread
 }
 
+// threadParallelism bounds concurrent thread expansions per source: fast enough for 60
+// threads inside the fetch budget, gentle on community-run APIs.
+const threadParallelism = 4
+
+// fetchInOrder runs fetch for indexes 0..n-1 with bounded concurrency and returns results
+// in index order, so callers can apply ordered, stop-at-first-error policies.
+func fetchInOrder[T any](n int, fetch func(i int) (T, error)) ([]T, []error) {
+	results := make([]T, n)
+	errs := make([]error, n)
+	sem := make(chan struct{}, threadParallelism)
+	var wg sync.WaitGroup
+	for i := range n {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			sem <- struct{}{}
+			defer func() { <-sem }()
+			results[i], errs[i] = fetch(i)
+		}()
+	}
+	wg.Wait()
+	return results, errs
+}
+
 // --- Hacker News (Algolia) ----------------------------------------------------------
 
 type algoliaHit struct {
@@ -186,22 +211,29 @@ func fetchHNComments(ctx context.Context, client *http.Client, src sources.Sourc
 		return nil, err
 	}
 
-	var items []Item
-	threads := 0
+	var ids []string
 	for _, h := range res.Hits {
-		key := "hnthread:" + h.ObjectID
-		if h.ObjectID == "" || st.Seen[key] != 0 {
-			continue
+		if h.ObjectID != "" && st.Seen["hnthread:"+h.ObjectID] == 0 && len(ids) < src.MaxThreads {
+			ids = append(ids, h.ObjectID)
 		}
-		if threads >= src.MaxThreads || len(items) >= src.MaxItems {
+	}
+	stories, errs := fetchInOrder(len(ids), func(i int) (algoliaItem, error) {
+		var story algoliaItem
+		err := getJSON(ctx, client, src.URL+"/items/"+url.PathEscape(ids[i]), userAgent, &story)
+		return story, err
+	})
+
+	var items []Item
+	for i, id := range ids {
+		if errs[i] != nil {
+			return partialOr(items, errs[i])
+		}
+		if len(items) >= src.MaxItems {
 			break
 		}
-		threads++
-		var story algoliaItem
-		if err := getJSON(ctx, client, src.URL+"/items/"+url.PathEscape(h.ObjectID), userAgent, &story); err != nil {
-			return partialOr(items, err)
-		}
-		threadURL := hnItemURL + h.ObjectID
+		key := "hnthread:" + id
+		story := stories[i]
+		threadURL := hnItemURL + id
 		title := truncate(commentTitlePrefix+collapse(story.Title), titleRunes)
 
 		type ranked struct {
@@ -417,17 +449,30 @@ func fetchLobsters(ctx context.Context, client *http.Client, src sources.Source,
 		return candidates[i].ShortID < candidates[j].ShortID
 	})
 
-	var items []Item
-	threads := 0
+	var selected []lobstersStory
 	for _, s := range candidates {
-		key := "lobthread:" + s.ShortID
-		if st.Seen[key] != 0 {
-			continue
+		if st.Seen["lobthread:"+s.ShortID] == 0 && len(selected) < src.MaxThreads {
+			selected = append(selected, s)
 		}
-		if threads >= src.MaxThreads || len(items) >= src.MaxItems {
+	}
+	threadsJSON, errs := fetchInOrder(len(selected), func(i int) (lobstersStory, error) {
+		var full lobstersStory
+		if selected[i].CommentCount == 0 {
+			return full, nil
+		}
+		err := getJSON(ctx, client, src.URL+"/s/"+url.PathEscape(selected[i].ShortID)+".json", userAgent, &full)
+		return full, err
+	})
+
+	var items []Item
+	for i, s := range selected {
+		if errs[i] != nil {
+			return partialOr(items, errs[i])
+		}
+		if len(items) >= src.MaxItems {
 			break
 		}
-		threads++
+		key := "lobthread:" + s.ShortID
 		threadURL := src.URL + "/s/" + url.PathEscape(s.ShortID)
 		title := collapse(s.Title)
 		var thread []Item
@@ -442,12 +487,8 @@ func fetchLobsters(ctx context.Context, client *http.Client, src sources.Source,
 			})
 		}
 		if s.CommentCount > 0 {
-			var full lobstersStory
-			if err := getJSON(ctx, client, threadURL+".json", userAgent, &full); err != nil {
-				return partialOr(items, err)
-			}
 			var top []lobstersComment
-			for _, c := range full.Comments {
+			for _, c := range threadsJSON[i].Comments {
 				if c.Depth == 0 && !c.IsDeleted && !c.IsModerated && c.User != "" && c.ShortIDURL != "" && longEnough(collapse(c.CommentPlain)) {
 					top = append(top, c)
 				}
