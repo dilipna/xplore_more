@@ -9,7 +9,7 @@
 1. **State:** **all gates green**: 71 Python tests with 0 skipped, all Go packages, Terraform validated and scanned. **The working tree is clean.**
 2. **The system already runs live on the laptop:** 43 real tech sources + **5 discussion sources** → Go poller → Pub/Sub emulator → Go ingestor → Python indexer (embeddings + story clustering) → Postgres → FastAPI (search, feed, story detail).
 3. **Newest direction (decided by the user):** XploreMore becomes the **problem-discovery backbone for Pro2Pro** (`protopro.vercel.app`). XploreMore finds, clusters and ranks **real problems people face**; Pro2Pro's agents turn them into shipped products. This is **Phase P (Problem Intelligence)** in §6, and it is the **top priority**.
-4. **Progress in Phase P:** **P1 done** (§4.8), **P2 done** (§4.9). **Next task: P3** (problem clustering + demand score, migration 0005). The dev DB `xploremore` holds ~1,550 real discussion docs.
+4. **Progress in Phase P:** **P1** (§4.8), **P2** (§4.9) and **P3** (§4.10) are done. **Next task: P4** (`/v1/problems` API + API-key auth + rate limit + MCP over streamable HTTP + OpenAPI contract). The dev DB `xploremore` holds ~1,550 discussion docs and 493 problems.
 
 ---
 
@@ -148,6 +148,16 @@ Go and Terraform are **not installed locally**. Use `scripts/go.sh` and `scripts
 - **Honest findings (keep in all docs):** precision is carried by GitHub issues (P 0.96 / R 0.98). On HN/Lobsters/SO it reaches only **P 0.48 / R 0.39**. Population-weighted precision (0.775) misses the 0.80 target. The 18-example classes are not learned. Consequence for P3: use p_problem as a soft weight, require multiple voices, and show platform in evidence. v2 needs active sampling of HN/Lobsters positives plus a human audit.
 - Serving parity numpy vs sklearn: 6e-8. Dataset hash is normalized to LF and matches the git blob.
 
+### 4.10 P3 — Problem clustering + demand score (commit `f9fe8b7`)
+- **Migration 0005:** `problems` table (voices, effective_voices, sources, platforms, engagement, category, statement, centroid HNSW, demand_score, scorer_version) plus `articles.problem_id / problem_probability / problem_category / classifier_version / problem_join_probability`.
+- **Indexer G7:** discussions are classified in the indexing transaction; admitted docs (`is_problem`) join exactly one problem under `PROBLEM_LOCK_KEY` (taken after the story lock). CLI: `xm-indexer backfill-problems [--reset]`. Setting `problem_classifier_file`; the Dockerfile copies the artifact.
+- **Policy (`xm_problems.policy`, version `problem-prior-2026-09-13c`):** 30-day window on **observation time** (discovered_at); comment headline = the comment itself; template boilerplate stripped from title overlap; named model versions with a conflict logit of -10; same-author -2; threshold 0.6; no same-source penalty. Calibration on 528 admitted docs: unrelated median cosine 0.575, p99 0.72; same-topic opinions reach 0.85–0.90.
+- **Demand v0 (`xm_problems.demand`):** `log1p(effective_voices) × (1+0.5·log1p(sources)) × 0.5^(age/30d) × (1+0.2·log1p(engagement)) × category prior`, with `explain()` factors.
+- **Measurements** (`uv run xm-indexer backfill-problems --reset && uv run python evals/problems/cluster_report.py` → `docs/reports/problem-clustering-v1.md`): 1,553 discussions → 528 admitted (GitHub 100%, Ask HN 24%, HN comments 13.6%, Lobsters 13.9%, SO 36%) → 493 problems; 19 with ≥2 voices, 0 cross-platform. **Merge audits (assistant, every join):** audit 1 **17/33 (51.5%)**, audit 2 after fixes **23/35 (65.7%, Wilson CI 49–79%)** on the same corpus, so optimistic. Recall is unmeasured.
+- **Known issues (in the report):** maintainer roadmaps are admitted and merge with each other (6 of the 12 remaining errors); every GitHub issue is admitted; single-platform demand only; top-50 usefulness is not human-judged (`evals/problems/top50_v1.jsonl`).
+- **Tests:** G7 exactly-once, voices, version conflicts, window, re-extraction, backfill replay, and a problem-lock race test on the backfill path (**fails 3/3 with the lock disabled**). 101 Python tests in total.
+- Bugs found along the way: `published_at` recency (active 2024 GitHub issues scored ~0); the test fixture didn't truncate `problems`; version conflict too weak (-6).
+
 ## 5. Pro2Pro facts needed for the integration (verified in its code)
 
 - **Discovery:** a LangGraph ReAct **Research Agent** (`p2pagent/src/p2pops/agents/research.py`) calls three tools:
@@ -186,7 +196,7 @@ Go and Terraform are **not installed locally**. Use `scripts/go.sh` and `scripts
 - **Models:** baselines (keyword cues like "struggling / is there a tool / wish / workaround / keeps failing", and zero-shot embedding centroids) → **logistic regression on bge embeddings + cue features**. CV like the clustering harness, per-class P/R, a precision target for "is a problem" of at least 0.8. Stored as a versioned model artifact with a feature-schema hash.
 - The classifier runs in the indexer (CPU, milliseconds). **No LLM in the hot path.**
 
-**P3. Problem clustering + demand score**
+**P3. Problem clustering + demand score** — ✅ DONE (§4.10; membership lives on `articles.problem_id` instead of a `problem_members` table, mirroring stories)
 - Reuse `xm_cluster` with a **problem policy**: a 30-day window (problems persist), no `version_conflict`, entity overlap weighted higher. New tables (migration 0005): `problems` (statement = representative text, first_seen, last_seen, voice_count = distinct `author_hash`, source_count, category, demand_score, status) and `problem_members`.
 - **Demand score v0 (interpretable, documented baseline):** `log1p(distinct_voices) × (1 + 0.5·log1p(source_count)) × recency_decay(half-life 30 d) × (1 + 0.2·log1p(engagement))`, with category weights.
 - **Evaluation:** a human-judged top-50 usefulness check, plus a precision/recall audit of problem clusters like §4.4.
@@ -240,6 +250,7 @@ Go and Terraform are **not installed locally**. Use `scripts/go.sh` and `scripts
 - [ ] Optional: a GitHub personal access token (public read-only) as `GITHUB_TOKEN`, for higher issue-API limits.
 - [ ] Audit clustering labels: `uv run python evals/clustering/audit.py`.
 - [ ] Audit pain-point labels (low/medium confidence first, 183 items): `uv run python evals/problems/audit.py`, then re-run `evaluate.py`.
+- [ ] Judge top-50 problem usefulness: fill `human_useful` in `evals/problems/top50_v1.jsonl`.
 - [ ] When P5 is ready: add `XPLOREMORE_API_URL` / `XPLOREMORE_API_KEY` to Pro2Pro's Render environment.
 
 ## 8. How to run everything locally
