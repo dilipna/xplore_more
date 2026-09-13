@@ -85,7 +85,9 @@ def main() -> None:
             )
     rng.shuffle(out)  # labeling order interleaves strata, so labeler drift is not confounded with source
 
-    args.out.write_text("".join(json.dumps(o, ensure_ascii=False) + "\n" for o in out), encoding="utf-8")
+    args.out.write_text(
+        "".join(json.dumps(o, ensure_ascii=False) + "\n" for o in out), encoding="utf-8", newline="\n"
+    )
     meta = {
         "created_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "seed": args.seed,
@@ -95,7 +97,9 @@ def main() -> None:
         "text_chars": TEXT_CHARS,
         "source": "dev database discussion documents collected with config/problem_sources.corpus.yaml",
     }
-    (HERE / "labels_v1.meta.json").write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
+    (HERE / "labels_v1.meta.json").write_text(
+        json.dumps(meta, indent=2) + "\n", encoding="utf-8", newline="\n"
+    )
     print(json.dumps(meta, indent=2))
 
 

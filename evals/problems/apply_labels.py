@@ -29,12 +29,14 @@ HUMAN_FIELDS = ("human_label", "human_audited", "human_note")
 def main() -> None:
     candidates = [
         json.loads(line)
-        for line in (HERE / "labels_v1.candidates.jsonl").read_text(encoding="utf-8").splitlines()
+        for line in (HERE / "labels_v1.candidates.jsonl")
+        .read_text(encoding="utf-8", newline="\n")
+        .splitlines()
         if line.strip()
     ]
     labels: dict[int, tuple[str, str]] = {}
     for path in sorted((HERE / "assistant_labels_v1").glob("*.txt")):
-        for line in path.read_text(encoding="utf-8").splitlines():
+        for line in path.read_text(encoding="utf-8", newline="\n").splitlines():
             if not line.strip():
                 continue
             row, code, conf = line.split()
@@ -48,7 +50,7 @@ def main() -> None:
     out_path = HERE / "labels_v1.jsonl"
     previous = {}
     if out_path.exists():
-        for line in out_path.read_text(encoding="utf-8").splitlines():
+        for line in out_path.read_text(encoding="utf-8", newline="\n").splitlines():
             if line.strip():
                 row = json.loads(line)
                 previous[row["item_id"]] = {k: row[k] for k in HUMAN_FIELDS if k in row}
@@ -65,7 +67,9 @@ def main() -> None:
         }
         row.update(previous.get(cand["item_id"], {}))
         rows.append(row)
-    out_path.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
+    out_path.write_text(
+        "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8", newline="\n"
+    )
 
     print(f"wrote {len(rows)} rows to {out_path.name}")
     print("labels:", dict(Counter(r["label"] for r in rows).most_common()))
