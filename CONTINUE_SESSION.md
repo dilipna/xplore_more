@@ -1,255 +1,285 @@
 # XploreMore — Continue Session Handoff
 
-> Last updated: 2026-09-13. Read this whole file before doing anything. It is the single source of truth for resuming work.
+> Last updated: 2026-09-13 (after commit `5b320b1`). Read this whole file before doing anything; it is the single source of truth for resuming work.
+
+---
+
+## 0. TL;DR for the next session
+
+1. **State:** 12 commits, **all gates green**: 55 Python tests with 0 skipped, all Go packages under the race detector, Terraform validated and scanned. **The working tree is clean.**
+2. **The system already runs live on the laptop:** 43 real tech sources → Go poller → Pub/Sub emulator → Go ingestor → Python indexer (embeddings + story clustering) → Postgres → FastAPI (search, feed, story detail).
+3. **Newest direction (decided by the user):** XploreMore becomes the **problem-discovery backbone for Pro2Pro** (`protopro.vercel.app`). XploreMore finds, clusters and ranks **real problems people face**; Pro2Pro's agents turn them into shipped products. This is **Phase P (Problem Intelligence)** in §6, and it is the **top priority**.
+4. **Next task:** start Phase P at step P1.
 
 ---
 
 ## 1. What this project is
 
-**XploreMore** is a portfolio project built to maximize hiring signal for AI Engineer, ML Engineer, and Search/Ranking/Recommendation roles at top AI companies. Dilip's resume already covers LLM inference, fine-tuning, RAG and agents (the RYPE, SpOps and Pro2Pro projects), so **XploreMore deliberately does not repeat those**.
+**XploreMore** is a portfolio project built to maximize hiring signal for AI/ML Engineer, Search/Ranking/Recommendation and ML Systems roles at top AI companies. Dilip's resume already proves LLM inference, fine-tuning, RAG and agents (RYPE, SpOps, **Pro2Pro**). **XploreMore therefore deliberately does not repeat those.**
 
-It adds what the resume lacks:
-- search and ranking (learning-to-rank)
-- recommendation and personalization
-- event-driven distributed systems
-- story clustering / entity resolution
-- Terraform with keyless GCP
-- SLOs, load testing and failure testing
-- operated Kubernetes
+It proves what the resume lacks:
+- search and learning-to-rank; recommendation and personalization
+- story and problem clustering (entity resolution)
+- event-driven distributed systems with correctness guarantees
+- Terraform with keyless GCP; SLOs, load and failure tests; operated Kubernetes
 
-**The product:** a technology intelligence platform. It ingests about 43 tech sources, clusters duplicate coverage into canonical stories, provides hybrid search with learning-to-rank, a personalized feed, and (later) evidence-grounded briefings.
+**The product:**
+- **Tech intelligence:** ingest 43+ sources, collapse duplicate coverage into stories, hybrid search, ranked and personalized feed.
+- **Problem intelligence (new):** discover and cluster real pain points from discussions, rank them by demand, and serve them to Pro2Pro through a REST API and an MCP tool.
 
-- **Full plan (read it):** `C:\Users\Dilip\.claude\plans\you-are-claude-opus-zazzy-fiddle.md`
-- **Old repo being replaced:** `github.com/dilipna/MLOPS-Project` (to be archived with a pointer)
-- **New repo:** this folder, `C:\Users\Dilip\OneDrive\Pictures\xplore_more` (local git, not pushed yet)
+**The two-project story (for the resume and interviews):**
+> "XploreMore is the search, ranking and data system that discovers and ranks real problems from 40+ sources. Pro2Pro is the agent system that validates them and ships products. Each project is strong in its own lane, and they connect through a versioned API contract."
 
-## 2. Constraints and decisions confirmed by the user
+- **Full architecture plan:** `C:\Users\Dilip\.claude\plans\you-are-claude-opus-zazzy-fiddle.md`
+- **This repo:** `C:\Users\Dilip\OneDrive\Pictures\xplore_more` (local git, **not pushed yet**)
+- **Pro2Pro repo:** `C:\Users\Dilip\OneDrive\Pictures\p2pagent` (remote `github.com/dilipna/Pro2ProAgent`). Live at `https://protopro.vercel.app`, API `https://protopro-api.onrender.com`. Its handoff file is `PROJECT_BRAIN.md` §15.
+- **Old repo being replaced:** `github.com/dilipna/MLOPS-Project` (archive later with a pointer)
 
-- **Budget:** the always-on system must run on **free tiers**: Cloud Run, Pub/Sub, BigQuery, GCS, Neon Postgres, Upstash Redis. The user will create a **new GCP account with $300 / 90-day credit**, used only for short GKE and load-test lab sessions.
-- **Timeline:** as fast as possible (the user has other projects). Work continuously.
-- **Stretch goals approved:** a **Go** edge service (done), **Argo CD** on the GKE lab (later), and a **cross-encoder rerank experiment** (later).
-- **Honesty rule:** no fabricated numbers. Every metric must come from a committed report with a reproduce command. Labels made by the AI assistant are marked `human_audited: false`.
-- **Commit discipline:** run `scripts/check.sh` and commit **only if the exit code is 0**. Don't pipe the gate into grep or tail before checking status; that previously let two failing commits through. Commit trailer: `Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>`.
+## 2. Standing rules and constraints (confirmed by the user)
+
+- **Budget:** always-on parts use **free tiers** only: Cloud Run, Pub/Sub, BigQuery, GCS, Neon Postgres, Upstash Redis. A **new GCP account with $300 / 90-day credit** is only for short GKE and load-test lab sessions.
+- **Speed:** the user wants maximum progress. Work continuously and give short progress updates.
+- **Approved stretch goals:** the Go edge (done), Argo CD on the GKE lab, and a cross-encoder rerank experiment.
+- **No fabricated numbers.** Every metric comes from a committed report with a reproduce command. **Labels made by an AI assistant are marked `human_audited: false`** and called provisional.
+- **Commit gate:** run `scripts/check.sh` **directly** and commit **only if its exit code is 0**. Never pipe it into grep or tail before checking status; that let two failing commits through earlier. `check.sh` now fails fast if Postgres is down, so integration tests can't silently skip.
+- **Commit trailer:** `Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>`.
+- **Keep XploreMore in its lane:** search, ranking, clustering and data systems. **No LLM agents in XploreMore's serving path**; agents belong to Pro2Pro. Offline LLM-assisted labeling is allowed if it's disclosed.
+- **Update this file** after every major milestone.
 
 ## 3. Tech stack in use
 
 | Layer | Tech |
 |---|---|
-| Edge (untrusted zone) | **Go 1.27**: poller + ingestor (go-trafilatura, gofeed, robotstxt, x/time/rate, cloud.google.com/go/pubsub/v2, storage) |
+| Edge (untrusted zone) | **Go 1.27**: poller + ingestor (go-trafilatura, gofeed, robotstxt, x/time/rate, pubsub/v2, storage) |
 | Data plane | **Python 3.13**, uv workspace, Pydantic v2, SQLAlchemy 2 async + psycopg 3, Alembic |
-| Storage | Postgres 17 + **pgvector** (halfvec HNSW, FTS tsvector), Redis (planned), BigQuery event log, GCS |
-| ML/IR | fastembed ONNX **bge-small-en-v1.5** (384-d), custom MinHash-LSH, gazetteer NER, logistic pair scorer, RRF, scikit-learn (eval), LightGBM LambdaMART (planned) |
-| API | **FastAPI** + uvicorn |
+| Storage | Postgres 17 + **pgvector** (halfvec HNSW, FTS tsvector); Redis (compose; Upstash later); BigQuery event log; GCS |
+| ML/IR | fastembed ONNX **bge-small-en-v1.5** (384-d), MinHash-LSH, gazetteer NER, logistic pair scorer, RRF, scikit-learn; planned: LightGBM LambdaMART |
+| API | **FastAPI** + uvicorn (planned: MCP server via the Python `mcp` SDK) |
 | Infra | **Terraform 1.16.2**, google provider 8.2.0, WIF/OIDC, Cloud Run services/jobs, Scheduler, Secret Manager |
 | CI/Security | GitHub Actions (SHA-pinned), ruff, pyright, pytest, go vet/race/fuzz, gitleaks, Trivy, Syft SBOM, tflint, checkov, actionlint, Renovate |
 
-Local tools: Go and Terraform are **not installed**. Use `scripts/go.sh` and `scripts/tf.sh`, which run them in Docker. Docker Desktop must be running; start it from `%LOCALAPPDATA%\Programs\DockerDesktop\Docker Desktop.exe`.
+Go and Terraform are **not installed locally**. Use `scripts/go.sh` and `scripts/tf.sh`, which run them in Docker. **Docker Desktop must be running** (`%LOCALAPPDATA%\Programs\DockerDesktop\Docker Desktop.exe`); it was found stopped at the start of the last session.
 
-## 4. What is DONE (11 commits, all gates green at each commit)
+## 4. DONE (12 commits)
+
+```
+5b320b1 Search + API: hybrid retrieval, RRF story collapse, heuristic feed, FastAPI
+5416b10 Clustering evaluation: live error analysis, labeled pair set, CV harness
+3dc437b Fix lint findings in clustering package
+976dabc Story clustering: MinHash-LSH + dense candidates, logistic pair scorer, locked assignment
+92be2fb Terraform: keyless GCP platform (bootstrap + pubsub/cloud run/job modules + prod)
+567044e CI: tests, race detector, fuzzing, secret/vuln/IaC scans, image scan + SBOM
+5e01a3c Fix lint in test conftest; add scripts/check.sh running all quality gates
+682c45c Live end-to-end pipeline on the laptop: poller -> ingestor -> indexer
+879dd19 Poller, real-world source validation, feed-content fallback
+700d5b9 Go ingestor: polite fetcher, extraction, content-addressed text store, push handler
+65befd8 Go edge foundation: URL canonicalization, SSRF-safe client, event contracts
+82edcfa Foundation: event contracts, core models, idempotent micro-batch indexer
+```
 
 ### 4.1 Event contracts (`contracts/`)
-- JSON Schema 2020-12 for the envelope, `article.discovered.v1`, `article.extracted.v1` and signals, plus fixtures.
-- Both Go and Python validate the same fixtures (contract tests).
+- JSON Schema 2020-12 for the envelope, `article.discovered.v1`, `article.extracted.v1` (with additive `content_origin`) and signals, plus fixtures.
+- Go and Python both validate the same fixtures.
 - `idempotency_key = sha256("{type}|{subject}|{discriminator}")`, `article_id = sha256(canonical_url)`.
-- Additive field `content_origin` (page|feed) was added to the extracted event.
+- **Rules:** additive changes only within v1; pointers, not bodies.
 
 ### 4.2 Go edge (`apps/edge-go`)
-- **`internal/canon`:** URL canonicalization. Fuzzed for idempotency (22M runs); the fuzzer found a malformed-host bug, now fixed with IDNA plus strict host validation, and the failing seed is kept.
-- **`internal/ssrf`:** checks the resolved IP at connect time (defeats DNS rebinding). Blocks metadata, private, CGNAT, NAT64 and 6to4 ranges, IPv4-mapped IPv6, redirect escapes and non-web ports.
-- **`internal/fetch`:**
-  - robots.txt (RFC 9309) and per-host rate limits
-  - MIME allowlist and a 5 MB cap applied after decompression (gzip-bomb test)
-  - permanent vs transient error classification
-- **`internal/extract`:** trafilatura extraction and language detection. Canonical URLs are accepted **only on the same registrable domain** (blocks canonical hijacking; public-suffix aware). `FromFeed` falls back to the feed's own content.
-- **`internal/textstore`:** content-addressed, create-only objects (GCS or local file).
-- **`internal/bus`:** Pub/Sub publisher (waits for server ack), plus an in-memory version for tests.
-- **`internal/ingest`:** Pub/Sub push handler. 204 = done or permanent reject; 503 = transient (Pub/Sub retries, then the DLQ). Nothing is published when the input will be retried. Lineage is kept via `caused_by`.
-- **`internal/poll`:**
-  - conditional GET (ETag / Last-Modified) and the HN API with as-of signals
-  - **one state object** with GCS generation preconditions, which detects overlapping runs
-  - items are marked seen only after publish; the ETag is rolled back on publish failure, so nothing is silently lost
-- **`internal/sources`:** loads and validates `config/sources.yaml`.
-- **Commands:**
-  - `cmd/ingestor`: HTTP service with graceful shutdown.
-  - `cmd/poller`: add `--check` for a dry run.
-  - `cmd/extractcheck`: measures real extraction quality.
-- **Dockerfile:** distroless static, non-root, about 111 MB.
-- **All packages pass under `-race`** (run with `GO_IMAGE=golang:1.27 CGO_ENABLED=1 scripts/go.sh test -race ./...`).
+- **`canon`:** URL canonicalization, fuzzed for idempotency (22M runs). The fuzzer found a real host-validation bug, now fixed, and the seed is kept.
+- **`ssrf`:** checks the resolved IP at connect time (defeats DNS rebinding). Blocks metadata, private, CGNAT, NAT64/6to4 and mapped IPv6 ranges, redirect escapes and non-web ports.
+- **`fetch`:** robots.txt, per-host rate limit, MIME allowlist, 5 MB cap after decompression, permanent vs transient errors.
+- **`extract`:** trafilatura; canonical URL accepted only on the same registrable domain; `FromFeed` fallback.
+- **`textstore`:** content-addressed, create-only. **`bus`:** Pub/Sub, waits for server ack.
+- **`ingest`:** push handler. 204 = done or permanent reject; 503 = retry, then DLQ. Lineage via `caused_by`.
+- **`poll`:** conditional GET; HN API with as-of points/comments. Single state object with GCS generation preconditions. Items marked seen only after publish; ETag rolled back on publish failure.
+- **Commands:** `cmd/ingestor`, `cmd/poller` (`--check`), `cmd/extractcheck`. Distroless non-root image, about 111 MB.
+- **Live measurements:** 42 of 43 sources reachable; 953 items in about 4 s; real-page extraction 106 of 117 (91%) before the feed fallback.
 
-**Live measurements (2026-09-13):**
-- 42 of 43 sources reachable (VentureBeat returned 429; arXiv is empty on weekends); 953 items found in about 3–4 s.
-- Real-page extraction: 106 of 117 (91%) before the feed fallback was added.
+### 4.3 Python core, indexer, embeddings
+- **`xm_core`:** settings, events, ORM, **migrations 0001–0003**, `idempotency.claim`, `db/admin.py`.
+- **`xm_embed`:** `FastEmbedEmbedder.embed / embed_query` (BGE query instruction) / `warm`.
+- **`apps/indexer`:** Pub/Sub pull micro-batches, then embed, then guarantees **G1–G6** in one transaction with per-message savepoints. CLI: `run | migrate | seed-sources | backfill-clusters [--reset]`. The Dockerfile bakes in the model and gazetteer.
+- **Live e2e (`scripts/e2e_local.sh`):** full registry run gave 953 published, **796 new articles indexed, 45 duplicate no-ops, 0 failures**. Finding: 485 ingestor retries caused by per-host limiter waits exceeding the fetch deadline (fix is TODO in §6).
+- **Dev DB `xploremore`** holds about 838 real articles plus stories. Tests use `xploremore_test`.
 
-### 4.3 Python core and indexer
-- **`packages/xm_core`:**
-  - settings (`XM_*` environment variables) and Pydantic event models
-  - ORM models and **Alembic migrations 0001–0003** (sources, articles, processed_events, content_origin, stories, article_lsh_bands, clustering columns)
-  - `idempotency.claim()`, and `db/admin.py` (migrate, sync_sources)
-- **`packages/xm_embed`** (uncommitted move, see §5): FastEmbedEmbedder with `embed`, `embed_query` (BGE query prefix) and `warm`.
-- **`apps/indexer`:**
-  - pulls micro-batches from Pub/Sub and embeds them
-  - applies guarantees **G1–G6** in one transaction with per-message savepoints (duplicate delivery gives no duplicate effect; ack only after commit; one bad message doesn't break its batch; re-extraction keeps the story; exact-duplicate linking; locked story assignment)
-  - CLI subcommands: `run`, `migrate`, `seed-sources`, `backfill-clusters [--reset]`
-  - Dockerfile bakes in the embedding model and `config/entities.yaml`
-- **Schema drift test:** ORM models must match the migrations.
-- **Live end-to-end test on the laptop** (`scripts/e2e_local.sh`): poller → Pub/Sub emulator → Go ingestor → indexer → Postgres.
-  - Small run: 51 discovered, 43 indexed, 0 failures.
-  - Full run: 953 published, 796 new articles indexed, 45 duplicate no-ops, 0 failures.
-  - **Finding:** 485 retries were caused by per-host rate-limiter waits exceeding the fetch deadline. The fix below is still TODO.
+### 4.4 Story clustering (`xm_cluster`) + evaluation (`evals/clustering`)
+- **Algorithm:** MinHash-LSH (16×4, collision rate verified against theory) plus dense story-centroid candidates within 72 h, then a logistic scorer over: member/centroid cosine, MinHash, title/entity Jaccard, hours gap, same source, `version_conflict`. Runs under an advisory lock; **the race test fails 10/10 without the lock** (`scripts/mutation_check_cluster_lock.py`).
+- **Calibration:** unrelated median cosine 0.60, p99 0.75. Real-bge paraphrase p = 0.90, unrelated p = 0.00.
+- **Error analysis:** audit #1 found 8/15 merges correct (templated same-source releases); after the new features, audit #2 found 7/8.
+- **Pair eval v1:** 182 stratified pairs (27 positive), reproducible from seed 13, **assistant-labeled, not audited**. Population results: prior P 0.875 / R 0.20; fitted logistic P 0.61 / R 0.45; precision-constrained P 0.69 / R 0.35. **The prior stays in serving**; `config/cluster_scorer.candidate.json` waits for the audit (`evals/clustering/audit.py`) and a v2 set with at least 80 positives.
+- **Docs:** `docs/clustering.md`, `docs/reports/clustering-pairs-v1.md`.
 
-### 4.4 Story clustering (`packages/xm_cluster`)
-- **Algorithm:** MinHash (multiply-shift hashing; LSH 16 bands × 4, collision rate verified against theory) plus dense candidates over story centroids within 72 h, then a logistic pair scorer over interpretable features: max/centroid cosine, MinHash Jaccard, title/entity Jaccard, hours gap, same source, `version_conflict`.
-- **Gazetteer:** `config/entities.yaml`, about 100 tech entities, case-sensitive where names are ambiguous.
-- **Concurrency:** assignment runs under a transaction-level advisory lock. `scripts/mutation_check_cluster_lock.py` shows the race test **fails 10/10 without the lock**.
-- **Calibration:** 903 live pairs, unrelated median cosine 0.60, p99 0.75. Paraphrase check with real bge: same-event rewrite p = 0.90, unrelated p = 0.00. Tests use real vectors from `apps/indexer/tests/fixtures/bge_small_vectors.json`.
-- **Error analysis:** audit #1 found 8/15 merges correct (templated same-source release titles over-merged). After adding `version_conflict` and a stronger same-source penalty, audit #2 found 7/8 correct. A recall probe showed real missed cross-source merges.
-- **Evaluation (`evals/clustering`):**
-  - 182 stratified pairs (27 positive), reproducible byte-for-byte (seed 13), with `pairs_v1.meta.json` holding the strata
-  - assistant labels, **not human-audited**; `audit.py` is the audit CLI
-  - `evaluate.py`: out-of-fold 5×20 CV, design-weighted population metrics, bootstrap CIs
-  - Population results: prior P 0.875 / R 0.20; logistic F1-optimal P 0.61 / R 0.45; logistic with precision ≥ 0.8 target P 0.69 / R 0.35
-  - **Decision:** keep the prior in serving; `config/cluster_scorer.candidate.json` waits for the human audit and a v2 set with at least 80 positives.
-  - Write-up: `docs/clustering.md`; report: `docs/reports/clustering-pairs-v1.md`.
+### 4.5 Search, feed, API (`xm_search`, `xm_rank`, `apps/api`)
+- **`xm_search`:** `parse_query` (entities, versions, recency intent); FTS top-200 plus pgvector top-200, then **RRF k=60**, then collapse to stories (best member), with a `RetrievalTrace`.
+- **`xm_rank`:** point-in-time `StoryFeatures` (as_of); `heuristic_importance` baseline with an 18 h half-life on **publication** time.
+- **`apps/api` (FastAPI):**
+  - `/healthz`, `/readyz`
+  - `/v1/search` (`Server-Timing` per stage; lexical-only fallback with `X-XM-Degraded`)
+  - `/v1/feed` (heuristic; the window uses publication time)
+  - `/v1/stories/{id}` and security headers
+  - 11 integration tests (real Postgres, stories built by the real indexer)
+- **Shared test fixtures** live in root `conftest.py`. `FakeEmbedder` is a hashed bag-of-words with `embed_query`; `FixtureEmbedder` holds real bge vectors for paraphrase tests.
 
-### 4.5 Terraform (`infra/terraform`)
-- **`bootstrap/`:**
-  - APIs and the state bucket (versioned)
-  - **WIF pool restricted to the repo**, with optional immutable `github_repository_id`
-  - deployer impersonation only from `refs/heads/main`; a read-only PR planner with narrow roles
-  - Artifact Registry (immutable tags, cleanup) and a billing budget
-- **`modules/pubsub_pipeline`:** topic, DLQ, and push (OIDC) or pull subscription, including the **service-agent DLQ bindings**, plus an optional BigQuery event-log subscription.
-- **`modules/cloud_run_service` and `modules/scheduled_job`.**
-- **`environments/prod`:** per-workload SAs with least privilege (the ingestor has no DB secret and can only create text objects), buckets, secret, BigQuery event log, pipelines, ingestor, poller and indexer jobs.
-- **Validation:** validates against provider 8.2.0; tflint clean; checkov 103 passed, 0 failed. Documented skips (no CMEK, no access logs) have reasons inline. See `infra/terraform/README.md`.
-- **Nothing is applied to GCP yet** (the user still has to create the account).
+### 4.6 Terraform (`infra/terraform`) — validated, not applied
+- **`bootstrap/`:** APIs, versioned state bucket, **WIF restricted to the repo (+ immutable repo id)**, deployer from `main` only, read-only PR planner with narrow roles, Artifact Registry, budget.
+- **Modules:** `pubsub_pipeline` (topic + DLQ + push/OIDC or pull + service-agent DLQ IAM + optional BigQuery event log), `cloud_run_service`, `scheduled_job`.
+- **`environments/prod`:** per-workload least-privilege SAs, buckets, secret, BigQuery event log, pipelines, ingestor, poller and indexer jobs.
+- **Validation:** tflint clean; checkov 103 passed, 0 failed. Documented skips are inline.
+- **Still missing:** `module "api"`, an API Dockerfile, a deploy workflow.
 
-### 4.6 CI (`.github/workflows/ci.yml`)
-- **Jobs:**
-  - python: ruff, pyright, pytest against a pgvector service
-  - go: gofmt, vet, `-race`, 30 s fuzz
-  - security: gitleaks, Trivy fs
-  - terraform: fmt, validate, tflint, checkov
-  - images: build, Trivy image scan, Syft SBOM
-- All actions are pinned to **verified commit SHAs**. `renovate.json` keeps them updated.
-- **Trivy found 2 HIGH gRPC CVEs**, fixed by upgrading to grpc v1.83.2.
+### 4.7 CI (`.github/workflows/ci.yml`)
+- python, go (race + fuzz), security (gitleaks, Trivy), terraform (fmt, validate, tflint, checkov), images (build, Trivy, SBOM).
+- SHA-pinned actions, verified via ls-remote peeled tags. Renovate is configured.
+- The Trivy finding was fixed (grpc v1.83.2).
 
-## 5. UNCOMMITTED work in progress (finish and commit first)
+## 5. Pro2Pro facts needed for the integration (verified in its code)
 
-`git status` shows uncommitted changes for **Phase 3: search + API**:
+- **Discovery:** a LangGraph ReAct **Research Agent** (`p2pagent/src/p2pops/agents/research.py`) calls three tools:
+  - `search_hn` in `tools/hn.py` (Algolia HN, `tags=story`)
+  - `search_web` in `tools/websearch.py` (DuckDuckGo)
+  - `fetch_article_text` in `tools/web.py`
+- **Two transports:** in-process `StructuredTool`s, or an MCP stdio server (`src/p2pops/mcp/server.py`, `@mcp.tool()` functions). Production currently prefers in-process tools because the MCP stdio subprocess hung prod runs (**ADR-0011**, commit `5c20f8a`).
+- **Token budget matters:** the agent resends its whole history each turn, so tool results must be **compact** (Pro2Pro caps result sizes; see comments in `mcp/server.py`).
+- **Downstream pipeline:** NeMo Guardrails, then ChromaDB semantic dedupe, then Analyst scoring (conviction 0–100), then `PTP-XXX` numbering, then human approval, then the build squad, then a Vercel deploy.
+- **Handoff file:** `p2pagent/PROJECT_BRAIN.md` §15. Update it when changing Pro2Pro.
 
-1. **Embedder moved:** `apps/indexer/src/xm_indexer/embedder.py` → `packages/xm_embed/src/xm_embed/embedder.py`. Imports were updated in the indexer.
-2. **Test fixtures moved:** `apps/indexer/tests/conftest.py` → root `conftest.py`. `FakeEmbedder` gained `embed_query`.
-3. **New `packages/xm_search`:**
-   - `query.py`: `parse_query` extracts entities, versions and recency intent.
-   - `fusion.py`: RRF with k = 60.
-   - `retrieval.py`: FTS top-200 plus pgvector top-200, then RRF, then collapse to stories, with a `RetrievalTrace`.
-4. **New `packages/xm_rank`:** `features.py` (point-in-time `StoryFeatures`, `heuristic_importance` baseline with an 18 h half-life on **published** time) and `tests/test_heuristic.py`.
-5. **New `apps/api`** (FastAPI):
-   - endpoints: `/healthz`, `/readyz`, `/v1/search` (Server-Timing header, lexical-only degradation with `X-XM-Degraded`), `/v1/feed` (heuristic ranker), `/v1/stories/{id}`
-   - security headers
-   - `tests/test_api_integration.py`
-   - `StateDep` moved to module level (fixed a 422 bug)
-6. `pyproject.toml` workspace now includes `apps/api`, `xm-embed`, `xm-search`, `xm-rank` and `xm-api`.
+## 6. ROADMAP — in priority order
 
-**Current test status:** 10 of 11 API tests pass. **One failure:** `test_feed_prefers_fresh_multi_source_news_over_old_backlog` raises `KeyError: 'results'`.
-- **Likely cause:** the test calls `/v1/feed?window_hours=8760`, but the endpoint caps `window_hours` at `le=24*14` (336), so it returns 422.
-- **Fix:** allow a larger maximum (e.g. `le=24*365`), or make the test use 336 and set the old article's `discovered_at` inside the window. `recent_story_ids` filters on `COALESCE(published_at, discovered_at)`, so a 120-day-old article is excluded with a small window. Decide which behaviour is intended; excluding old backlog is correct product behaviour.
-- Then run `scripts/check.sh` (exit code must be 0) and commit as **"Search + API: hybrid retrieval, RRF story collapse, heuristic feed, FastAPI with Server-Timing"**.
-- Also add an **API Dockerfile** (like the indexer's, with the model baked in) and a Terraform `module "api"` in `environments/prod` (public ingress, `invoker_members = ["allUsers"]`, max_instances cap).
+### PHASE P — Problem Intelligence for Pro2Pro (TOP PRIORITY)
 
-## 6. Remaining roadmap (in order)
+**Goal:** Pro2Pro discovers problems primarily from XploreMore, with a fallback to its own HN/web tools. XploreMore answers "what are people struggling with?" with **clustered, evidence-backed, demand-ranked problems**, not headlines.
 
-1. **Finish §5** and commit.
-2. **Ingestor rate-limit fix** (finding from §4.3): fail fast when the limiter's reservation delay exceeds the remaining deadline (return 503 immediately). Measure again with the full e2e run.
-3. **Search evaluation + LTR** (Phase 3 core):
-   - judged query set `evals/search/judgments_v1`: about 150 queries pooled from BM25, dense and hybrid; graded 0–3 with a human audit subset
-   - offline BM25 (rank_bm25) vs Postgres FTS Recall@100 comparison
-   - LightGBM lambdarank search ranker; nDCG@10, MRR, Recall@100 and zero-result rate with CIs
-   - CI non-inferiority gate
-4. **Importance LTR for the feed:** snapshot features at T+1h, label from realized coverage at T+24h (source-count growth, HN points), time-split evaluation against the heuristic baseline. This needs **days of accumulated data**, so get ingestion running continuously (locally or on GCP) as early as possible.
-5. **Redis:** feed cache with single-flight and rate limiting (Upstash in prod, compose locally).
-6. **Personalization (Phase 4):**
-   - signed anonymous uid and an events beacon to Pub/Sub, then BigQuery
-   - decayed topic/entity affinities; Thompson-sampling exploration slots; MMR diversity
-   - propensity and served-feature logging; IPS/SNIPS validated on a simulator
-   - privacy defaults (`DELETE /me`, TTLs)
-7. **Web frontend:** Next.js static site reusing the old repo's editorial design.
-8. **Reliability (Phase 5):**
-   - OpenTelemetry (trace context propagated through Pub/Sub attributes), Grafana Cloud dashboards, SLO doc with burn-rate alerts
-   - k6 open-model load tests; toxiproxy fault injection; gameday postmortem
-   - canary deploys on Cloud Run with auto-rollback; `deploy.yml` workflow (WIF auth, cosign signing, terraform apply)
-9. **Stretch:**
-   - Helm chart with `ct install` on kind in CI
-   - GKE Autopilot perf lab (credits) with HPA, NetworkPolicy and PDB
-   - Argo CD on the lab
-   - cross-encoder rerank experiment
-10. **Deliverables:**
-    - ADRs (`docs/adr/0001…`), `SECURITY.md`, threat model, `docs/search.md`, `storage-economics.md`, load-test report
-    - archive `MLOPS-Project`
-    - push to GitHub as `dilipna/xploremore`
-11. **Evidence audit:** P1 evidence-grounded briefings, interleaving experiments, cost dashboard.
+**Key insight:** news is mostly announcements. Problems live in **discussions**. XploreMore currently skips Ask HN (no URL) and collects no comments, so new sources are required.
 
-## 7. User actions still needed (outside Claude's control)
+**P1. Discussion sources (Go edge + contracts)**
+- **New contract `xm.discussion.discovered.v1`**, or extend the article event with `doc_kind: article|discussion`. Recommendation: add `doc_kind` (additive) so embedding, search and clustering reuse everything.
+  - Fields: `doc_kind`, `parent_url` (thread), `engagement` {points, comments, reactions}, `author_hash` (salted sha256, never raw usernames; privacy).
+  - Migration 0004 is expand-only.
+- **Sources** (all public and keyless unless noted):
+  - **Ask HN / Show HN** via Algolia (`hn.algolia.com/api/v1/search_by_date?tags=ask_hn`), plus **top-level comments** of high-engagement stories (`/items/{id}`), capped per thread
+  - **GitHub issues** on about 40 popular AI/infra repos via the REST search API, e.g. `repo:X is:issue is:open sort:reactions-+1`. The unauthenticated limit is 60 req/h; an optional `GITHUB_TOKEN` gives 5,000/h, so use it if set.
+  - **Lobsters** comment threads (`lobste.rs/s/<id>.json`)
+  - **Stack Exchange API** for questions tagged llm, kubernetes, vector-database and similar (keyless, quota-limited)
+  - **Excluded:** Reddit (API terms/cost); scraping behind logins.
+- Registry: `config/problem_sources.yaml`. Same poller/ingestor safety (SSRF, robots, rate limits). Discussion text comes from APIs (no HTML fetch).
+- **Tests:** contract fixtures (Go + Python), poller tests with httptest servers, dedup by canonical thread/comment URL.
 
-- [ ] Create the GitHub repo `dilipna/xploremore` and push (`git remote add origin …`).
-- [ ] Create a new GCP account/project ($300 credit; the clock starts at signup), then run `infra/terraform/bootstrap` (see `infra/terraform/README.md`).
-- [ ] Create a free Neon project (pooled URL goes into Secret Manager `database-url`) and an Upstash Redis instance.
-- [ ] Audit the clustering labels: `uv run python evals/clustering/audit.py` (low/medium-confidence pairs first).
-- [ ] Optionally install Go, Terraform, gcloud and k6 natively (not required; the Docker wrappers work).
+**P2. Pain-point classifier (ML, measured)**
+- **Labels:** `bug_or_reliability`, `missing_capability`, `cost_or_performance`, `workflow_friction`, `how_to_question`, `not_a_problem`.
+- **Dataset:** `evals/problems/labels_v1.jsonl` with about 400–600 items stratified by source. Assistant first-pass labels with `human_audited: false` plus an audit CLI (reuse the clustering audit pattern).
+- **Models:** baselines (keyword cues like "struggling / is there a tool / wish / workaround / keeps failing", and zero-shot embedding centroids) → **logistic regression on bge embeddings + cue features**. CV like the clustering harness, per-class P/R, a precision target for "is a problem" of at least 0.8. Stored as a versioned model artifact with a feature-schema hash.
+- The classifier runs in the indexer (CPU, milliseconds). **No LLM in the hot path.**
+
+**P3. Problem clustering + demand score**
+- Reuse `xm_cluster` with a **problem policy**: a 30-day window (problems persist), no `version_conflict`, entity overlap weighted higher. New tables (migration 0005): `problems` (statement = representative text, first_seen, last_seen, voice_count = distinct `author_hash`, source_count, category, demand_score, status) and `problem_members`.
+- **Demand score v0 (interpretable, documented baseline):** `log1p(distinct_voices) × (1 + 0.5·log1p(source_count)) × recency_decay(half-life 30 d) × (1 + 0.2·log1p(engagement))`, with category weights.
+- **Evaluation:** a human-judged top-50 usefulness check, plus a precision/recall audit of problem clusters like §4.4.
+
+**P4. Problem API + MCP**
+- `GET /v1/problems?topic=&category=&since_days=30&min_voices=2&limit=10` returns a ranked list of `{id, statement, category, demand_score, voice_count, source_count, first_seen, last_seen, entities, evidence:[{source, url, excerpt≤280 chars, engagement, date}] (max 5)}`. **Compact by design** (Pro2Pro's token budget). `topic` uses hybrid retrieval over problem members.
+- `GET /v1/problems/{id}` returns full evidence.
+- **Auth:** `X-XM-Api-Key` (hashed keys in DB or Secret Manager), per-key rate limits (Redis token bucket), 429 with `Retry-After`. Reads by the public web UI can stay unauthenticated but rate-limited.
+- **MCP server** `apps/mcp` (Python `mcp` SDK, **streamable HTTP**, not stdio, to avoid the ADR-0011 subprocess hang) with tools `find_problems`, `get_problem`, `search_stories`.
+- **Contract:** `contracts/api/problems.v1.openapi.json` with contract tests on both sides.
+
+**P5. Pro2Pro integration (edits in `p2pagent` repo)**
+- New tool `src/p2pops/tools/xploremore.py`: httpx client, 5 s timeout, small circuit breaker, compact results.
+- Register as an in-process `StructuredTool` in `agents/research.py` **and** as `@mcp.tool()` in `mcp/server.py`. Update the agent prompt: prefer `find_problems` first; use `search_hn`/`search_web` to validate or fill gaps; **fall back automatically** if XploreMore is unavailable.
+- Config `XPLOREMORE_API_URL` and `XPLOREMORE_API_KEY` (Render env). Pass provenance (`problem_id`, voices, sources, evidence URLs) into dedupe, the Analyst and the showcase card ("Discovered via XploreMore: 23 people across 5 sources").
+- Tests with a mocked XploreMore; update `PROJECT_BRAIN.md` §15 and add an ADR in Pro2Pro.
+
+**P6. Measure the integration (experiment, not vibes)**
+- Compare discovery runs, same budget and same guardrails: **XploreMore-sourced vs HN/web-sourced**.
+- Metrics:
+  - Guardrail pass rate
+  - Dedupe-new rate
+  - Analyst conviction distribution
+  - Share reaching approval
+  - Human rating of problem quality
+  - Tokens and cost per validated problem
+- Report with CIs in `docs/reports/pro2pro-discovery-ab.md`. If the sample is small, say so.
+
+**P7. Go live** (requires the user's GCP/Neon/Upstash setup, §7)
+- API Dockerfile, Terraform `module "api"` (public ingress, `allUsers` invoker for read endpoints, max-instance cap), MCP service module, poller/indexer jobs for problem sources, `deploy.yml` (WIF auth, cosign, terraform apply, canary).
+- Point Pro2Pro's Render env at the live XploreMore API.
+
+### PHASE Q — Carry-over engineering (interleave where it unblocks P)
+1. **Ingestor rate-limit fix:** fail fast when the limiter's reservation delay exceeds the remaining deadline (503 immediately), then re-measure retries on a full e2e run.
+2. **Redis:** feed/problem caches with single-flight, and API-key rate limiting.
+3. **Search eval + LTR:** judged query set, BM25 vs FTS Recall@100, LightGBM lambdarank, nDCG@10/MRR with CIs, CI gate.
+4. **Importance LTR for the feed:** T+1h features vs T+24h realized coverage, time split. Needs days of continuous ingestion, so start continuous ingestion as soon as GCP is live.
+
+### PHASE R — Personalization, reliability, stretch (after P)
+- **Personalization:** signed uid, events beacon, affinities, Thompson exploration, MMR, propensity logging, IPS/SNIPS on a simulator, privacy (`DELETE /me`).
+- **Web frontend:** Next.js static; includes a public "Problems" page.
+- **Reliability:** OpenTelemetry (Pub/Sub trace propagation), Grafana Cloud, SLO doc and burn-rate alerts, k6 open-model load tests, toxiproxy fault injection, gameday postmortem, Cloud Run canary with auto-rollback.
+- **Stretch:** Helm with `ct` on kind, GKE Autopilot perf lab (HPA, NetworkPolicy, PDB), Argo CD, cross-encoder rerank experiment.
+- **Docs:** ADRs, `SECURITY.md`, threat model, `docs/search.md`, `docs/problems.md`, storage economics; archive MLOPS-Project; push `dilipna/xploremore`.
+
+## 7. User actions still needed
+
+- [ ] Create GitHub repo `dilipna/xploremore` and push (`git remote add origin https://github.com/dilipna/xploremore.git && git push -u origin main`).
+- [ ] New GCP account/project ($300 credit), then `infra/terraform/bootstrap` (see `infra/terraform/README.md`).
+- [ ] Free **Neon** project (pooled URL → Secret Manager `database-url`) and free **Upstash Redis**.
+- [ ] Optional: a GitHub personal access token (public read-only) as `GITHUB_TOKEN`, for higher issue-API limits.
+- [ ] Audit clustering labels: `uv run python evals/clustering/audit.py`. Later, audit problem labels the same way.
+- [ ] When P5 is ready: add `XPLOREMORE_API_URL` / `XPLOREMORE_API_KEY` to Pro2Pro's Render environment.
 
 ## 8. How to run everything locally
 
 ```bash
 cd C:\Users\Dilip\OneDrive\Pictures\xplore_more
-# Docker Desktop must be running
+# 1) Docker Desktop must be running, then:
 docker compose -f deploy/compose/docker-compose.yml up -d postgres redis pubsub
 uv sync
 scripts/check.sh                          # ALL gates; commit only if exit code 0
-scripts/e2e_local.sh                      # live end-to-end pipeline (small source list)
+scripts/e2e_local.sh                      # live end-to-end pipeline (6 sources)
 
-# Dev DB already holds ~838 real articles + stories (xploremore); tests use xploremore_test
 export XM_DATABASE_URL=postgresql+psycopg://xm:xm@localhost:5432/xploremore
 export PUBSUB_EMULATOR_HOST=localhost:8085
 uv run xm-indexer migrate
 uv run xm-indexer backfill-clusters --reset
+uv run xm-api                              # http://localhost:8000/docs  (downloads bge model on first run)
 uv run python evals/clustering/evaluate.py
 uv run python scripts/mutation_check_cluster_lock.py
 
-scripts/go.sh test ./...                  # Go tests via Docker
-scripts/go.sh run ./cmd/poller --check    # live source reachability
+scripts/go.sh test ./...                   # Go via Docker
+GO_IMAGE=golang:1.27 CGO_ENABLED=1 scripts/go.sh test -race ./...
+scripts/go.sh run ./cmd/poller --check     # live source reachability
 scripts/tf.sh -chdir=infra/terraform/environments/prod validate
 ```
 
-Windows notes:
-- Use `PYTHONIOENCODING=utf-8` when printing article titles.
-- Don't write Python with backslash escapes through bash heredocs; they corrupted files twice. Write a script file instead.
-- psycopg async needs the selector event loop (`ensure_psycopg_compatible_loop()`).
+**Windows pitfalls (learned the hard way):**
+- Set `PYTHONIOENCODING=utf-8` when printing titles.
+- **Don't write Python code containing `\n` or `\d` through bash heredocs or `-c` strings.** It corrupted files three times. Use the Write/Edit tools, or a script file in the scratchpad.
+- psycopg async needs `ensure_psycopg_compatible_loop()`.
+- FastAPI dependency aliases must be at module scope (`from __future__ import annotations`).
+- Before claiming determinism or success, make sure the command actually ran. A crashed script once "matched" an old file.
 
 ## 9. Repository map
 
 ```
 contracts/            JSON Schemas + fixtures (Go + Python contract tests)
 config/               sources.yaml (43), sources.e2e.yaml (6), entities.yaml, cluster_scorer.candidate.json
-apps/edge-go/         Go poller + ingestor (+ extractcheck)
+apps/edge-go/         Go poller + ingestor (+ extractcheck), Dockerfile
 apps/indexer/         Python micro-batch indexer (G1–G6), backfill, Dockerfile
-apps/api/             FastAPI (UNCOMMITTED)
+apps/api/             FastAPI: search, feed, stories (Dockerfile TODO)
 packages/xm_core/     settings, events, models, migrations 0001-0003, idempotency, admin
-packages/xm_cluster/  minhash, text, entities, scoring, assign
-packages/xm_embed/    embedder (UNCOMMITTED move)
-packages/xm_search/   query, fusion, retrieval (UNCOMMITTED)
-packages/xm_rank/     story features + heuristic (UNCOMMITTED)
+packages/xm_cluster/  minhash, text (version_tokens), entities, scoring, assign
+packages/xm_embed/    embedder (embed, embed_query, warm)
+packages/xm_search/   query, fusion (RRF), retrieval
+packages/xm_rank/     story features (point-in-time) + heuristic importance
 evals/clustering/     sample_pairs, apply_labels, audit, evaluate, pairs_v1*, results_v1.json
 infra/terraform/      bootstrap, modules (pubsub_pipeline, cloud_run_service, scheduled_job), environments/prod
 deploy/compose/       postgres(pgvector) redis pubsub-emulator ingestor
 scripts/              check.sh, go.sh, tf.sh, e2e_local.sh, pubsub_local_setup.py, mutation_check_cluster_lock.py
 docs/                 clustering.md, reports/clustering-pairs-v1.md
-.github/workflows/    ci.yml ; renovate.json
-conftest.py           shared test fixtures (UNCOMMITTED move)
+.github/workflows/    ci.yml ; renovate.json ; conftest.py (shared fixtures)
 ```
 
-## 10. Honest caveats to preserve in all docs and resume text
+## 10. Honest caveats (keep in all docs and resume text)
 
-- Clustering labels are assistant-labeled, and the set is small (27 positives). Its metrics are provisional.
-- Nothing is deployed to GCP yet. Terraform is validated and scanned, but not applied.
+- Clustering labels are assistant-made and the set is small (27 positives), so its metrics are provisional.
+- **Nothing is deployed to GCP yet.** Terraform is validated and scanned only.
 - The Pub/Sub emulator doesn't report delivery attempts, so DLQ behaviour is only verifiable on real Pub/Sub.
-- Load, SLO, personalization and LTR results **do not exist yet**. Don't write numbers for them anywhere.
+- **No results exist yet** for problem intelligence, search LTR, personalization, load tests or SLOs. Don't write numbers for them anywhere.
+- XploreMore **complements** Hacker News and Techmeme. It doesn't claim to compete with them.
