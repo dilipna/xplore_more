@@ -7,7 +7,9 @@ require (
 	cloud.google.com/go/storage v1.67.1
 	github.com/abadojack/whatlanggo v1.0.1
 	github.com/markusmobius/go-trafilatura v1.12.2
+	github.com/mmcdole/gofeed v1.4.2
 	github.com/temoto/robotstxt v1.1.2
+	go.yaml.in/yaml/v3 v3.0.5
 	golang.org/x/net v0.59.0
 	golang.org/x/time v0.16.0
 	google.golang.org/api v0.287.1
@@ -52,6 +54,7 @@ require (
 	github.com/markusmobius/go-htmldate v1.9.1 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/mmcdole/goxpp/v2 v2.0.0 // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rs/zerolog v1.33.0 // indirect

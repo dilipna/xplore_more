@@ -1,0 +1,65 @@
+# Source registry. Verify reachability with: scripts/go.sh run ./cmd/poller --check
+#
+# authority: prior belief (0-1) that a story covered by this source matters. These are
+#   hand-set PRIORS for cold start only; the importance model learns from realized
+#   outcomes and ADR-0008 documents how priors are replaced.
+# max_items: cap per poll, protects free-tier budgets from high-volume feeds (arXiv).
+# kind: rss (RSS/Atom/JSON Feed) | hn (Hacker News API)
+
+sources:
+  # --- AI labs & research orgs ---
+  - {id: openai-news, kind: rss, name: OpenAI News, url: "https://openai.com/news/rss.xml", authority: 0.95}
+  - {id: google-deepmind, kind: rss, name: Google DeepMind Blog, url: "https://deepmind.google/blog/rss.xml", authority: 0.95}
+  - {id: google-research, kind: rss, name: Google Research Blog, url: "https://research.google/blog/rss/", authority: 0.9}
+  - {id: microsoft-research, kind: rss, name: Microsoft Research, url: "https://www.microsoft.com/en-us/research/feed/", authority: 0.85}
+  - {id: huggingface-blog, kind: rss, name: Hugging Face Blog, url: "https://huggingface.co/blog/feed.xml", authority: 0.85}
+  - {id: nvidia-developer, kind: rss, name: NVIDIA Technical Blog, url: "https://developer.nvidia.com/blog/feed", authority: 0.8}
+  - {id: aws-ml-blog, kind: rss, name: AWS Machine Learning Blog, url: "https://aws.amazon.com/blogs/machine-learning/feed/", authority: 0.7}
+
+  # --- Technology press ---
+  - {id: techcrunch-ai, kind: rss, name: TechCrunch AI, url: "https://techcrunch.com/category/artificial-intelligence/feed/", authority: 0.8}
+  - {id: the-verge, kind: rss, name: The Verge, url: "https://www.theverge.com/rss/index.xml", authority: 0.75}
+  - {id: ars-technica, kind: rss, name: Ars Technica, url: "https://feeds.arstechnica.com/arstechnica/index", authority: 0.8}
+  - {id: wired-ai, kind: rss, name: WIRED AI, url: "https://www.wired.com/feed/tag/ai/latest/rss", authority: 0.75}
+  - {id: venturebeat-ai, kind: rss, name: VentureBeat AI, url: "https://venturebeat.com/category/ai/feed/", authority: 0.65}
+  - {id: mit-tech-review, kind: rss, name: MIT Technology Review, url: "https://www.technologyreview.com/feed/", authority: 0.85}
+  - {id: the-register, kind: rss, name: The Register, url: "https://www.theregister.com/headlines.atom", authority: 0.65}
+  - {id: infoq, kind: rss, name: InfoQ, url: "https://feed.infoq.com/", authority: 0.65}
+
+  # --- Engineering blogs ---
+  - {id: cloudflare-blog, kind: rss, name: Cloudflare Blog, url: "https://blog.cloudflare.com/rss/", authority: 0.8}
+  - {id: github-blog, kind: rss, name: GitHub Blog, url: "https://github.blog/feed/", authority: 0.8}
+  - {id: kubernetes-blog, kind: rss, name: Kubernetes Blog, url: "https://kubernetes.io/feed.xml", authority: 0.8}
+  - {id: netflix-techblog, kind: rss, name: Netflix TechBlog, url: "https://netflixtechblog.com/feed", authority: 0.75}
+  - {id: meta-engineering, kind: rss, name: Engineering at Meta, url: "https://engineering.fb.com/feed/", authority: 0.8}
+  - {id: google-cloud-blog, kind: rss, name: Google Cloud Blog, url: "https://cloudblog.withgoogle.com/rss/", authority: 0.7}
+  - {id: aws-news, kind: rss, name: AWS News Blog, url: "https://aws.amazon.com/blogs/aws/feed/", authority: 0.7}
+  - {id: stripe-blog, kind: rss, name: Stripe Blog, url: "https://stripe.com/blog/feed.rss", authority: 0.7}
+  - {id: dropbox-tech, kind: rss, name: Dropbox Tech, url: "https://dropbox.tech/feed", authority: 0.65}
+  - {id: slack-engineering, kind: rss, name: Slack Engineering, url: "https://slack.engineering/feed/", authority: 0.65}
+
+  # --- Independent researchers & newsletters ---
+  - {id: simon-willison, kind: rss, name: Simon Willison, url: "https://simonwillison.net/atom/everything/", authority: 0.8, max_items: 40}
+  - {id: lilian-weng, kind: rss, name: Lil'Log, url: "https://lilianweng.github.io/index.xml", authority: 0.85}
+  - {id: import-ai, kind: rss, name: Import AI, url: "https://importai.substack.com/feed", authority: 0.8}
+  - {id: sebastian-raschka, kind: rss, name: Ahead of AI, url: "https://magazine.sebastianraschka.com/feed", authority: 0.8}
+  - {id: interconnects, kind: rss, name: Interconnects, url: "https://www.interconnects.ai/feed", authority: 0.8}
+  - {id: chip-huyen, kind: rss, name: Chip Huyen, url: "https://huyenchip.com/feed.xml", authority: 0.8}
+  - {id: eugene-yan, kind: rss, name: Eugene Yan, url: "https://eugeneyan.com/rss/", authority: 0.75}
+
+  # --- Papers (high volume: capped) ---
+  - {id: arxiv-cs-cl, kind: rss, name: arXiv cs.CL, url: "https://rss.arxiv.org/rss/cs.CL", authority: 0.5, max_items: 30}
+  - {id: arxiv-cs-lg, kind: rss, name: arXiv cs.LG, url: "https://rss.arxiv.org/rss/cs.LG", authority: 0.5, max_items: 30}
+  - {id: arxiv-cs-ir, kind: rss, name: arXiv cs.IR, url: "https://rss.arxiv.org/rss/cs.IR", authority: 0.5, max_items: 20}
+
+  # --- Releases of core AI/infra projects ---
+  - {id: gh-vllm, kind: rss, name: vLLM releases, url: "https://github.com/vllm-project/vllm/releases.atom", authority: 0.7, max_items: 5}
+  - {id: gh-pytorch, kind: rss, name: PyTorch releases, url: "https://github.com/pytorch/pytorch/releases.atom", authority: 0.75, max_items: 5}
+  - {id: gh-kubernetes, kind: rss, name: Kubernetes releases, url: "https://github.com/kubernetes/kubernetes/releases.atom", authority: 0.7, max_items: 5}
+  - {id: gh-transformers, kind: rss, name: Transformers releases, url: "https://github.com/huggingface/transformers/releases.atom", authority: 0.7, max_items: 5}
+  - {id: gh-ollama, kind: rss, name: Ollama releases, url: "https://github.com/ollama/ollama/releases.atom", authority: 0.6, max_items: 5}
+  - {id: gh-llama-cpp, kind: rss, name: llama.cpp releases, url: "https://github.com/ggml-org/llama.cpp/releases.atom", authority: 0.6, max_items: 5}
+
+  # --- Community aggregators ---
+  - {id: lobsters, kind: rss, name: Lobsters, url: "https://lobste.rs/rss", authority: 0.6}
+  - {id: hacker-news, kind: hn, name: Hacker News, url: "https://hacker-news.firebaseio.com/v0", authority: 0.7, max_items: 120}

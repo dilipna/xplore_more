@@ -67,6 +67,7 @@ async def _upsert_article(session: AsyncSession, article: ArticleExtracted, vect
         "content_hash": article.content_hash,
         "lang": article.lang,
         "word_count": article.word_count,
+        "content_origin": article.content_origin,
         "published_at": article.published_at,
         "discovered_at": article.discovered_at,
         "extracted_at": article.extracted_at,

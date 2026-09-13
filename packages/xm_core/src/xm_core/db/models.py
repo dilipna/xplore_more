@@ -62,6 +62,7 @@ class Article(Base):
     content_hash: Mapped[str] = mapped_column(String(64))
     lang: Mapped[str] = mapped_column(String(3))
     word_count: Mapped[int] = mapped_column(Integer)
+    content_origin: Mapped[str] = mapped_column(String(8), server_default="page")
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     discovered_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     extracted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
@@ -84,6 +85,7 @@ class Article(Base):
     signals_observed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     __table_args__ = (
+        CheckConstraint("content_origin IN ('page', 'feed')", name="content_origin_valid"),
         Index("ix_articles_content_hash", "content_hash"),
         Index("ix_articles_discovered_at", "discovered_at"),
         Index("ix_articles_tsv", "tsv", postgresql_using="gin"),

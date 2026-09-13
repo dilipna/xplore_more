@@ -89,6 +89,30 @@ func FromHTML(body []byte, finalURL *url.URL, fallbackTitle string) (*Document, 
 	return doc, nil
 }
 
+// minFeedRunes is lower than minTextRunes: feed content is publisher-curated (release
+// notes, abstracts), so a short text is still meaningful, but a bare title is not.
+const minFeedRunes = 80
+
+// FromFeed builds a document from the feed's own title and content. It is used when the
+// page blocks automated fetches (401/403/robots) or has too little extractable text.
+// Publishers offer feeds for syndication, so this respects their access choices.
+func FromFeed(title, content, canonicalURL string) (*Document, error) {
+	text := normalizeSpace(content)
+	title = normalizeSpace(title)
+	if title == "" || utf8.RuneCountInString(text) < minFeedRunes {
+		return nil, ErrNoContent
+	}
+	return &Document{
+		Title:        truncateRunes(title, titleRunes),
+		Text:         text,
+		Lede:         truncateRunes(text, ledeRunes),
+		Lang:         detectLang("", text),
+		WordCount:    len(strings.Fields(text)),
+		ContentHash:  events.Sha256Hex(text),
+		CanonicalURL: canonicalURL,
+	}, nil
+}
+
 // chooseCanonical accepts a page-declared canonical URL only when it stays on the same
 // registrable domain as the page actually fetched. Otherwise a malicious page could
 // declare `<link rel=canonical href="https://anthropic.com/news/x">` and overwrite a

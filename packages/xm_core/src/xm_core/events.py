@@ -56,6 +56,7 @@ class ArticleExtracted(_Strict):
     content_hash: Sha256Hex
     lang: Annotated[str, StringConstraints(pattern=r"^[a-z]{2,3}$")]
     word_count: int = Field(ge=0)
+    content_origin: Literal["page", "feed"] = "page"
     published_at: AwareDatetime | None = None
     discovered_at: AwareDatetime
     extracted_at: AwareDatetime
