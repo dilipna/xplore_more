@@ -32,8 +32,8 @@ from xm_cluster.text import shingles
 from xm_core.db.models import Article
 from xm_core.events import ArticleExtracted, Envelope
 from xm_core.idempotency import claim
+from xm_embed.embedder import Embedder
 from xm_indexer.bus import ReceivedMessage
-from xm_indexer.embedder import Embedder
 
 log = logging.getLogger(__name__)
 

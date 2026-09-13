@@ -1,3 +1,5 @@
+"""Shared test fixtures: a dedicated Postgres test database, deterministic embedders, clusterer."""
+
 from __future__ import annotations
 
 import hashlib
@@ -20,7 +22,7 @@ from xm_indexer.pipeline import Clusterer
 
 ensure_psycopg_compatible_loop()
 
-ROOT = Path(__file__).resolve().parents[3]
+ROOT = Path(__file__).resolve().parent
 # Tests own a dedicated database and drop its schema freely; never point this at dev data.
 DATABASE_URL = os.environ.get(
     "XM_TEST_DATABASE_URL", "postgresql+psycopg://xm:xm@localhost:5432/xploremore_test"
@@ -49,6 +51,9 @@ class FakeEmbedder:
             norm = math.sqrt(sum(v * v for v in vec)) or 1.0
             out.append([v / norm for v in vec])
         return out
+
+    def embed_query(self, query: str) -> list[float]:
+        return self.embed([query])[0]
 
 
 def _ensure_database_exists() -> None:
@@ -110,7 +115,7 @@ class FixtureEmbedder(FakeEmbedder):
 
     def __init__(self) -> None:
         super().__init__()
-        data = json.loads((Path(__file__).parent / "fixtures" / "bge_small_vectors.json").read_text())
+        data = json.loads((ROOT / "apps/indexer/tests/fixtures/bge_small_vectors.json").read_text())
         self.table: dict[str, list[float]] = data["vectors"]
 
     def embed(self, texts: Sequence[str]) -> list[list[float]]:

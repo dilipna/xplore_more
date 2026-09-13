@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from xm_indexer.embedder import FastEmbedEmbedder
+from xm_embed.embedder import FastEmbedEmbedder
 
 HERE = Path(__file__).resolve().parent
 

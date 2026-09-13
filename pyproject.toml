@@ -4,18 +4,22 @@ version = "0.1.0"
 description = "Technology intelligence platform: live ingestion, story clustering, learning-to-rank search and personalized feeds."
 requires-python = ">=3.13,<3.14"
 readme = "README.md"
-dependencies = ["xm-core", "xm-indexer", "xm-cluster"]
+dependencies = ["xm-core", "xm-indexer", "xm-cluster", "xm-embed", "xm-search", "xm-rank", "xm-api"]
 
 [tool.uv]
 package = false
 
 [tool.uv.workspace]
-members = ["packages/*", "apps/indexer"]
+members = ["packages/*", "apps/indexer", "apps/api"]
 
 [tool.uv.sources]
 xm-core = { workspace = true }
 xm-indexer = { workspace = true }
 xm-cluster = { workspace = true }
+xm-embed = { workspace = true }
+xm-search = { workspace = true }
+xm-rank = { workspace = true }
+xm-api = { workspace = true }
 
 [dependency-groups]
 dev = [
@@ -38,7 +42,7 @@ select = ["E", "F", "W", "I", "B", "UP", "SIM", "S", "ASYNC", "RUF"]
 ignore = ["S101"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["xm_core", "xm_indexer", "xm_cluster"]
+known-first-party = ["xm_core", "xm_indexer", "xm_cluster", "xm_embed", "xm_search", "xm_rank", "xm_api"]
 
 [tool.ruff.lint.per-file-ignores]
 "**/tests/**" = ["S", "B"]
@@ -48,14 +52,14 @@ known-first-party = ["xm_core", "xm_indexer", "xm_cluster"]
 [tool.pyright]
 pythonVersion = "3.13"
 typeCheckingMode = "standard"
-include = ["packages", "apps/indexer", "evals"]
+include = ["packages", "apps/indexer", "apps/api", "evals"]
 exclude = ["**/tests/**", "**/.venv/**", "**/migrations/**"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "session"
 asyncio_default_test_loop_scope = "session"
-testpaths = ["packages", "apps/indexer"]
+testpaths = ["packages", "apps/indexer", "apps/api"]
 markers = [
     "integration: requires docker compose services (postgres, redis, pubsub emulator)",
     "guarantees: tests that prove a documented system guarantee",

@@ -1,21 +1,27 @@
 [project]
-name = "xm-indexer"
+name = "xm-api"
 version = "0.1.0"
-description = "Micro-batch indexer: pulls article.extracted events, embeds, dedups and writes idempotently."
+description = "Public read API: story search, ranked feed, story detail."
 requires-python = ">=3.13,<3.14"
 dependencies = [
     "xm-core",
     "xm-cluster",
     "xm-embed",
+    "xm-search",
+    "xm-rank",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
 ]
 
 [project.scripts]
-xm-indexer = "xm_indexer.__main__:main"
+xm-api = "xm_api.__main__:main"
 
 [tool.uv.sources]
 xm-core = { workspace = true }
 xm-cluster = { workspace = true }
 xm-embed = { workspace = true }
+xm-search = { workspace = true }
+xm-rank = { workspace = true }
 
 [build-system]
 requires = ["uv_build>=0.8,<0.12"]

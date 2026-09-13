@@ -3,6 +3,8 @@
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
+echo "==> services: postgres reachable (integration tests must run, not skip)"
+docker compose -f deploy/compose/docker-compose.yml exec -T postgres pg_isready -U xm >/dev/null   || { echo "Postgres is not running: docker compose -f deploy/compose/docker-compose.yml up -d"; exit 1; }
 echo "==> python: ruff lint";      uv run ruff check .
 echo "==> python: ruff format";    uv run ruff format --check .
 echo "==> python: pyright";        uv run pyright

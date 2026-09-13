@@ -1,21 +1,17 @@
 [project]
-name = "xm-indexer"
+name = "xm-search"
 version = "0.1.0"
-description = "Micro-batch indexer: pulls article.extracted events, embeds, dedups and writes idempotently."
+description = "Story search: query understanding, lexical + dense candidates, RRF fusion, story collapse."
 requires-python = ">=3.13,<3.14"
 dependencies = [
     "xm-core",
     "xm-cluster",
-    "xm-embed",
+    "numpy>=2.1",
 ]
-
-[project.scripts]
-xm-indexer = "xm_indexer.__main__:main"
 
 [tool.uv.sources]
 xm-core = { workspace = true }
 xm-cluster = { workspace = true }
-xm-embed = { workspace = true }
 
 [build-system]
 requires = ["uv_build>=0.8,<0.12"]
