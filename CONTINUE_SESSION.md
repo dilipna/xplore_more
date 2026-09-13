@@ -1,15 +1,15 @@
 # XploreMore — Continue Session Handoff
 
-> Last updated: 2026-09-13 (after commit `5b320b1`). Read this whole file before doing anything; it is the single source of truth for resuming work.
+> Last updated: 2026-09-13 (after P1, commit `1380915` + handoff commit). Read this whole file before doing anything; it is the single source of truth for resuming work.
 
 ---
 
 ## 0. TL;DR for the next session
 
-1. **State:** 12 commits, **all gates green**: 55 Python tests with 0 skipped, all Go packages under the race detector, Terraform validated and scanned. **The working tree is clean.**
-2. **The system already runs live on the laptop:** 43 real tech sources → Go poller → Pub/Sub emulator → Go ingestor → Python indexer (embeddings + story clustering) → Postgres → FastAPI (search, feed, story detail).
+1. **State:** **all gates green**: 71 Python tests with 0 skipped, all Go packages, Terraform validated and scanned. **The working tree is clean.**
+2. **The system already runs live on the laptop:** 43 real tech sources + **5 discussion sources** → Go poller → Pub/Sub emulator → Go ingestor → Python indexer (embeddings + story clustering) → Postgres → FastAPI (search, feed, story detail).
 3. **Newest direction (decided by the user):** XploreMore becomes the **problem-discovery backbone for Pro2Pro** (`protopro.vercel.app`). XploreMore finds, clusters and ranks **real problems people face**; Pro2Pro's agents turn them into shipped products. This is **Phase P (Problem Intelligence)** in §6, and it is the **top priority**.
-4. **Next task:** start Phase P at step P1.
+4. **Progress in Phase P:** **P1 done** (§4.8). **Next task: P2** (pain-point classifier). The dev DB `xploremore` already holds 366 real discussion docs to sample the labeled set from.
 
 ---
 
@@ -131,6 +131,14 @@ Go and Terraform are **not installed locally**. Use `scripts/go.sh` and `scripts
 - SHA-pinned actions, verified via ls-remote peeled tags. Renovate is configured.
 - The Trivy finding was fixed (grpc v1.83.2).
 
+### 4.8 P1 — Discussion sources (commit `1380915`)
+- **Contract (additive):** `doc_kind: article|discussion` + `discussion.v1` (`platform`, `thread_url`, `parent_url`, salted `author_hash`, as-of `engagement`) on both article events. JSON Schema if/then rules; legacy fixture in `contracts/fixtures/legacy/` must keep validating (Go + Python). Consumers deploy first.
+- **Go edge:** kinds `hn_algolia`, `hn_comments`, `github_issues`, `lobsters`, `stackexchange` in `config/problem_sources.yaml` (`poll/discussions.go`). Policies: maturity window (engagement observed once, when min..max hours old); thread marked seen only on its last published item (mutation-checked); quota hits publish what was gathered and report `warning`. `author_hash = sha256(salt|platform|handle)`; poller refuses discussion sources without `XM_AUTHOR_SALT` (≥16 chars); optional `GITHUB_TOKEN`; `XM_STATE_OBJECT` separates poller state. Ingestor never fetches discussion HTML.
+- **Python:** migration **0004** (doc_kind + provenance columns, CHECK constraints). Discussions never join news stories (G6 amended); search excludes them (dense uses pgvector 0.8 `hnsw.iterative_scan`). `seed-sources` syncs **all registries together** (syncing one alone used to disable the other's sources).
+- **Live measurement (2026-09-13, `E2E_SOURCES=problem_sources.yaml E2E_MAX_BATCHES=40 scripts/e2e_local.sh`):** 366 found → 366 published → 366 extracted → 366 indexed; 0 invalid, 0 rejected, 0 retried, 0 failed; 0 discussions in stories. By platform: GitHub 149 docs / 139 voices, HN 184 / 181 (79 threads), Lobsters 28 / 27, Stack Exchange 5 / 5. Every doc has an author_hash.
+- **Finding:** Stack Overflow volume has collapsed (newest `[kubernetes]` question ~27 days old), so its window is 30 days and it is a minor source.
+- Local salt lives in `.data/author_salt` (gitignored).
+
 ## 5. Pro2Pro facts needed for the integration (verified in its code)
 
 - **Discovery:** a LangGraph ReAct **Research Agent** (`p2pagent/src/p2pops/agents/research.py`) calls three tools:
@@ -150,7 +158,7 @@ Go and Terraform are **not installed locally**. Use `scripts/go.sh` and `scripts
 
 **Key insight:** news is mostly announcements. Problems live in **discussions**. XploreMore currently skips Ask HN (no URL) and collects no comments, so new sources are required.
 
-**P1. Discussion sources (Go edge + contracts)**
+**P1. Discussion sources (Go edge + contracts)** — ✅ DONE (§4.8)
 - **New contract `xm.discussion.discovered.v1`**, or extend the article event with `doc_kind: article|discussion`. Recommendation: add `doc_kind` (additive) so embedding, search and clustering reuse everything.
   - Fields: `doc_kind`, `parent_url` (thread), `engagement` {points, comments, reactions}, `author_hash` (salted sha256, never raw usernames; privacy).
   - Migration 0004 is expand-only.
