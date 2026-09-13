@@ -1,0 +1,12 @@
+[project]
+name = "xm-embed"
+version = "0.1.0"
+description = "Text embeddings (ONNX Runtime on CPU via fastembed) shared by the indexer and the API."
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "fastembed>=0.4",
+]
+
+[build-system]
+requires = ["uv_build>=0.8,<0.12"]
+build-backend = "uv_build"

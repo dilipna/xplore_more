@@ -6,7 +6,7 @@ requires-python = ">=3.13,<3.14"
 dependencies = [
     "xm-core",
     "xm-cluster",
-    "fastembed>=0.4",
+    "xm-embed",
 ]
 
 [project.scripts]
@@ -15,6 +15,7 @@ xm-indexer = "xm_indexer.__main__:main"
 [tool.uv.sources]
 xm-core = { workspace = true }
 xm-cluster = { workspace = true }
+xm-embed = { workspace = true }
 
 [build-system]
 requires = ["uv_build>=0.8,<0.12"]

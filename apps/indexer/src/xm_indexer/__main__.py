@@ -18,9 +18,9 @@ from pathlib import Path
 from xm_core.db.admin import migrate, sync_sources
 from xm_core.db.session import ensure_psycopg_compatible_loop, make_engine, make_sessionmaker
 from xm_core.settings import get_settings
+from xm_embed.embedder import Embedder, FastEmbedEmbedder
 from xm_indexer.backfill import backfill_clusters, reset_clusters
 from xm_indexer.bus import BatchSource, PubSubBatchSource
-from xm_indexer.embedder import Embedder, FastEmbedEmbedder
 from xm_indexer.pipeline import Clusterer, process_batch
 
 log = logging.getLogger("xm_indexer")

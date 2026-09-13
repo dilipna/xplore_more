@@ -1,0 +1,15 @@
+[project]
+name = "xm-rank"
+version = "0.1.0"
+description = "Story features and ranking: heuristic baseline now, learning-to-rank next."
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "xm-core",
+]
+
+[tool.uv.sources]
+xm-core = { workspace = true }
+
+[build-system]
+requires = ["uv_build>=0.8,<0.12"]
+build-backend = "uv_build"
