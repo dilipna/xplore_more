@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Technology intelligence platform: live ingestion, story clustering, learning-to-rank search and personalized feeds."
 requires-python = ">=3.13,<3.14"
 readme = "README.md"
-dependencies = ["xm-core", "xm-indexer"]
+dependencies = ["xm-core", "xm-indexer", "xm-cluster"]
 
 [tool.uv]
 package = false
@@ -15,6 +15,7 @@ members = ["packages/*", "apps/indexer"]
 [tool.uv.sources]
 xm-core = { workspace = true }
 xm-indexer = { workspace = true }
+xm-cluster = { workspace = true }
 
 [dependency-groups]
 dev = [
@@ -36,7 +37,7 @@ select = ["E", "F", "W", "I", "B", "UP", "SIM", "S", "ASYNC", "RUF"]
 ignore = ["S101"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["xm_core", "xm_indexer"]
+known-first-party = ["xm_core", "xm_indexer", "xm_cluster"]
 
 [tool.ruff.lint.per-file-ignores]
 "**/tests/**" = ["S", "B"]

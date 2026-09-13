@@ -20,28 +20,43 @@ from xm_core.db.session import ensure_psycopg_compatible_loop, make_engine, make
 from xm_core.settings import get_settings
 from xm_indexer.bus import BatchSource, PubSubBatchSource
 from xm_indexer.embedder import Embedder, FastEmbedEmbedder
-from xm_indexer.pipeline import process_batch
+from xm_indexer.pipeline import Clusterer, process_batch
 
 log = logging.getLogger("xm_indexer")
 
 
 async def drain(
-    source: BatchSource, embedder: Embedder, *, batch_size: int, max_batches: int
+    source: BatchSource,
+    embedder: Embedder,
+    clusterer: Clusterer,
+    *,
+    batch_size: int,
+    max_batches: int,
 ) -> dict[str, int]:
     settings = get_settings()
     engine = make_engine(settings)
     sessionmaker = make_sessionmaker(engine)
-    totals = {"batches": 0, "applied": 0, "duplicates": 0, "invalid": 0, "failed": 0}
+    totals = {
+        "batches": 0,
+        "applied": 0,
+        "duplicates": 0,
+        "invalid": 0,
+        "failed": 0,
+        "stories_created": 0,
+        "stories_joined": 0,
+    }
     try:
         for _ in range(max_batches):
             messages = source.pull(batch_size)
             if not messages:
                 break
-            result = await process_batch(messages, sessionmaker=sessionmaker, embedder=embedder)
+            result = await process_batch(
+                messages, sessionmaker=sessionmaker, embedder=embedder, clusterer=clusterer
+            )
             source.ack(result.ack_ids)
             source.nack(result.nack_ids)
             totals["batches"] += 1
-            for key in ("applied", "duplicates", "invalid", "failed"):
+            for key in ("applied", "duplicates", "invalid", "failed", "stories_created", "stories_joined"):
                 totals[key] += getattr(result, key)
     finally:
         await engine.dispose()
@@ -56,6 +71,10 @@ def _run(max_batches: int) -> int:
         drain(
             PubSubBatchSource(settings.gcp_project, settings.sub_article_extracted_indexer),
             FastEmbedEmbedder(settings.embedding_model, settings.embedding_dim, settings.embedding_cache_dir),
+            Clusterer.load(
+                Path(settings.entities_file),
+                Path(settings.cluster_scorer_file) if settings.cluster_scorer_file else None,
+            ),
             batch_size=settings.indexer_batch_size,
             max_batches=max_batches,
         )

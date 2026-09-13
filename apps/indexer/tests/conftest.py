@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import hashlib
+import json
+import math
 import os
 from collections.abc import AsyncIterator, Sequence
 from pathlib import Path
@@ -12,7 +14,9 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+from xm_cluster.text import content_tokens
 from xm_core.db.session import ensure_psycopg_compatible_loop
+from xm_indexer.pipeline import Clusterer
 
 ensure_psycopg_compatible_loop()
 
@@ -25,7 +29,8 @@ os.environ["XM_DATABASE_URL"] = DATABASE_URL  # alembic env.py reads settings fr
 
 
 class FakeEmbedder:
-    """Deterministic 384-d vectors so tests never download a model."""
+    """Deterministic 384-d hashed bag-of-words vectors: similar texts get similar vectors,
+    unrelated texts are near-orthogonal, and tests never download a model."""
 
     dim = 384
 
@@ -36,8 +41,13 @@ class FakeEmbedder:
         self.calls += 1
         out: list[list[float]] = []
         for t in texts:
-            digest = hashlib.sha256(t.encode()).digest()
-            out.append([(digest[i % len(digest)] / 255.0) for i in range(self.dim)])
+            vec = [0.0] * self.dim
+            for token in content_tokens(t):
+                digest = hashlib.blake2b(token.encode(), digest_size=8).digest()
+                index = int.from_bytes(digest[:4], "big") % self.dim
+                vec[index] += 1.0 if digest[4] & 1 else -1.0
+            norm = math.sqrt(sum(v * v for v in vec)) or 1.0
+            out.append([v / norm for v in vec])
         return out
 
 
@@ -79,18 +89,40 @@ def migrated_database() -> str:
 async def sessionmaker(migrated_database: str) -> AsyncIterator[async_sessionmaker[AsyncSession]]:
     engine = create_async_engine(migrated_database)
     async with engine.begin() as conn:
-        await conn.execute(text("TRUNCATE processed_events, articles, sources CASCADE"))
+        await conn.execute(
+            text("TRUNCATE processed_events, article_lsh_bands, articles, stories, sources CASCADE")
+        )
         await conn.execute(
             text(
-                "INSERT INTO sources (id, kind, name, url) VALUES "
-                "('anthropic-news', 'rss', 'Anthropic News', 'https://www.anthropic.com/news'),"
-                "('techcrunch-ai', 'rss', 'TechCrunch AI', 'https://techcrunch.com/category/artificial-intelligence/feed/')"
+                "INSERT INTO sources (id, kind, name, url, authority_prior) VALUES "
+                "('anthropic-news', 'rss', 'Anthropic News', 'https://www.anthropic.com/news', 0.95),"
+                "('techcrunch-ai', 'rss', 'TechCrunch AI', 'https://techcrunch.com/ai/feed/', 0.8),"
+                "('hacker-news', 'hn', 'Hacker News', 'https://hacker-news.firebaseio.com/v0', 0.7)"
             )
         )
     yield async_sessionmaker(engine, expire_on_commit=False)
     await engine.dispose()
 
 
+class FixtureEmbedder(FakeEmbedder):
+    """Real bge-small vectors for known texts (tests/fixtures/bge_small_vectors.json),
+    hashed bag-of-words for everything else."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        data = json.loads((Path(__file__).parent / "fixtures" / "bge_small_vectors.json").read_text())
+        self.table: dict[str, list[float]] = data["vectors"]
+
+    def embed(self, texts: Sequence[str]) -> list[list[float]]:
+        fallback = super().embed(texts)
+        return [self.table.get(t, fb) for t, fb in zip(texts, fallback, strict=True)]
+
+
 @pytest.fixture
-def embedder() -> FakeEmbedder:
-    return FakeEmbedder()
+def embedder() -> FixtureEmbedder:
+    return FixtureEmbedder()
+
+
+@pytest.fixture(scope="session")
+def clusterer() -> Clusterer:
+    return Clusterer.load(ROOT / "config" / "entities.yaml")

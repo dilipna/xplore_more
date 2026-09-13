@@ -33,6 +33,9 @@ class Settings(BaseSettings):
     embedding_dim: int = 384
     embedding_cache_dir: str | None = None  # baked into the image in production
 
+    entities_file: str = "config/entities.yaml"
+    cluster_scorer_file: str | None = None  # fitted weights; None uses calibrated priors
+
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:

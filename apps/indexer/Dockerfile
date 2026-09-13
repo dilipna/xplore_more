@@ -22,6 +22,7 @@ RUN useradd --system --uid 10001 xm
 COPY --from=build --chown=xm:xm /app/.venv /app/.venv
 COPY --from=build --chown=xm:xm /app/models /app/models
 COPY alembic.ini /app/alembic.ini
+COPY config/entities.yaml /app/config/entities.yaml
 ENV PATH=/app/.venv/bin:$PATH XM_EMBEDDING_CACHE_DIR=/app/models PYTHONUNBUFFERED=1
 WORKDIR /app
 USER xm
