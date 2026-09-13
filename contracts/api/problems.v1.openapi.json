@@ -1,0 +1,684 @@
+{
+  "components": {
+    "schemas": {
+      "DemandFactors": {
+        "properties": {
+          "category": {
+            "title": "Category",
+            "type": "number"
+          },
+          "engagement": {
+            "title": "Engagement",
+            "type": "number"
+          },
+          "recency": {
+            "title": "Recency",
+            "type": "number"
+          },
+          "sources": {
+            "title": "Sources",
+            "type": "number"
+          },
+          "voices": {
+            "title": "Voices",
+            "type": "number"
+          }
+        },
+        "required": [
+          "voices",
+          "sources",
+          "recency",
+          "engagement",
+          "category"
+        ],
+        "title": "DemandFactors",
+        "type": "object"
+      },
+      "Engagement": {
+        "properties": {
+          "comments": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comments"
+          },
+          "points": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Points"
+          },
+          "reactions": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reactions"
+          }
+        },
+        "required": [
+          "points",
+          "comments",
+          "reactions"
+        ],
+        "title": "Engagement",
+        "type": "object"
+      },
+      "Evidence": {
+        "properties": {
+          "date": {
+            "format": "date-time",
+            "title": "Date",
+            "type": "string"
+          },
+          "engagement": {
+            "$ref": "#/components/schemas/Engagement"
+          },
+          "excerpt": {
+            "description": "At most 280 characters of the post or comment.",
+            "maxLength": 281,
+            "title": "Excerpt",
+            "type": "string"
+          },
+          "p_problem": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Classifier probability that this post reports a problem.",
+            "title": "P Problem"
+          },
+          "platform": {
+            "title": "Platform",
+            "type": "string"
+          },
+          "source_id": {
+            "title": "Source Id",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_id",
+          "platform",
+          "url",
+          "excerpt",
+          "engagement",
+          "date",
+          "p_problem"
+        ],
+        "title": "Evidence",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "ProblemDetail": {
+        "properties": {
+          "category": {
+            "anyOf": [
+              {
+                "enum": [
+                  "bug_or_reliability",
+                  "cost_or_performance",
+                  "missing_capability",
+                  "workflow_friction"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "demand_factors": {
+            "$ref": "#/components/schemas/DemandFactors"
+          },
+          "demand_score": {
+            "description": "Demand v0 at response time; see demand_factors on the detail.",
+            "title": "Demand Score",
+            "type": "number"
+          },
+          "effective_voices": {
+            "title": "Effective Voices",
+            "type": "number"
+          },
+          "entities": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Entities",
+            "type": "array"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/components/schemas/Evidence"
+            },
+            "title": "Evidence",
+            "type": "array"
+          },
+          "first_seen": {
+            "format": "date-time",
+            "title": "First Seen",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "last_seen": {
+            "format": "date-time",
+            "title": "Last Seen",
+            "type": "string"
+          },
+          "member_count": {
+            "title": "Member Count",
+            "type": "integer"
+          },
+          "platforms": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Platforms",
+            "type": "array"
+          },
+          "relevance": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Topic relevance in [0, 1]; null without a topic.",
+            "title": "Relevance"
+          },
+          "scorer_version": {
+            "title": "Scorer Version",
+            "type": "string"
+          },
+          "source_count": {
+            "title": "Source Count",
+            "type": "integer"
+          },
+          "statement": {
+            "title": "Statement",
+            "type": "string"
+          },
+          "voice_count": {
+            "description": "Distinct authors (salted hashes; no identities are stored).",
+            "title": "Voice Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "statement",
+          "category",
+          "demand_score",
+          "voice_count",
+          "source_count",
+          "platforms",
+          "first_seen",
+          "last_seen",
+          "entities",
+          "relevance",
+          "evidence",
+          "member_count",
+          "effective_voices",
+          "demand_factors",
+          "scorer_version"
+        ],
+        "title": "ProblemDetail",
+        "type": "object"
+      },
+      "ProblemSummary": {
+        "properties": {
+          "category": {
+            "anyOf": [
+              {
+                "enum": [
+                  "bug_or_reliability",
+                  "cost_or_performance",
+                  "missing_capability",
+                  "workflow_friction"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "demand_score": {
+            "description": "Demand v0 at response time; see demand_factors on the detail.",
+            "title": "Demand Score",
+            "type": "number"
+          },
+          "entities": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Entities",
+            "type": "array"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/components/schemas/Evidence"
+            },
+            "title": "Evidence",
+            "type": "array"
+          },
+          "first_seen": {
+            "format": "date-time",
+            "title": "First Seen",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "last_seen": {
+            "format": "date-time",
+            "title": "Last Seen",
+            "type": "string"
+          },
+          "platforms": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Platforms",
+            "type": "array"
+          },
+          "relevance": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Topic relevance in [0, 1]; null without a topic.",
+            "title": "Relevance"
+          },
+          "source_count": {
+            "title": "Source Count",
+            "type": "integer"
+          },
+          "statement": {
+            "title": "Statement",
+            "type": "string"
+          },
+          "voice_count": {
+            "description": "Distinct authors (salted hashes; no identities are stored).",
+            "title": "Voice Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "statement",
+          "category",
+          "demand_score",
+          "voice_count",
+          "source_count",
+          "platforms",
+          "first_seen",
+          "last_seen",
+          "entities",
+          "relevance",
+          "evidence"
+        ],
+        "title": "ProblemSummary",
+        "type": "object"
+      },
+      "ProblemsResponse": {
+        "properties": {
+          "as_of": {
+            "format": "date-time",
+            "title": "As Of",
+            "type": "string"
+          },
+          "degraded": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Degraded",
+            "type": "array"
+          },
+          "ranker": {
+            "title": "Ranker",
+            "type": "string"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/ProblemSummary"
+            },
+            "title": "Results",
+            "type": "array"
+          }
+        },
+        "required": [
+          "as_of",
+          "ranker",
+          "degraded",
+          "results"
+        ],
+        "title": "ProblemsResponse",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "ApiKey": {
+        "in": "header",
+        "name": "X-XM-Api-Key",
+        "type": "apiKey"
+      }
+    }
+  },
+  "info": {
+    "description": "Clustered, evidence-backed, demand-ranked problems. Additive changes only within v1. Compact responses for agent tool use.",
+    "title": "XploreMore Problems API",
+    "version": "1.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/v1/problems": {
+      "get": {
+        "description": "Problems clustered from discussions (Hacker News, GitHub issues, Lobsters, Stack Exchange), ranked by demand. With `topic`, problems are retrieved by hybrid search over their evidence, filtered to relevance >= 0.5 and ranked by relevance x sqrt(demand). Responses are compact for agent tool use.",
+        "operationId": "problems_v1_problems_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "topic",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 256,
+                  "minLength": 2,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Topic"
+            }
+          },
+          {
+            "in": "query",
+            "name": "category",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "bug_or_reliability",
+                    "cost_or_performance",
+                    "missing_capability",
+                    "workflow_friction"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
+            }
+          },
+          {
+            "in": "query",
+            "name": "since_days",
+            "required": false,
+            "schema": {
+              "default": 30,
+              "maximum": 90,
+              "minimum": 1,
+              "title": "Since Days",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "min_voices",
+            "required": false,
+            "schema": {
+              "default": 2,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Min Voices",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "maximum": 25,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Evidence items per problem.",
+            "in": "query",
+            "name": "evidence",
+            "required": false,
+            "schema": {
+              "default": 3,
+              "description": "Evidence items per problem.",
+              "maximum": 5,
+              "minimum": 0,
+              "title": "Evidence",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Invalid or revoked API key, or key required by deployment"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {},
+          {
+            "ApiKey": []
+          }
+        ],
+        "summary": "Ranked, evidence-backed problems people report",
+        "tags": [
+          "problems"
+        ]
+      }
+    },
+    "/v1/problems/{problem_id}": {
+      "get": {
+        "operationId": "problem_v1_problems__problem_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "problem_id",
+            "required": true,
+            "schema": {
+              "minimum": 1,
+              "title": "Problem Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "evidence",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "maximum": 25,
+              "minimum": 1,
+              "title": "Evidence",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Invalid or revoked API key, or key required by deployment"
+          },
+          "404": {
+            "description": "Problem not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {},
+          {
+            "ApiKey": []
+          }
+        ],
+        "summary": "One problem with full evidence and demand factors",
+        "tags": [
+          "problems"
+        ]
+      }
+    }
+  }
+}

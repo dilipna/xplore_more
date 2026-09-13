@@ -21,10 +21,23 @@ from pathlib import Path
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, Response
+from fastapi import Path as PathParam
+from redis.asyncio import Redis
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
-from xm_api.schemas import FeedResponse, SearchResponse, StoryDetail
+from xm_api.auth import HEADER as API_KEY_HEADER
+from xm_api.auth import InvalidApiKeyError, KeyResolver, Principal
+from xm_api.problems import RANKER, find_problems, get_problem
+from xm_api.ratelimit import RateLimiter
+from xm_api.schemas import (
+    FeedResponse,
+    ProblemCategory,
+    ProblemDetail,
+    ProblemsResponse,
+    SearchResponse,
+    StoryDetail,
+)
 from xm_api.stories import recent_story_ids, story_articles, summaries
 from xm_cluster.entities import Gazetteer
 from xm_core.db.session import make_engine, make_sessionmaker
@@ -45,16 +58,53 @@ class AppState:
     sessionmaker: async_sessionmaker[AsyncSession]
     gazetteer: Gazetteer
     embedder: QueryEmbedder | None
+    keys: KeyResolver
+    limiter: RateLimiter
+    require_key_for_problems: bool
 
 
 def _state(request: Request) -> AppState:
     return request.app.state.xm
 
 
+def _mark_degraded(response: Response, reason: str) -> None:
+    existing = [r for r in response.headers.get("X-XM-Degraded", "").split(",") if r]
+    response.headers["X-XM-Degraded"] = ",".join([*existing, reason])
+
+
+async def _protect(request: Request, response: Response) -> Principal:
+    """Authenticate (optional key) and rate-limit every /v1 request."""
+    st: AppState = request.app.state.xm
+    client = request.client.host if request.client else "unknown"
+    try:
+        principal = await st.keys.resolve(request.headers.get(API_KEY_HEADER), client)
+    except InvalidApiKeyError:
+        raise HTTPException(
+            status_code=401, detail="invalid or revoked API key", headers={"WWW-Authenticate": "ApiKey"}
+        ) from None
+    decision = await st.limiter.check(principal.kind, principal.id, principal.rate_per_minute)
+    response.headers["RateLimit-Limit"] = str(decision.limit)
+    response.headers["RateLimit-Remaining"] = str(decision.remaining)
+    if decision.degraded:
+        _mark_degraded(response, "rate_limit")
+    if not decision.allowed:
+        raise HTTPException(
+            status_code=429,
+            detail="rate limit exceeded",
+            headers={
+                "Retry-After": str(decision.retry_after_seconds),
+                "RateLimit-Limit": str(decision.limit),
+                "RateLimit-Remaining": "0",
+            },
+        )
+    return principal
+
+
 # Module level on purpose: with postponed annotations FastAPI resolves dependency types by
 # name at import scope; a type alias defined inside create_app() would silently turn `st`
 # into a required query parameter (422).
 StateDep = Annotated[AppState, Depends(_state)]
+ProtectedDep = Annotated[Principal, Depends(_protect)]
 
 
 def create_app(
@@ -75,15 +125,24 @@ def create_app(
             )
             if warm_embedder:
                 await asyncio.to_thread(model.warm)  # pay model load before accepting traffic
+        sessionmaker = make_sessionmaker(engine)
+        # Short timeouts: a slow Redis must not add latency; the limiter fails open instead.
+        redis = Redis.from_url(
+            settings.redis_url.get_secret_value(), socket_timeout=0.25, socket_connect_timeout=0.25
+        )
         app.state.xm = AppState(
             engine=engine,
-            sessionmaker=make_sessionmaker(engine),
+            sessionmaker=sessionmaker,
             gazetteer=Gazetteer.load(Path(settings.entities_file)),
             embedder=model,
+            keys=KeyResolver(sessionmaker, settings.anon_rate_per_minute),
+            limiter=RateLimiter(redis),
+            require_key_for_problems=settings.require_api_key_for_problems,
         )
         try:
             yield
         finally:
+            await redis.aclose()
             await engine.dispose()
 
     app = FastAPI(
@@ -121,6 +180,7 @@ def create_app(
     @app.get("/v1/search", response_model=SearchResponse)
     async def search(
         st: StateDep,
+        _: ProtectedDep,
         response: Response,
         q: Annotated[str, Query(min_length=1, max_length=256)],
         limit: Annotated[int, Query(ge=1, le=50)] = 20,
@@ -150,13 +210,14 @@ def create_app(
         timings |= {"lexical": trace.lexical_ms, "dense": trace.dense_ms, "fusion": trace.fusion_ms}
 
         response.headers["Server-Timing"] = ", ".join(f"{k};dur={v:.1f}" for k, v in timings.items())
-        if trace.degraded:
-            response.headers["X-XM-Degraded"] = ",".join(trace.degraded)
+        for reason in trace.degraded:
+            _mark_degraded(response, reason)
         return SearchResponse(query=q, results=results, degraded=trace.degraded)
 
     @app.get("/v1/feed", response_model=FeedResponse)
     async def feed(
         st: StateDep,
+        _: ProtectedDep,
         response: Response,
         limit: Annotated[int, Query(ge=1, le=50)] = 30,
         window_hours: Annotated[int, Query(ge=1, le=24 * 14)] = 72,
@@ -172,11 +233,91 @@ def create_app(
         return FeedResponse(ranker=f"heuristic/{FEATURE_VERSION}", results=results)
 
     @app.get("/v1/stories/{story_id}", response_model=StoryDetail)
-    async def story(st: StateDep, story_id: int) -> StoryDetail:
+    async def story(st: StateDep, _: ProtectedDep, story_id: int) -> StoryDetail:
         async with st.sessionmaker() as session:
             found = await summaries(session, [story_id])
             if not found:
                 raise HTTPException(status_code=404, detail="story not found")
             return StoryDetail(story=found[0], articles=await story_articles(session, story_id))
+
+    def _require_key(st: AppState, principal: Principal) -> None:
+        if st.require_key_for_problems and principal.kind != "key":
+            raise HTTPException(
+                status_code=401,
+                detail=f"{API_KEY_HEADER} header required",
+                headers={"WWW-Authenticate": "ApiKey"},
+            )
+
+    @app.get(
+        "/v1/problems",
+        response_model=ProblemsResponse,
+        tags=["problems"],
+        summary="Ranked, evidence-backed problems people report",
+        description=(
+            "Problems clustered from discussions (Hacker News, GitHub issues, Lobsters, Stack Exchange), "
+            "ranked by demand. With `topic`, problems are retrieved by hybrid search over their evidence, "
+            "filtered to relevance >= 0.5 and ranked by relevance x sqrt(demand). "
+            "Responses are compact for agent tool use."
+        ),
+    )
+    async def problems(
+        st: StateDep,
+        principal: ProtectedDep,
+        response: Response,
+        topic: Annotated[str | None, Query(min_length=2, max_length=256)] = None,
+        category: ProblemCategory | None = None,
+        since_days: Annotated[int, Query(ge=1, le=90)] = 30,
+        min_voices: Annotated[int, Query(ge=1, le=100)] = 2,
+        limit: Annotated[int, Query(ge=1, le=25)] = 10,
+        evidence: Annotated[int, Query(ge=0, le=5, description="Evidence items per problem.")] = 3,
+    ) -> ProblemsResponse:
+        _require_key(st, principal)
+        degraded: list[str] = []
+        embedding: list[float] | None = None
+        if topic and st.embedder is not None:
+            try:
+                embedding = await asyncio.to_thread(st.embedder.embed_query, topic)
+            except Exception:
+                log.exception("topic embedding failed; lexical-only problem retrieval")
+                degraded.append("dense_unavailable")
+        now = datetime.now(UTC)
+        async with st.sessionmaker() as session, session.begin():
+            results = await find_problems(
+                session,
+                as_of=now,
+                topic=topic,
+                embedding=embedding,
+                category=category,
+                since_days=since_days,
+                min_voices=min_voices,
+                limit=limit,
+                evidence_limit=evidence,
+            )
+        for reason in degraded:
+            _mark_degraded(response, reason)
+        response.headers["Cache-Control"] = "private, max-age=60"
+        return ProblemsResponse(as_of=now, ranker=RANKER, degraded=degraded, results=results)
+
+    @app.get(
+        "/v1/problems/{problem_id}",
+        response_model=ProblemDetail,
+        tags=["problems"],
+        summary="One problem with full evidence and demand factors",
+        responses={404: {"description": "Problem not found"}},
+    )
+    async def problem(
+        st: StateDep,
+        principal: ProtectedDep,
+        response: Response,
+        problem_id: Annotated[int, PathParam(ge=1)],
+        evidence: Annotated[int, Query(ge=1, le=25)] = 10,
+    ) -> ProblemDetail:
+        _require_key(st, principal)
+        async with st.sessionmaker() as session:
+            found = await get_problem(session, problem_id, as_of=datetime.now(UTC), evidence_limit=evidence)
+        if found is None:
+            raise HTTPException(status_code=404, detail="problem not found")
+        response.headers["Cache-Control"] = "private, max-age=60"
+        return found
 
     return app

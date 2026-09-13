@@ -11,6 +11,8 @@ dependencies = [
     "xm-rank",
     "fastapi>=0.115",
     "uvicorn[standard]>=0.32",
+    "redis>=5.2",
+    "xm-problems",
 ]
 
 [project.scripts]
@@ -22,6 +24,7 @@ xm-cluster = { workspace = true }
 xm-embed = { workspace = true }
 xm-search = { workspace = true }
 xm-rank = { workspace = true }
+xm-problems = { workspace = true }
 
 [build-system]
 requires = ["uv_build>=0.8,<0.12"]
