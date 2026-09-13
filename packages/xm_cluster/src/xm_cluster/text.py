@@ -41,6 +41,17 @@ def shingles(text: str, size: int = 3) -> set[str]:
     return {" ".join(toks[i : i + size]) for i in range(len(toks) - size + 1)}
 
 
+# Version-like tokens: 3.8, v1.37.0-rc.1, 1.0a39, llama.cpp build b10938, commit hashes.
+_VERSION = re.compile(
+    r"(?<![a-z0-9])(?:v?\d+(?:\.\d+){1,3}(?:[-.]?(?:rc|alpha|beta|a|b)\.?\d*)?|b\d{4,}|[0-9a-f]{12,40})(?![a-z0-9])"
+)
+
+
+def version_tokens(title: str) -> set[str]:
+    """Versions named in a title. Two items naming *different* versions are different releases."""
+    return {m.group(0).removeprefix("v") for m in _VERSION.finditer(normalize(title))}
+
+
 def jaccard(a: set[str], b: set[str]) -> float:
     if not a or not b:
         return 0.0

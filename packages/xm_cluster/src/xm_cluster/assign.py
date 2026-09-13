@@ -26,7 +26,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from xm_cluster.minhash import MinHasher
 from xm_cluster.scoring import LogisticScorer, PairFeatures
-from xm_cluster.text import content_tokens
+from xm_cluster.text import content_tokens, version_tokens
 
 CLUSTER_LOCK_KEY = 0x584D434C55535452  # "XMCLUSTR"
 WINDOW = timedelta(hours=72)
@@ -97,10 +97,10 @@ async def _features(
     rows = await session.execute(
         text(
             "SELECT s.id, s.title, s.last_updated_at, s.centroid::text, "
-            "  m.source_id, m.minhash, m.entities, m.embedding::text "
+            "  m.source_id, m.minhash, m.entities, m.embedding::text, m.title "
             "FROM stories s "
             "JOIN LATERAL ("
-            "  SELECT source_id, minhash, entities, embedding FROM articles "
+            "  SELECT source_id, minhash, entities, embedding, title FROM articles "
             "  WHERE story_id = s.id ORDER BY discovered_at DESC LIMIT :m"
             ") m ON true "
             "WHERE s.id = ANY(:ids)"
@@ -110,7 +110,8 @@ async def _features(
     vec = _unit(a.embedding)
     title_tokens = set(content_tokens(a.title))
     acc: dict[int, dict[str, object]] = {}
-    for sid, title, last_updated, centroid, source_id, minhash, entities, embedding in rows:
+    article_versions = version_tokens(a.title)
+    for sid, title, last_updated, centroid, source_id, minhash, entities, embedding, member_title in rows:
         st = acc.setdefault(
             sid,
             {
@@ -121,8 +122,10 @@ async def _features(
                 "max_jac": 0.0,
                 "entities": set(),
                 "sources": set(),
+                "versions": set(),
             },
         )
+        st["versions"].update(version_tokens(member_title))  # type: ignore[union-attr]
         if embedding is not None:
             st["max_cos"] = max(float(st["max_cos"]), float(vec @ _unit(_parse_vec(embedding))))  # type: ignore[arg-type]
         if minhash is not None:
@@ -143,6 +146,9 @@ async def _features(
             entity_jaccard=_jaccard(a.entities, ents),
             hours_gap=abs((a.discovered_at - st["last_updated"]).total_seconds()) / 3600.0,  # type: ignore[operator]
             same_source=a.source_id in st["sources"],  # type: ignore[operator]
+            version_conflict=bool(article_versions)
+            and bool(st["versions"])
+            and not (article_versions & st["versions"]),  # type: ignore[operator]
         )
     return out
 

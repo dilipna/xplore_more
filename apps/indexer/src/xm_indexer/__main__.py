@@ -18,6 +18,7 @@ from pathlib import Path
 from xm_core.db.admin import migrate, sync_sources
 from xm_core.db.session import ensure_psycopg_compatible_loop, make_engine, make_sessionmaker
 from xm_core.settings import get_settings
+from xm_indexer.backfill import backfill_clusters, reset_clusters
 from xm_indexer.bus import BatchSource, PubSubBatchSource
 from xm_indexer.embedder import Embedder, FastEmbedEmbedder
 from xm_indexer.pipeline import Clusterer, process_batch
@@ -86,6 +87,29 @@ def _run(max_batches: int) -> int:
     return 1 if totals["failed"] else 0
 
 
+def _backfill(*, reset: bool) -> int:
+    settings = get_settings()
+    ensure_psycopg_compatible_loop()
+
+    async def go() -> dict[str, int]:
+        engine = make_engine(settings)
+        try:
+            clusterer = Clusterer.load(
+                Path(settings.entities_file),
+                Path(settings.cluster_scorer_file) if settings.cluster_scorer_file else None,
+            )
+            sessionmaker = make_sessionmaker(engine)
+            if reset:
+                await reset_clusters(sessionmaker)
+            return await backfill_clusters(sessionmaker, clusterer)
+        finally:
+            await engine.dispose()
+
+    totals = asyncio.run(go())
+    log.info(json.dumps({"event": "clusters_backfilled", **totals}))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="xm-indexer")
     sub = parser.add_subparsers(dest="command")
@@ -94,6 +118,8 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("migrate", help="apply database migrations")
     seed = sub.add_parser("seed-sources", help="sync the source registry")
     seed.add_argument("--file", type=Path, default=Path("config/sources.yaml"))
+    backfill = sub.add_parser("backfill-clusters", help="assign stories to unclustered articles")
+    backfill.add_argument("--reset", action="store_true", help="drop clustering state and replay")
     args = parser.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO, stream=sys.stdout, format="%(message)s")
@@ -108,6 +134,8 @@ def main(argv: list[str] | None = None) -> int:
             count = sync_sources(settings, args.file)
             log.info(json.dumps({"event": "sources_synced", "count": count}))
             return 0
+        case "backfill-clusters":
+            return _backfill(reset=args.reset)
         case "run":
             return _run(args.max_batches)
         case _:
