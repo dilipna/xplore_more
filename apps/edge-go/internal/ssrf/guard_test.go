@@ -13,21 +13,21 @@ import (
 func TestCheckAddrBlocksInternalTargets(t *testing.T) {
 	p := DefaultPolicy()
 	blocked := []string{
-		"169.254.169.254:80",  // GCP/AWS metadata
-		"127.0.0.1:443",       // loopback
-		"10.1.2.3:443",        // private
-		"172.16.0.1:443",      // private
-		"192.168.1.1:80",      // private
-		"100.64.0.1:443",      // CGNAT
-		"0.0.0.0:80",          // this network
-		"[::1]:443",           // IPv6 loopback
+		"169.254.169.254:80",    // GCP/AWS metadata
+		"127.0.0.1:443",         // loopback
+		"10.1.2.3:443",          // private
+		"172.16.0.1:443",        // private
+		"192.168.1.1:80",        // private
+		"100.64.0.1:443",        // CGNAT
+		"0.0.0.0:80",            // this network
+		"[::1]:443",             // IPv6 loopback
 		"[::ffff:10.0.0.1]:443", // IPv4-mapped private
 		"[::ffff:169.254.169.254]:80",
-		"[fd00::1]:443",       // unique local
-		"[fe80::1]:443",       // link-local
+		"[fd00::1]:443",        // unique local
+		"[fe80::1]:443",        // link-local
 		"[64:ff9b::a00:1]:443", // NAT64-embedded 10.0.0.1
-		"[2002:a00:1::1]:443", // 6to4-embedded 10.0.0.1
-		"8.8.8.8:22",          // public but non-web port
+		"[2002:a00:1::1]:443",  // 6to4-embedded 10.0.0.1
+		"8.8.8.8:22",           // public but non-web port
 		"8.8.8.8:6379",
 	}
 	for _, addr := range blocked {
