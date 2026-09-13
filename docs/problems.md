@@ -51,7 +51,25 @@ demand = log1p(effective_voices) × (1 + 0.5·log1p(sources)) × 0.5^(age_days/3
 
 `effective_voices` sums, over distinct authors, each author's highest p_problem, so repeated posts count once and doubtful voices count less. Age is measured from the last sighting. `explain()` returns every factor so API consumers can show *why* a problem ranks.
 
-## 5. Operating it
+## 5. Serving: REST API and MCP (P4)
+
+**REST** (`apps/api`, contract `contracts/api/problems.v1.openapi.json`; a test fails if the code drifts from it):
+
+- `GET /v1/problems?topic=&category=&since_days=30&min_voices=2&limit=10&evidence=3` returns a compact ranked list.
+  - Without `topic`, problems are ordered by demand, recomputed at request time so recency never goes stale.
+  - With `topic`, hybrid retrieval (FTS + pgvector, RRF) runs over problem evidence. Relevance is normalized to the best match, results below 0.5 are dropped, and the rest are ranked by `relevance × √demand`.
+  - A first version ranked by `demand × (0.5 + 0.5·relevance)`. On the dev corpus it returned the globally top problems for "tool calling bugs", so relevance now gates the results and leads the ranking.
+- `GET /v1/problems/{id}` returns full evidence, `demand_factors`, member count and scorer version.
+- **Auth:** `X-XM-Api-Key`, optional unless `XM_REQUIRE_API_KEY_FOR_PROBLEMS=true`. Only sha256 hashes are stored (keys are 256-bit random tokens). Unknown or revoked keys get 401, never a silent downgrade. Manage keys with `xm-api keys create|revoke --name`.
+- **Rate limits:** a Redis token bucket in one atomic Lua script using Redis server time. Anonymous callers are limited per IP (30/min by default), keys per key. Over the limit returns 429 with `Retry-After` and `RateLimit-*` headers. If Redis is down, requests **fail open** with `X-XM-Degraded: rate_limit` (read-only API; availability first).
+
+**MCP** (`apps/mcp`, `xm-mcp`): tools `find_problems`, `get_problem`, `search_stories` over **streamable HTTP**, stateless with JSON responses.
+
+- It is a thin client of the REST API, so auth, limits and ranking live in one place.
+- Outputs are token-lean: 3 problems with evidence came to 1,874 characters, measured live.
+- Tests validate their mock API responses against the committed OpenAPI contract and exercise a real HTTP transport.
+
+## 6. Operating it
 
 ```bash
 uv run xm-indexer backfill-problems [--reset]    # classify + assign existing discussions
@@ -60,7 +78,7 @@ uv run python evals/problems/cluster_report.py    # clustering report + top-50 j
 uv run python evals/problems/audit.py             # human audit of classifier labels
 ```
 
-## 6. Open work
+## 7. Open work
 
 - Human audits: classifier labels (low/medium confidence first), merge verdicts, top-50 usefulness (`evals/problems/top50_v1.jsonl`).
 - v2 labels with active sampling of HN/Lobsters positives, and a decision on maintainer roadmaps.

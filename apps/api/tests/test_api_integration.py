@@ -104,7 +104,9 @@ async def seeded(sessionmaker, embedder, clusterer) -> None:
 
 def client_for(migrated_database: str, embedder) -> TestClient:
     settings = Settings(
-        database_url=SecretStr(migrated_database), entities_file=str(ROOT / "config" / "entities.yaml")
+        database_url=SecretStr(migrated_database),
+        entities_file=str(ROOT / "config" / "entities.yaml"),
+        anon_rate_per_minute=100_000,  # every test client shares one anonymous bucket
     )
     return TestClient(create_app(settings, embedder=embedder, warm_embedder=False))
 

@@ -190,6 +190,22 @@ class Problem(Base):
     )
 
 
+class ApiKey(Base):
+    """Integrator credential. Only sha256(key) is stored (keys are 256-bit random tokens)."""
+
+    __tablename__ = "api_keys"
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    name: Mapped[str] = mapped_column(String(64), unique=True)
+    key_prefix: Mapped[str] = mapped_column(String(12))
+    key_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    rate_per_minute: Mapped[int] = mapped_column(Integer, server_default="120")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    __table_args__ = (CheckConstraint("rate_per_minute BETWEEN 1 AND 100000", name="api_key_rate_range"),)
+
+
 class ArticleLshBand(Base):
     """Inverted index from MinHash band key to articles, for near-duplicate candidates."""
 

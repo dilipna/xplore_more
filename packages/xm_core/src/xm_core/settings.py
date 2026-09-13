@@ -39,6 +39,12 @@ class Settings(BaseSettings):
     # intelligence in the indexer: discussions are still stored, just not classified.
     problem_classifier_file: str = "config/problem_classifier.v1.json"
 
+    # API protection. Upstash Redis in prod (rediss://). If Redis is unreachable the API
+    # fails OPEN (serves, marks X-XM-Degraded: rate_limit) because it is a read-only API.
+    redis_url: SecretStr = SecretStr("redis://localhost:6379/0")
+    anon_rate_per_minute: int = Field(default=30, ge=1)
+    require_api_key_for_problems: bool = False
+
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
