@@ -27,7 +27,9 @@ KEYS = {
 
 
 def save(path: Path, rows: list[dict]) -> None:
-    path.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
+    path.write_text(
+        "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8", newline="\n"
+    )
 
 
 def main() -> None:
@@ -37,7 +39,9 @@ def main() -> None:
     args = parser.parse_args()
 
     rows = [
-        json.loads(line) for line in args.dataset.read_text(encoding="utf-8").splitlines() if line.strip()
+        json.loads(line)
+        for line in args.dataset.read_text(encoding="utf-8", newline="\n").splitlines()
+        if line.strip()
     ]
     queue = sorted(
         (

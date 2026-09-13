@@ -77,7 +77,11 @@ LABEL_DESCRIPTIONS = {
 
 
 def load_rows(path: Path) -> list[dict[str, Any]]:
-    rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    rows = [
+        json.loads(line)
+        for line in path.read_text(encoding="utf-8", newline="\n").splitlines()
+        if line.strip()
+    ]
     for r in rows:
         r["gold"] = r["human_label"] if r.get("human_audited") and r.get("human_label") else r["label"]
     return rows
@@ -337,7 +341,7 @@ def train_artifact(x: np.ndarray, rows: list[dict[str, Any]], result: dict[str, 
         "intercept": [round(float(np.asarray(model.intercept_)[i]), 8) for i in order],
         "training": {
             "dataset": str(dataset.relative_to(ROOT)).replace("\\", "/"),
-            "dataset_sha256": hashlib.sha256(dataset.read_bytes()).hexdigest(),
+            "dataset_sha256": hashlib.sha256(dataset.read_bytes().replace(b"\r\n", b"\n")).hexdigest(),
             "rows": len(rows),
             "human_audited_rows": sum(bool(r.get("human_audited")) for r in rows),
             "labels_provisional": not all(r.get("human_audited") for r in rows),
@@ -473,7 +477,7 @@ def write_report(results: dict[str, Any], path: Path) -> None:
         "Embeddings are cached in `evals/problems/.cache/` (gitignored) keyed by a hash of the input texts.",
         "",
     ]
-    path.write_text("\n".join(lines), encoding="utf-8")
+    path.write_text("\n".join(lines), encoding="utf-8", newline="\n")
 
 
 def main() -> None:
@@ -500,7 +504,9 @@ def main() -> None:
     if x_selected is None:
         raise SystemExit("serving supports logreg_full features only; embedding-only won, revisit")
     artifact = train_artifact(x_selected, rows, selected, args.dataset)
-    (ROOT / "config" / "problem_classifier.v1.json").write_text(json.dumps(artifact) + "\n", encoding="utf-8")
+    (ROOT / "config" / "problem_classifier.v1.json").write_text(
+        json.dumps(artifact) + "\n", encoding="utf-8", newline="\n"
+    )
 
     results = {
         "created_at": datetime.now(UTC).isoformat(timespec="seconds"),
@@ -524,7 +530,9 @@ def main() -> None:
         "artifact": {k: artifact[k] for k in ("version", "C", "threshold", "feature_schema_hash")}
         | {"serving_parity_max_abs_diff": artifact["training"]["serving_parity_max_abs_diff"]},
     }
-    (HERE / "results_v1.json").write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
+    (HERE / "results_v1.json").write_text(
+        json.dumps(results, indent=2) + "\n", encoding="utf-8", newline="\n"
+    )
     write_report(results, ROOT / "docs" / "reports" / "problem-classifier-v1.md")
     for m in methods:
         b = m["binary_operating"]["sample"]
