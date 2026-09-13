@@ -1,0 +1,35 @@
+# Local development and integration-test dependencies.
+# Mirrors production protocols: Postgres+pgvector (Neon), Redis (Upstash), Pub/Sub (emulator).
+name: xploremore
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: xm
+      POSTGRES_PASSWORD: xm
+      POSTGRES_DB: xploremore
+    ports: ["5432:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U xm -d xploremore"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7.4-alpine
+    ports: ["6379:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      retries: 30
+
+  pubsub:
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
+    command: gcloud beta emulators pubsub start --host-port=0.0.0.0:8085 --project=xm-local
+    ports: ["8085:8085"]
+
+volumes:
+  pgdata:

@@ -1,0 +1,60 @@
+[project]
+name = "xploremore"
+version = "0.1.0"
+description = "Technology intelligence platform: live ingestion, story clustering, learning-to-rank search and personalized feeds."
+requires-python = ">=3.13,<3.14"
+readme = "README.md"
+dependencies = ["xm-core", "xm-indexer"]
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = ["packages/*", "apps/indexer"]
+
+[tool.uv.sources]
+xm-core = { workspace = true }
+xm-indexer = { workspace = true }
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "hypothesis>=6.115",
+    "ruff>=0.8",
+    "pyright>=1.1.390",
+    "jsonschema>=4.23",
+    "referencing>=0.35",
+]
+
+[tool.ruff]
+line-length = 110
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "S", "ASYNC", "RUF"]
+ignore = ["S101"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["xm_core", "xm_indexer"]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["S", "B"]
+"**/migrations/**" = ["E501"]
+
+[tool.pyright]
+pythonVersion = "3.13"
+typeCheckingMode = "standard"
+include = ["packages", "apps/indexer"]
+exclude = ["**/tests/**", "**/.venv/**", "**/migrations/**"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+testpaths = ["packages", "apps/indexer"]
+markers = [
+    "integration: requires docker compose services (postgres, redis, pubsub emulator)",
+    "guarantees: tests that prove a documented system guarantee",
+]
+addopts = "-ra --strict-markers --import-mode=importlib"

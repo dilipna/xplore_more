@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xploremore.dev/contracts/events/article.extracted.v1.schema.json",
+  "title": "data payload of xm.article.extracted.v1",
+  "description": "Emitted by the untrusted-zone ingestor after an SSRF-safe fetch and text extraction. Text is referenced by URI, not embedded.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "article_id", "canonical_url", "final_url", "source_id", "title", "lede",
+    "text_uri", "content_hash", "lang", "word_count", "discovered_at", "extracted_at"
+  ],
+  "properties": {
+    "article_id": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "canonical_url": { "type": "string", "format": "uri", "maxLength": 2048 },
+    "final_url": { "type": "string", "format": "uri", "maxLength": 2048, "description": "URL after redirects (each hop SSRF-validated)." },
+    "source_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]{1,63}$" },
+    "title": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "lede": { "type": "string", "maxLength": 1000, "description": "First ~1000 chars of extracted text; stored in Postgres for display and FTS." },
+    "text_uri": { "type": "string", "pattern": "^(gs|file)://", "description": "Full extracted text location." },
+    "content_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "sha256 of whitespace-normalized extracted text; exact-duplicate key across different URLs." },
+    "lang": { "type": "string", "pattern": "^[a-z]{2,3}$", "description": "ISO 639 code, or 'und' when undetermined." },
+    "word_count": { "type": "integer", "minimum": 0 },
+    "published_at": { "type": ["string", "null"], "format": "date-time" },
+    "discovered_at": { "type": "string", "format": "date-time" },
+    "extracted_at": { "type": "string", "format": "date-time" },
+    "signals": { "$ref": "signals.v1.schema.json" }
+  }
+}

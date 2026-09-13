@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xploremore.dev/contracts/events/envelope.v1.schema.json",
+  "title": "XploreMore event envelope (v1)",
+  "description": "CloudEvents-style envelope carried as the Pub/Sub message body. Payloads carry pointers (e.g. text_uri), never full article bodies (claim-check pattern).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "type", "source", "subject", "time", "schema_version", "idempotency_key", "data"],
+  "properties": {
+    "id": { "type": "string", "format": "uuid", "description": "Unique per emission. Redeliveries of the same message keep the same id." },
+    "type": {
+      "type": "string",
+      "enum": ["xm.article.discovered.v1", "xm.article.extracted.v1", "xm.story.updated.v1"]
+    },
+    "source": { "type": "string", "minLength": 1, "description": "Emitting component, e.g. edge/poller." },
+    "subject": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "Entity the event is about (article_id or story key)." },
+    "time": { "type": "string", "format": "date-time" },
+    "schema_version": { "type": "integer", "const": 1 },
+    "idempotency_key": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "sha256(type | subject | content discriminator). Consumers record it in the same transaction as their effect, so duplicate deliveries and re-emissions produce no duplicate effects."
+    },
+    "caused_by": { "type": ["string", "null"], "format": "uuid", "description": "Id of the upstream event (lineage)." },
+    "data": { "type": "object" }
+  }
+}

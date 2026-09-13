@@ -1,0 +1,19 @@
+[project]
+name = "xm-indexer"
+version = "0.1.0"
+description = "Micro-batch indexer: pulls article.extracted events, embeds, dedups and writes idempotently."
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "xm-core",
+    "fastembed>=0.4",
+]
+
+[project.scripts]
+xm-indexer = "xm_indexer.__main__:main"
+
+[tool.uv.sources]
+xm-core = { workspace = true }
+
+[build-system]
+requires = ["uv_build>=0.8,<0.12"]
+build-backend = "uv_build"
