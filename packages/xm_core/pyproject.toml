@@ -11,6 +11,7 @@ dependencies = [
     "pgvector>=0.3.6",
     "alembic>=1.14",
     "google-cloud-pubsub>=2.27",
+    "pyyaml>=6.0.2",
 ]
 
 [build-system]

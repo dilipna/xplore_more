@@ -1,0 +1,8 @@
+# Small live registry for the local end-to-end test (scripts/e2e_local.sh).
+sources:
+  - {id: kubernetes-blog, kind: rss, name: Kubernetes Blog, url: "https://kubernetes.io/feed.xml", authority: 0.8, max_items: 8}
+  - {id: huggingface-blog, kind: rss, name: Hugging Face Blog, url: "https://huggingface.co/blog/feed.xml", authority: 0.85, max_items: 8}
+  - {id: github-blog, kind: rss, name: GitHub Blog, url: "https://github.blog/feed/", authority: 0.8, max_items: 8}
+  - {id: gh-vllm, kind: rss, name: vLLM releases, url: "https://github.com/vllm-project/vllm/releases.atom", authority: 0.7, max_items: 3}
+  - {id: openai-news, kind: rss, name: OpenAI News, url: "https://openai.com/news/rss.xml", authority: 0.95, max_items: 5}
+  - {id: hacker-news, kind: hn, name: Hacker News, url: "https://hacker-news.firebaseio.com/v0", authority: 0.7, max_items: 20}
