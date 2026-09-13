@@ -196,8 +196,10 @@ async def _refresh_story_summary(session: AsyncSession, story_id: int) -> None:
             "  title = sub.rep_title "
             "FROM ("
             "  SELECT COUNT(DISTINCT a.source_id) AS source_count, "
-            "    (ARRAY_AGG(a.id ORDER BY src.authority_prior DESC, a.discovered_at, a.id))[1] AS rep_id, "
-            "    (ARRAY_AGG(a.title ORDER BY src.authority_prior DESC, a.discovered_at, a.id))[1] AS rep_title "
+            "    (ARRAY_AGG(a.id ORDER BY src.authority_prior DESC, a.discovered_at, a.id))[1] "
+            "      AS rep_id, "
+            "    (ARRAY_AGG(a.title ORDER BY src.authority_prior DESC, a.discovered_at, a.id))[1] "
+            "      AS rep_title "
             "  FROM articles a JOIN sources src ON src.id = a.source_id WHERE a.story_id = :id"
             ") sub WHERE s.id = :id"
         ),

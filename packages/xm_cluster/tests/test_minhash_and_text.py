@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parents[3]
 
 def _set_with_jaccard(target: float, size: int = 400, seed: int = 0) -> tuple[set[str], set[str]]:
     rng = random.Random(seed)
-    shared = int(round(2 * size * target / (1 + target)))
+    shared = round(2 * size * target / (1 + target))
     common = {f"c{i}" for i in range(shared)}
     a = common | {f"a{i}" for i in range(size - shared)}
     b = common | {f"b{i}" for i in range(size - shared)}

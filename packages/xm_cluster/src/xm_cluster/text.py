@@ -8,19 +8,20 @@ import unicodedata
 _TOKEN = re.compile(r"[a-z0-9]+(?:[.\-][a-z0-9]+)*")
 
 # Words that carry no event identity in tech headlines.
-STOPWORDS = frozenset(
-    """
+_STOPWORD_TEXT = """
     a an and are as at be by for from has have how in into is it its new of on or our that the
     this to was we what when why will with you your via after over about now more than just
     announces announced launches launched introduces introducing releases released unveils
     unveiled says said today update updates report reports
-    """.split()
-)
+"""
+STOPWORDS = frozenset(_STOPWORD_TEXT.split())
+
+_RIGHT_SINGLE_QUOTE = "\u2019"
 
 
 def normalize(text: str) -> str:
     text = unicodedata.normalize("NFKC", text).lower()
-    return text.replace("’", "'")
+    return text.replace(_RIGHT_SINGLE_QUOTE, "'")
 
 
 def tokens(text: str) -> list[str]:

@@ -14,7 +14,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
-PLUGIN = '''
+PLUGIN = """
 import pytest
 import xm_indexer.pipeline as pipeline
 
@@ -24,7 +24,7 @@ async def _no_lock(session):
 @pytest.fixture(autouse=True)
 def _disable_cluster_lock(monkeypatch):
     monkeypatch.setattr(pipeline, "acquire_cluster_lock", _no_lock)
-'''
+"""
 
 
 def main() -> int:
@@ -35,7 +35,12 @@ def main() -> int:
     for _ in range(runs):
         proc = subprocess.run(
             [
-                sys.executable, "-m", "pytest", "-q", "-p", "no_lock_plugin",
+                sys.executable,
+                "-m",
+                "pytest",
+                "-q",
+                "-p",
+                "no_lock_plugin",
                 "apps/indexer/tests/test_clustering_integration.py::test_concurrent_indexers_cannot_split_one_event",
             ],
             cwd=ROOT,
