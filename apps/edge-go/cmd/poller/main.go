@@ -58,13 +58,27 @@ func run(ctx context.Context, log *slog.Logger, registry string, check bool) err
 		Now:             time.Now,
 		PerSourceTimout: config.Duration("XM_SOURCE_TIMEOUT", 45*time.Second),
 		DiscoveredTopic: config.String("XM_TOPIC_ARTICLE_DISCOVERED", "article-discovered"),
+		GitHubToken:     config.String("GITHUB_TOKEN", ""),
+		AuthorSalt:      config.String("XM_AUTHOR_SALT", ""),
+	}
+	hasDiscussions := false
+	for _, s := range srcs {
+		hasDiscussions = hasDiscussions || (s.Kind.IsDiscussion() && !s.Disabled)
 	}
 
 	if check {
 		// Dry run: in-memory state and a recording publisher.
 		p.State = poll.FileStateStore{Path: fmt.Sprintf("%s/xm-check-%d.json", os.TempDir(), time.Now().UnixNano())}
 		p.Publisher = &bus.Memory{}
+		if p.AuthorSalt == "" {
+			p.AuthorSalt = "check-only"
+		}
 	} else {
+		// Without a stable salt, distinct voices cannot be counted and rotating it later
+		// would split every author in two. Refuse to run rather than degrade silently.
+		if hasDiscussions && len(p.AuthorSalt) < 16 {
+			return errors.New("XM_AUTHOR_SALT (>= 16 chars, from Secret Manager) is required for discussion sources")
+		}
 		project, err := config.Required("XM_GCP_PROJECT")
 		if err != nil {
 			return err
@@ -82,7 +96,10 @@ func run(ctx context.Context, log *slog.Logger, registry string, check bool) err
 				return err
 			}
 			defer gcs.Close()
-			p.State = poll.GCSStateStore{Client: gcs, Bucket: bucket, Object: "poller/state.json"}
+			// Each registry runs as its own job with its own state object, so the article and
+			// problem pollers never conflict on one generation precondition.
+			object := config.String("XM_STATE_OBJECT", "poller/state.json")
+			p.State = poll.GCSStateStore{Client: gcs, Bucket: bucket, Object: object}
 		} else {
 			p.State = poll.FileStateStore{Path: config.String("XM_STATE_FILE", "./.data/poller-state.json")}
 		}
@@ -102,6 +119,9 @@ func run(ctx context.Context, log *slog.Logger, registry string, check bool) err
 		summary["published"] += r.Published
 		summary["skipped_seen"] += r.Skipped
 		summary["invalid_url"] += r.Invalid
+		if r.Warning != "" {
+			summary["partial_sources"]++
+		}
 		if r.Error != "" {
 			summary["failed_sources"]++
 		}

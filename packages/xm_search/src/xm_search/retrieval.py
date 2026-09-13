@@ -53,7 +53,7 @@ async def lexical_articles(session: AsyncSession, query: ParsedQuery, limit: int
     rows = await session.execute(
         text(
             "SELECT id FROM articles, websearch_to_tsquery('english', :q) AS tsq "
-            "WHERE tsv @@ tsq "
+            "WHERE tsv @@ tsq AND doc_kind = 'article' "
             "ORDER BY ts_rank_cd(tsv, tsq, 32) DESC, discovered_at DESC, id LIMIT :k"
         ),
         {"q": query.text, "k": limit},
@@ -64,8 +64,18 @@ async def lexical_articles(session: AsyncSession, query: ParsedQuery, limit: int
 async def dense_articles(session: AsyncSession, embedding: list[float], limit: int = DENSE_K) -> list[str]:
     # hnsw.ef_search bounds recall/latency of the ANN scan; must exceed LIMIT to return LIMIT rows.
     await session.execute(text("SET LOCAL hnsw.ef_search = 256"))
+    # The HNSW index spans articles and discussions. A plain filtered ANN scan post-filters
+    # one ef_search-sized candidate list, so a discussion-heavy neighbourhood would return
+    # fewer than LIMIT articles. pgvector >= 0.8 iterative scans keep walking the graph until
+    # LIMIT rows pass the filter; relaxed_order needs the outer re-sort for exact order.
+    await session.execute(text("SET LOCAL hnsw.iterative_scan = relaxed_order"))
     rows = await session.execute(
-        text("SELECT id FROM articles ORDER BY embedding <=> CAST(:v AS halfvec) LIMIT :k"),
+        text(
+            "WITH candidates AS MATERIALIZED ("
+            "  SELECT id, embedding <=> CAST(:v AS halfvec) AS distance FROM articles "
+            "  WHERE doc_kind = 'article' ORDER BY distance LIMIT :k"
+            ") SELECT id FROM candidates ORDER BY distance, id"
+        ),
         {"v": _vec(embedding), "k": limit},
     )
     return [r[0] for r in rows]

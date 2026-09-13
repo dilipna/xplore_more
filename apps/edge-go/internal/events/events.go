@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"time"
 )
 
@@ -35,40 +36,92 @@ type Signals struct {
 	ObservedAt *string `json:"observed_at"`
 }
 
+// Document kinds (contracts: doc_kind). An empty value from a legacy producer means article.
+const (
+	KindArticle    = "article"
+	KindDiscussion = "discussion"
+)
+
+// Discussion platforms (contracts/events/discussion.v1.schema.json).
+const (
+	PlatformHN            = "hn"
+	PlatformGitHub        = "github"
+	PlatformLobsters      = "lobsters"
+	PlatformStackExchange = "stackexchange"
+)
+
+// Engagement holds as-of discussion engagement.
+type Engagement struct {
+	Points    *int `json:"points"`
+	Comments  *int `json:"comments"`
+	Reactions *int `json:"reactions"`
+}
+
+// Discussion is the provenance of a post or comment. AuthorHash is salted; raw handles
+// never leave the poller.
+type Discussion struct {
+	Platform   string     `json:"platform"`
+	ThreadURL  string     `json:"thread_url"`
+	ParentURL  *string    `json:"parent_url"`
+	AuthorHash *string    `json:"author_hash"`
+	Engagement Engagement `json:"engagement"`
+}
+
 type ArticleDiscovered struct {
-	ArticleID    string  `json:"article_id"`
-	URL          string  `json:"url"`
-	CanonicalURL string  `json:"canonical_url"`
-	SourceID     string  `json:"source_id"`
-	DiscoveredAt string  `json:"discovered_at"`
-	PublishedAt  *string `json:"published_at"`
-	FeedTitle    *string `json:"feed_title"`
-	FeedSummary  *string `json:"feed_summary"`
-	Signals      Signals `json:"signals"`
+	ArticleID    string      `json:"article_id"`
+	URL          string      `json:"url"`
+	CanonicalURL string      `json:"canonical_url"`
+	SourceID     string      `json:"source_id"`
+	DiscoveredAt string      `json:"discovered_at"`
+	PublishedAt  *string     `json:"published_at"`
+	FeedTitle    *string     `json:"feed_title"`
+	FeedSummary  *string     `json:"feed_summary"`
+	Signals      Signals     `json:"signals"`
+	DocKind      string      `json:"doc_kind"`
+	Discussion   *Discussion `json:"discussion"`
 }
 
 type ArticleExtracted struct {
-	ArticleID     string  `json:"article_id"`
-	CanonicalURL  string  `json:"canonical_url"`
-	FinalURL      string  `json:"final_url"`
-	SourceID      string  `json:"source_id"`
-	Title         string  `json:"title"`
-	Lede          string  `json:"lede"`
-	TextURI       string  `json:"text_uri"`
-	ContentHash   string  `json:"content_hash"`
-	Lang          string  `json:"lang"`
-	WordCount     int     `json:"word_count"`
-	ContentOrigin string  `json:"content_origin"` // "page" | "feed"
-	PublishedAt   *string `json:"published_at"`
-	DiscoveredAt  string  `json:"discovered_at"`
-	ExtractedAt   string  `json:"extracted_at"`
-	Signals       Signals `json:"signals"`
+	ArticleID     string      `json:"article_id"`
+	CanonicalURL  string      `json:"canonical_url"`
+	FinalURL      string      `json:"final_url"`
+	SourceID      string      `json:"source_id"`
+	Title         string      `json:"title"`
+	Lede          string      `json:"lede"`
+	TextURI       string      `json:"text_uri"`
+	ContentHash   string      `json:"content_hash"`
+	Lang          string      `json:"lang"`
+	WordCount     int         `json:"word_count"`
+	ContentOrigin string      `json:"content_origin"` // "page" | "feed"
+	PublishedAt   *string     `json:"published_at"`
+	DiscoveredAt  string      `json:"discovered_at"`
+	ExtractedAt   string      `json:"extracted_at"`
+	Signals       Signals     `json:"signals"`
+	DocKind       string      `json:"doc_kind"`
+	Discussion    *Discussion `json:"discussion"`
 }
 
 const (
 	OriginPage = "page"
 	OriginFeed = "feed"
 )
+
+// ErrKindMismatch reports a doc_kind that disagrees with the presence of discussion data.
+var ErrKindMismatch = errors.New("discussion must be set exactly when doc_kind is discussion")
+
+// NormalizeKind maps a legacy empty kind to article and checks kind/provenance agreement.
+func NormalizeKind(kind string, d *Discussion) (string, error) {
+	if kind == "" {
+		kind = KindArticle
+	}
+	switch {
+	case kind != KindArticle && kind != KindDiscussion:
+		return kind, errors.New("unknown doc_kind " + kind)
+	case (kind == KindDiscussion) != (d != nil):
+		return kind, ErrKindMismatch
+	}
+	return kind, nil
+}
 
 // Sha256Hex returns the lowercase hex sha256 of s.
 func Sha256Hex(s string) string {
@@ -102,6 +155,9 @@ func NewUUIDv7(now time.Time) string {
 
 // NewDiscovered builds a discovered event for a canonicalized article.
 func NewDiscovered(source string, data ArticleDiscovered, now time.Time) Envelope[ArticleDiscovered] {
+	if data.DocKind == "" {
+		data.DocKind = KindArticle
+	}
 	return Envelope[ArticleDiscovered]{
 		ID:             NewUUIDv7(now),
 		Type:           TypeArticleDiscovered,
@@ -119,6 +175,9 @@ func NewExtracted(source string, data ArticleExtracted, causedBy string, now tim
 	var cause *string
 	if causedBy != "" {
 		cause = &causedBy
+	}
+	if data.DocKind == "" {
+		data.DocKind = KindArticle
 	}
 	return Envelope[ArticleExtracted]{
 		ID:             NewUUIDv7(now),

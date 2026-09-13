@@ -64,6 +64,42 @@ func TestExtractedFixtureContract(t *testing.T) {
 	}
 }
 
+func TestDiscussionFixturesContract(t *testing.T) {
+	disc, raw := decodeStrict[ArticleDiscovered](t, "discussion.discovered.v1.json")
+	assertRoundTrip(t, disc, raw)
+	if _, err := NormalizeKind(disc.Data.DocKind, disc.Data.Discussion); err != nil {
+		t.Fatal(err)
+	}
+	if disc.Data.Discussion.Platform != PlatformHN || disc.Data.Discussion.AuthorHash == nil {
+		t.Fatalf("discussion %+v", disc.Data.Discussion)
+	}
+	ext, raw := decodeStrict[ArticleExtracted](t, "discussion.extracted.v1.json")
+	assertRoundTrip(t, ext, raw)
+	if got := IdempotencyKey(ext.Type, ext.Subject, ext.Data.ContentHash); got != ext.IdempotencyKey {
+		t.Fatalf("idempotency key %s, fixture %s", got, ext.IdempotencyKey)
+	}
+}
+
+func TestLegacyDiscoveredDecodesAsArticle(t *testing.T) {
+	env, _ := decodeStrict[ArticleDiscovered](t, filepath.Join("legacy", "article.discovered.v1.pre-doc-kind.json"))
+	kind, err := NormalizeKind(env.Data.DocKind, env.Data.Discussion)
+	if err != nil || kind != KindArticle {
+		t.Fatalf("kind %q err %v", kind, err)
+	}
+}
+
+func TestNormalizeKindRejectsMismatch(t *testing.T) {
+	if _, err := NormalizeKind(KindDiscussion, nil); err == nil {
+		t.Fatal("discussion without provenance accepted")
+	}
+	if _, err := NormalizeKind(KindArticle, &Discussion{}); err == nil {
+		t.Fatal("article with provenance accepted")
+	}
+	if _, err := NormalizeKind("tweet", nil); err == nil {
+		t.Fatal("unknown kind accepted")
+	}
+}
+
 func TestUUIDv7Format(t *testing.T) {
 	re := regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$`)
 	prev := ""

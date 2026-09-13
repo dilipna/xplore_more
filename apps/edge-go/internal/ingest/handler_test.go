@@ -204,6 +204,83 @@ func TestContractViolationsAreRejectedWithoutFetching(t *testing.T) {
 	}
 }
 
+func readFixture(t *testing.T, name string) []byte {
+	t.Helper()
+	raw, err := os.ReadFile(filepath.Join("..", "..", "..", "..", "contracts", "fixtures", name))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return raw
+}
+
+func TestDiscussionIsNeverFetchedAndKeepsProvenance(t *testing.T) {
+	f := &stubFetcher{result: okResult(t)}
+	pub := &bus.Memory{}
+	h := newHandler(f, textstore.File{Dir: t.TempDir()}, pub)
+	if code := serve(h, pushBody(t, readFixture(t, "discussion.discovered.v1.json"))); code != http.StatusNoContent {
+		t.Fatalf("status %d", code)
+	}
+	if f.calls != 0 {
+		t.Fatal("a discussion must not trigger an HTML fetch")
+	}
+	msgs := pub.Snapshot()
+	if len(msgs) != 1 {
+		t.Fatalf("published %d", len(msgs))
+	}
+	dec := json.NewDecoder(bytes.NewReader(msgs[0].Data))
+	dec.DisallowUnknownFields()
+	var got events.Envelope[events.ArticleExtracted]
+	if err := dec.Decode(&got); err != nil {
+		t.Fatal(err)
+	}
+	var want events.Envelope[events.ArticleExtracted]
+	_ = json.Unmarshal(readFixture(t, "discussion.extracted.v1.json"), &want)
+
+	gotDisc, _ := json.Marshal(got.Data.Discussion)
+	wantDisc, _ := json.Marshal(want.Data.Discussion)
+	if got.Data.DocKind != events.KindDiscussion || !bytes.Equal(gotDisc, wantDisc) {
+		t.Fatalf("provenance lost: kind %q discussion %s", got.Data.DocKind, gotDisc)
+	}
+	// The ingestor and the contract fixture agree on identity and content hashing.
+	if got.Data.ContentHash != want.Data.ContentHash || got.IdempotencyKey != want.IdempotencyKey || got.Data.ContentOrigin != events.OriginFeed {
+		t.Fatalf("got %+v\nwant %+v", got.Data, want.Data)
+	}
+}
+
+func TestDiscussionKindMismatchIsRejected(t *testing.T) {
+	var generic map[string]any
+	_ = json.Unmarshal(readFixture(t, "discussion.discovered.v1.json"), &generic)
+	generic["data"].(map[string]any)["discussion"] = nil
+	data, _ := json.Marshal(generic)
+
+	f := &stubFetcher{result: okResult(t)}
+	pub := &bus.Memory{}
+	h := newHandler(f, textstore.File{Dir: t.TempDir()}, pub)
+	if code := serve(h, pushBody(t, data)); code != http.StatusNoContent {
+		t.Fatalf("status %d", code)
+	}
+	if f.calls != 0 || len(pub.Snapshot()) != 0 || h.Stats.Rejected.Load() != 1 {
+		t.Fatalf("mismatched event was processed: calls %d published %d", f.calls, len(pub.Snapshot()))
+	}
+}
+
+func TestLegacyDiscoveredIsProcessedAsArticle(t *testing.T) {
+	pub := &bus.Memory{}
+	h := newHandler(&stubFetcher{result: okResult(t)}, textstore.File{Dir: t.TempDir()}, pub)
+	if code := serve(h, pushBody(t, readFixture(t, filepath.Join("legacy", "article.discovered.v1.pre-doc-kind.json")))); code != http.StatusNoContent {
+		t.Fatalf("status %d", code)
+	}
+	var out events.Envelope[events.ArticleExtracted]
+	msgs := pub.Snapshot()
+	if len(msgs) != 1 {
+		t.Fatalf("published %d", len(msgs))
+	}
+	_ = json.Unmarshal(msgs[0].Data, &out)
+	if out.Data.DocKind != events.KindArticle || out.Data.Discussion != nil {
+		t.Fatalf("legacy event kind %q", out.Data.DocKind)
+	}
+}
+
 func TestRejectsNonPost(t *testing.T) {
 	h := newHandler(&stubFetcher{}, textstore.File{Dir: t.TempDir()}, &bus.Memory{})
 	rec := httptest.NewRecorder()

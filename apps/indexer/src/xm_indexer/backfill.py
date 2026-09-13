@@ -44,6 +44,7 @@ async def backfill_clusters(
                     text(
                         "SELECT id, title, lede, source_id, discovered_at, embedding::text, duplicate_of "
                         "FROM articles WHERE story_id IS NULL AND embedding IS NOT NULL "
+                        "AND doc_kind = 'article' "
                         "ORDER BY discovered_at, id LIMIT :n"
                     ),
                     {"n": batch_size},

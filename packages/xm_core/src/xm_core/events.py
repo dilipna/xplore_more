@@ -13,7 +13,7 @@ import uuid
 from datetime import UTC, datetime
 from typing import Annotated, Literal
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StringConstraints
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 Sha256Hex = Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{64}$")]
 SourceId = Annotated[str, StringConstraints(pattern=r"^[a-z0-9][a-z0-9_-]{1,63}$")]
@@ -33,7 +33,38 @@ class Signals(_Strict):
     observed_at: AwareDatetime | None = None
 
 
-class ArticleDiscovered(_Strict):
+DocKind = Literal["article", "discussion"]
+Platform = Literal["hn", "github", "lobsters", "stackexchange"]
+
+
+class Engagement(_Strict):
+    points: int | None = None  # Stack Exchange scores can be negative
+    comments: int | None = Field(default=None, ge=0)
+    reactions: int | None = Field(default=None, ge=0)
+
+
+class Discussion(_Strict):
+    """Provenance of a post or comment. Usernames never cross the edge; see discussion.v1."""
+
+    platform: Platform
+    thread_url: Url
+    parent_url: Url | None
+    author_hash: Sha256Hex | None
+    engagement: Engagement
+
+
+class _DocKindMixin(_Strict):
+    doc_kind: DocKind = "article"
+    discussion: Discussion | None = None
+
+    @model_validator(mode="after")
+    def _discussion_matches_kind(self) -> _DocKindMixin:
+        if (self.doc_kind == "discussion") != (self.discussion is not None):
+            raise ValueError("discussion must be set exactly when doc_kind is 'discussion'")
+        return self
+
+
+class ArticleDiscovered(_DocKindMixin):
     article_id: Sha256Hex
     url: Url
     canonical_url: Url
@@ -44,8 +75,14 @@ class ArticleDiscovered(_Strict):
     feed_summary: Annotated[str, StringConstraints(max_length=2000)] | None = None
     signals: Signals = Signals()
 
+    @model_validator(mode="after")
+    def _discussion_carries_text(self) -> ArticleDiscovered:
+        if self.doc_kind == "discussion" and not (self.feed_title and self.feed_summary):
+            raise ValueError("a discussion carries its title and text in the event (no HTML fetch)")
+        return self
 
-class ArticleExtracted(_Strict):
+
+class ArticleExtracted(_DocKindMixin):
     article_id: Sha256Hex
     canonical_url: Url
     final_url: Url

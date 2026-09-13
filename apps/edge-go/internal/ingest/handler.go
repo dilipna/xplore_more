@@ -114,37 +114,51 @@ func decodeDiscovered(data []byte) (events.Envelope[events.ArticleDiscovered], e
 	if env.Data.CanonicalURL == "" || env.Data.SourceID == "" || env.Data.DiscoveredAt == "" {
 		return env, errors.New("missing required fields")
 	}
+	kind, err := events.NormalizeKind(env.Data.DocKind, env.Data.Discussion)
+	if err != nil {
+		return env, err
+	}
+	env.Data.DocKind = kind
 	return env, nil
 }
 
 func (h *Handler) process(ctx context.Context, env events.Envelope[events.ArticleDiscovered]) outcome {
 	d := env.Data
-	fetchCtx, cancel := context.WithTimeout(ctx, h.FetchTimeout)
-	defer cancel()
-
 	feedTitle, feedSummary := deref(d.FeedTitle), deref(d.FeedSummary)
 	origin := events.OriginPage
 	var doc *extract.Document
 	var finalURL string
 
-	res, err := h.Fetcher.Get(fetchCtx, d.CanonicalURL)
-	switch {
-	case errors.Is(err, fetch.ErrPermanent):
-		// Blocked, disallowed or gone: fall back to the syndication feed's own content.
+	if d.DocKind == events.KindDiscussion {
+		// Discussion text came from the platform API in the event itself. Fetching the
+		// thread's HTML would add load on the platform and a scraping surface for nothing.
+		var err error
 		if doc, err = extract.FromFeed(feedTitle, feedSummary, d.CanonicalURL); err != nil {
-			return reject("fetch: permanent failure and no usable feed content")
+			return reject("discussion: no usable text")
 		}
 		origin, finalURL = events.OriginFeed, d.CanonicalURL
-	case err != nil:
-		return retryLater("fetch: " + err.Error())
-	default:
-		finalURL = res.FinalURL.String()
-		doc, err = extract.FromHTML(res.Body, res.FinalURL, feedTitle)
-		if err != nil {
+	} else {
+		fetchCtx, cancel := context.WithTimeout(ctx, h.FetchTimeout)
+		defer cancel()
+		res, err := h.Fetcher.Get(fetchCtx, d.CanonicalURL)
+		switch {
+		case errors.Is(err, fetch.ErrPermanent):
+			// Blocked, disallowed or gone: fall back to the syndication feed's own content.
 			if doc, err = extract.FromFeed(feedTitle, feedSummary, d.CanonicalURL); err != nil {
-				return reject("extract: no content in page or feed")
+				return reject("fetch: permanent failure and no usable feed content")
 			}
-			origin = events.OriginFeed
+			origin, finalURL = events.OriginFeed, d.CanonicalURL
+		case err != nil:
+			return retryLater("fetch: " + err.Error())
+		default:
+			finalURL = res.FinalURL.String()
+			doc, err = extract.FromHTML(res.Body, res.FinalURL, feedTitle)
+			if err != nil {
+				if doc, err = extract.FromFeed(feedTitle, feedSummary, d.CanonicalURL); err != nil {
+					return reject("extract: no content in page or feed")
+				}
+				origin = events.OriginFeed
+			}
 		}
 	}
 
@@ -180,6 +194,8 @@ func (h *Handler) process(ctx context.Context, env events.Envelope[events.Articl
 		DiscoveredAt:  d.DiscoveredAt,
 		ExtractedAt:   events.Timestamp(now),
 		Signals:       d.Signals,
+		DocKind:       d.DocKind,
+		Discussion:    d.Discussion,
 	}, env.ID, now)
 
 	// Publish must succeed before we ack the input. If it fails we return 503, and the

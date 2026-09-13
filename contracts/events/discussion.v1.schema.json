@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xploremore.dev/contracts/events/discussion.v1.schema.json",
+  "title": "Discussion provenance for doc_kind=discussion (a post or comment where people describe problems)",
+  "description": "Added 2026-09-13 (additive). Usernames never leave the edge: author_hash is sha256(deployment salt | platform | lowercase handle), so distinct voices can be counted without storing identities.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["platform", "thread_url", "parent_url", "author_hash", "engagement"],
+  "properties": {
+    "platform": { "type": "string", "enum": ["hn", "github", "lobsters", "stackexchange"] },
+    "thread_url": { "type": "string", "format": "uri", "maxLength": 2048, "description": "Canonical URL of the thread's opening post." },
+    "parent_url": { "type": ["string", "null"], "format": "uri", "maxLength": 2048, "description": "Thread URL for a comment; null for the opening post itself." },
+    "author_hash": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+    "engagement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["points", "comments", "reactions"],
+      "description": "As-of values observed once, after the item matured (see config/problem_sources.yaml).",
+      "properties": {
+        "points": { "type": ["integer", "null"], "description": "Score or +1 votes; can be negative on Stack Exchange." },
+        "comments": { "type": ["integer", "null"], "minimum": 0, "description": "Replies or answers." },
+        "reactions": { "type": ["integer", "null"], "minimum": 0 }
+      }
+    }
+  }
+}

@@ -84,6 +84,16 @@ class Article(Base):
     hn_points: Mapped[int | None] = mapped_column(Integer)
     hn_comments: Mapped[int | None] = mapped_column(Integer)
     signals_observed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Document kind and discussion provenance (migration 0004). Discussions are never
+    # assigned to news stories; they feed problem clustering instead.
+    doc_kind: Mapped[str] = mapped_column(String(16), server_default="article")
+    platform: Mapped[str | None] = mapped_column(String(16))
+    thread_url: Mapped[str | None] = mapped_column(Text)
+    parent_url: Mapped[str | None] = mapped_column(Text)
+    author_hash: Mapped[str | None] = mapped_column(String(64))  # salted at the edge
+    engagement_points: Mapped[int | None] = mapped_column(Integer)
+    engagement_comments: Mapped[int | None] = mapped_column(Integer)
+    engagement_reactions: Mapped[int | None] = mapped_column(Integer)
     # Clustering state (xm_cluster.assign)
     story_id: Mapped[int | None] = mapped_column(BigInteger, ForeignKey("stories.id", ondelete="SET NULL"))
     minhash: Mapped[bytes | None] = mapped_column(BYTEA)
@@ -92,6 +102,13 @@ class Article(Base):
 
     __table_args__ = (
         CheckConstraint("content_origin IN ('page', 'feed')", name="content_origin_valid"),
+        CheckConstraint("doc_kind IN ('article', 'discussion')", name="doc_kind_valid"),
+        CheckConstraint(
+            "(doc_kind = 'discussion') = (platform IS NOT NULL AND thread_url IS NOT NULL)",
+            name="discussion_provenance",
+        ),
+        Index("ix_articles_doc_kind_discovered_at", "doc_kind", "discovered_at"),
+        Index("ix_articles_thread_url", "thread_url"),
         Index("ix_articles_content_hash", "content_hash"),
         Index("ix_articles_discovered_at", "discovered_at"),
         Index("ix_articles_story_id", "story_id"),

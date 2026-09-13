@@ -29,6 +29,19 @@
     "published_at": { "type": ["string", "null"], "format": "date-time" },
     "discovered_at": { "type": "string", "format": "date-time" },
     "extracted_at": { "type": "string", "format": "date-time" },
-    "signals": { "$ref": "signals.v1.schema.json" }
-  }
+    "signals": { "$ref": "signals.v1.schema.json" },
+    "doc_kind": {
+      "type": "string",
+      "enum": ["article", "discussion"],
+      "default": "article",
+      "description": "Added 2026-09-13 (additive)."
+    },
+    "discussion": {
+      "oneOf": [{ "type": "null" }, { "$ref": "discussion.v1.schema.json" }],
+      "default": null
+    }
+  },
+  "if": { "properties": { "doc_kind": { "const": "discussion" } }, "required": ["doc_kind"] },
+  "then": { "required": ["discussion"], "properties": { "discussion": { "$ref": "discussion.v1.schema.json" } } },
+  "else": { "properties": { "discussion": { "type": "null" } } }
 }

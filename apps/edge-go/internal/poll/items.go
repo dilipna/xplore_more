@@ -2,7 +2,6 @@ package poll
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -29,6 +28,7 @@ type Item struct {
 	HNItemID    *int64
 	HNPoints    *int
 	HNComments  *int
+	Discussion  *discussionMeta // set by discussion fetchers; Summary is then plain text
 }
 
 // errNotModified signals a 304: nothing new, not a failure.
@@ -181,18 +181,5 @@ func fetchHN(ctx context.Context, client *http.Client, src sources.Source, st *S
 }
 
 func getJSON(ctx context.Context, client *http.Client, url, userAgent string, v any) error {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
-	if err != nil {
-		return err
-	}
-	req.Header.Set("User-Agent", userAgent)
-	res, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("%s: status %d", url, res.StatusCode)
-	}
-	return json.NewDecoder(io.LimitReader(res.Body, 5<<20)).Decode(v)
+	return getJSONWithHeaders(ctx, client, url, userAgent, nil, v)
 }
