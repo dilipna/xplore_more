@@ -16,5 +16,5 @@ MSYS_NO_PATHCONV=1 exec docker run --rm \
   -v xm-gomod:/go/pkg/mod \
   -v xm-gobuild:/root/.cache/go-build \
   -w /src/apps/edge-go \
-  -e CGO_ENABLED=0 \
+  -e CGO_ENABLED="${CGO_ENABLED:-0}" \
   "$GO_IMAGE" go "$@"

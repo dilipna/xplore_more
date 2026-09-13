@@ -120,7 +120,7 @@ func TestSuccessfulIngestPublishesContractValidEvent(t *testing.T) {
 	if env.CausedBy == nil || *env.CausedBy != "0192f3a4-5b6c-7d8e-9f01-23456789abcd" {
 		t.Error("lineage caused_by not set to discovery event id")
 	}
-	if !strings.HasPrefix(d.TextURI, "file://") || d.Lang != "en" || d.SourceID != "anthropic-news" {
+	if !strings.HasPrefix(d.TextURI, "file://") || d.Lang != "en" || d.SourceID != "anthropic-news" || d.ContentOrigin != events.OriginPage {
 		t.Errorf("payload %+v", d)
 	}
 	if h.Stats.Extracted.Load() != 1 {
@@ -151,6 +151,31 @@ func TestRetryPolicy(t *testing.T) {
 				t.Fatal("nothing may be published when the input will be retried")
 			}
 		})
+	}
+}
+
+func TestBlockedPageFallsBackToFeedContent(t *testing.T) {
+	var env map[string]any
+	_ = json.Unmarshal(discoveredFixture(t), &env)
+	env["data"].(map[string]any)["feed_summary"] = "vLLM 0.20 adds disaggregated prefill, speculative decoding for MoE models, and a new KV cache offloading path."
+	data, _ := json.Marshal(env)
+
+	pub := &bus.Memory{}
+	h := newHandler(&stubFetcher{err: fmt.Errorf("%w: status 403", fetch.ErrPermanent)}, textstore.File{Dir: t.TempDir()}, pub)
+	if code := serve(h, pushBody(t, data)); code != http.StatusNoContent {
+		t.Fatalf("status %d", code)
+	}
+	msgs := pub.Snapshot()
+	if len(msgs) != 1 {
+		t.Fatalf("expected feed-origin event, got %d messages", len(msgs))
+	}
+	var out events.Envelope[events.ArticleExtracted]
+	_ = json.Unmarshal(msgs[0].Data, &out)
+	if out.Data.ContentOrigin != events.OriginFeed || !strings.Contains(out.Data.Lede, "disaggregated prefill") {
+		t.Fatalf("payload %+v", out.Data)
+	}
+	if out.Data.CanonicalURL != "https://anthropic.com/news/claude-example" {
+		t.Fatalf("feed fallback must keep the discovered canonical URL, got %q", out.Data.CanonicalURL)
 	}
 }
 

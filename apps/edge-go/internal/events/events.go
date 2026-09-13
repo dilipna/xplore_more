@@ -48,21 +48,27 @@ type ArticleDiscovered struct {
 }
 
 type ArticleExtracted struct {
-	ArticleID    string  `json:"article_id"`
-	CanonicalURL string  `json:"canonical_url"`
-	FinalURL     string  `json:"final_url"`
-	SourceID     string  `json:"source_id"`
-	Title        string  `json:"title"`
-	Lede         string  `json:"lede"`
-	TextURI      string  `json:"text_uri"`
-	ContentHash  string  `json:"content_hash"`
-	Lang         string  `json:"lang"`
-	WordCount    int     `json:"word_count"`
-	PublishedAt  *string `json:"published_at"`
-	DiscoveredAt string  `json:"discovered_at"`
-	ExtractedAt  string  `json:"extracted_at"`
-	Signals      Signals `json:"signals"`
+	ArticleID     string  `json:"article_id"`
+	CanonicalURL  string  `json:"canonical_url"`
+	FinalURL      string  `json:"final_url"`
+	SourceID      string  `json:"source_id"`
+	Title         string  `json:"title"`
+	Lede          string  `json:"lede"`
+	TextURI       string  `json:"text_uri"`
+	ContentHash   string  `json:"content_hash"`
+	Lang          string  `json:"lang"`
+	WordCount     int     `json:"word_count"`
+	ContentOrigin string  `json:"content_origin"` // "page" | "feed"
+	PublishedAt   *string `json:"published_at"`
+	DiscoveredAt  string  `json:"discovered_at"`
+	ExtractedAt   string  `json:"extracted_at"`
+	Signals       Signals `json:"signals"`
 }
+
+const (
+	OriginPage = "page"
+	OriginFeed = "feed"
+)
 
 // Sha256Hex returns the lowercase hex sha256 of s.
 func Sha256Hex(s string) string {

@@ -20,6 +20,12 @@
     "content_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "sha256 of whitespace-normalized extracted text; exact-duplicate key across different URLs." },
     "lang": { "type": "string", "pattern": "^[a-z]{2,3}$", "description": "ISO 639 code, or 'und' when undetermined." },
     "word_count": { "type": "integer", "minimum": 0 },
+    "content_origin": {
+      "type": "string",
+      "enum": ["page", "feed"],
+      "default": "page",
+      "description": "Where the text came from: the fetched page, or the syndication feed's own content when the page blocks automated fetches or is too short. Added 2026-09-13 (additive)."
+    },
     "published_at": { "type": ["string", "null"], "format": "date-time" },
     "discovered_at": { "type": "string", "format": "date-time" },
     "extracted_at": { "type": "string", "format": "date-time" },

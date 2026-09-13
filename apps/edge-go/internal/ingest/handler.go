@@ -122,24 +122,32 @@ func (h *Handler) process(ctx context.Context, env events.Envelope[events.Articl
 	fetchCtx, cancel := context.WithTimeout(ctx, h.FetchTimeout)
 	defer cancel()
 
+	feedTitle, feedSummary := deref(d.FeedTitle), deref(d.FeedSummary)
+	origin := events.OriginPage
+	var doc *extract.Document
+	var finalURL string
+
 	res, err := h.Fetcher.Get(fetchCtx, d.CanonicalURL)
 	switch {
 	case errors.Is(err, fetch.ErrPermanent):
-		return reject("fetch: " + err.Error())
+		// Blocked, disallowed or gone: fall back to the syndication feed's own content.
+		if doc, err = extract.FromFeed(feedTitle, feedSummary, d.CanonicalURL); err != nil {
+			return reject("fetch: permanent failure and no usable feed content")
+		}
+		origin, finalURL = events.OriginFeed, d.CanonicalURL
 	case err != nil:
 		return retryLater("fetch: " + err.Error())
+	default:
+		finalURL = res.FinalURL.String()
+		doc, err = extract.FromHTML(res.Body, res.FinalURL, feedTitle)
+		if err != nil {
+			if doc, err = extract.FromFeed(feedTitle, feedSummary, d.CanonicalURL); err != nil {
+				return reject("extract: no content in page or feed")
+			}
+			origin = events.OriginFeed
+		}
 	}
 
-	fallbackTitle := ""
-	if d.FeedTitle != nil {
-		fallbackTitle = *d.FeedTitle
-	}
-	doc, err := extract.FromHTML(res.Body, res.FinalURL, fallbackTitle)
-	if err != nil {
-		return reject("extract: " + err.Error())
-	}
-
-	finalURL := res.FinalURL.String()
 	if len(finalURL) > maxURLLen || len(doc.CanonicalURL) > maxURLLen {
 		return reject("url exceeds contract length")
 	}
@@ -157,20 +165,21 @@ func (h *Handler) process(ctx context.Context, env events.Envelope[events.Articl
 		published = &ts
 	}
 	extracted := events.NewExtracted(sourceName, events.ArticleExtracted{
-		ArticleID:    articleID,
-		CanonicalURL: doc.CanonicalURL,
-		FinalURL:     finalURL,
-		SourceID:     d.SourceID,
-		Title:        doc.Title,
-		Lede:         doc.Lede,
-		TextURI:      textURI,
-		ContentHash:  doc.ContentHash,
-		Lang:         doc.Lang,
-		WordCount:    doc.WordCount,
-		PublishedAt:  published,
-		DiscoveredAt: d.DiscoveredAt,
-		ExtractedAt:  events.Timestamp(now),
-		Signals:      d.Signals,
+		ArticleID:     articleID,
+		CanonicalURL:  doc.CanonicalURL,
+		FinalURL:      finalURL,
+		SourceID:      d.SourceID,
+		Title:         doc.Title,
+		Lede:          doc.Lede,
+		TextURI:       textURI,
+		ContentHash:   doc.ContentHash,
+		Lang:          doc.Lang,
+		WordCount:     doc.WordCount,
+		ContentOrigin: origin,
+		PublishedAt:   published,
+		DiscoveredAt:  d.DiscoveredAt,
+		ExtractedAt:   events.Timestamp(now),
+		Signals:       d.Signals,
 	}, env.ID, now)
 
 	// Publish must succeed before we ack the input. If it fails we return 503, and the
@@ -180,6 +189,13 @@ func (h *Handler) process(ctx context.Context, env events.Envelope[events.Articl
 		return retryLater("publish: " + err.Error())
 	}
 	return okExtracted
+}
+
+func deref(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
 }
 
 func (h *Handler) finish(w http.ResponseWriter, push pushRequest, articleID string, o outcome) {
