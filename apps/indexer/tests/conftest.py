@@ -17,9 +17,11 @@ from xm_core.db.session import ensure_psycopg_compatible_loop
 ensure_psycopg_compatible_loop()
 
 ROOT = Path(__file__).resolve().parents[3]
-DATABASE_URL = os.environ.setdefault(
-    "XM_DATABASE_URL", "postgresql+psycopg://xm:xm@localhost:5432/xploremore"
+# Tests own a dedicated database and drop its schema freely; never point this at dev data.
+DATABASE_URL = os.environ.get(
+    "XM_TEST_DATABASE_URL", "postgresql+psycopg://xm:xm@localhost:5432/xploremore_test"
 )
+os.environ["XM_DATABASE_URL"] = DATABASE_URL  # alembic env.py reads settings from env
 
 
 class FakeEmbedder:
@@ -39,8 +41,24 @@ class FakeEmbedder:
         return out
 
 
+def _ensure_database_exists() -> None:
+    admin_url, _, db_name = DATABASE_URL.rpartition("/")
+    admin = create_engine(f"{admin_url}/postgres", isolation_level="AUTOCOMMIT")
+    try:
+        with admin.connect() as conn:
+            exists = conn.execute(text("SELECT 1 FROM pg_database WHERE datname = :n"), {"n": db_name}).first()
+            if not exists:
+                conn.execute(text(f'CREATE DATABASE "{db_name}"'))
+    finally:
+        admin.dispose()
+
+
 @pytest.fixture(scope="session")
 def migrated_database() -> str:
+    try:
+        _ensure_database_exists()
+    except OperationalError:
+        pytest.skip("Postgres not reachable; run `docker compose -f deploy/compose/docker-compose.yml up -d`")
     engine = create_engine(DATABASE_URL)
     try:
         with engine.begin() as conn:

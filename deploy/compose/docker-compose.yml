@@ -31,5 +31,23 @@ services:
     command: gcloud beta emulators pubsub start --host-port=0.0.0.0:8085 --project=xm-local
     ports: ["8085:8085"]
 
+  # --- Pipeline services (profile: pipeline) ---
+  ingestor:
+    profiles: ["pipeline"]
+    build:
+      context: ../..
+      dockerfile: apps/edge-go/Dockerfile
+    environment:
+      PUBSUB_EMULATOR_HOST: pubsub:8085
+      XM_GCP_PROJECT: xm-local
+      XM_TEXT_DIR: /tmp/text
+      XM_STATE_FILE: /tmp/poller-state.json
+    ports: ["8080:8080"]
+    depends_on: [pubsub]
+    read_only: true
+    tmpfs: ["/tmp"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+
 volumes:
   pgdata:

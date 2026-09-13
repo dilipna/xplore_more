@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     indexer_batch_size: int = Field(default=200, ge=1, le=1000)
     embedding_model: str = "BAAI/bge-small-en-v1.5"
     embedding_dim: int = 384
+    embedding_cache_dir: str | None = None  # baked into the image in production
 
 
 @lru_cache(maxsize=1)
