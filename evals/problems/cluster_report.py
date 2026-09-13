@@ -1,0 +1,220 @@
+"""Problem clustering report (docs/reports/problem-clustering-v1.md) and the top-50 judging sheet.
+
+    XM_DATABASE_URL=... uv run xm-indexer backfill-problems --reset
+    XM_DATABASE_URL=... uv run python evals/problems/cluster_report.py
+
+Reads the live problem tables (dev database with the corpus from
+config/problem_sources.corpus.yaml) and evals/problems/merge_audits.jsonl. Writes
+evals/problems/top50_v1.jsonl with empty human fields for the usefulness check, keeping
+human answers already present.
+"""
+
+from __future__ import annotations
+
+import json
+import math
+from collections import Counter
+from datetime import UTC, datetime
+from pathlib import Path
+
+from sqlalchemy import create_engine, text
+
+from xm_core.settings import get_settings
+from xm_problems.demand import DemandInputs, explain
+from xm_problems.policy import problem_scorer
+
+ROOT = Path(__file__).resolve().parents[2]
+HERE = Path(__file__).resolve().parent
+REPORT = ROOT / "docs" / "reports" / "problem-clustering-v1.md"
+TOP50 = HERE / "top50_v1.jsonl"
+
+
+def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
+    if n == 0:
+        return (0.0, 0.0)
+    p = k / n
+    centre = (p + z * z / (2 * n)) / (1 + z * z / n)
+    half = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / (1 + z * z / n)
+    return (centre - half, centre + half)
+
+
+def main() -> None:
+    engine = create_engine(get_settings().database_url.get_secret_value())
+    as_of = datetime.now(UTC)
+    with engine.connect() as conn:
+        admitted = conn.execute(
+            text(
+                "SELECT source_id, count(*) AS docs, count(*) FILTER (WHERE problem_id IS NOT NULL) AS admitted "
+                "FROM articles WHERE doc_kind = 'discussion' GROUP BY 1 ORDER BY 1"
+            )
+        ).all()
+        sizes = conn.execute(text("SELECT member_count, count(*) FROM problems GROUP BY 1 ORDER BY 1")).all()
+        multi = conn.execute(
+            text(
+                "SELECT count(*) FILTER (WHERE voice_count >= 2), count(*) FILTER (WHERE source_count >= 2), "
+                "count(*) FILTER (WHERE platform_count >= 2), count(*) FROM problems"
+            )
+        ).one()
+        top = conn.execute(
+            text(
+                "SELECT p.id, p.statement, p.category, p.voice_count, p.effective_voices, p.source_count, "
+                "  p.engagement, p.last_seen_at, p.member_count, "
+                "  (SELECT array_agg(DISTINCT a.platform) FROM articles a WHERE a.problem_id = p.id), "
+                "  (SELECT a.canonical_url FROM articles a WHERE a.id = p.representative_article_id) "
+                "FROM problems p ORDER BY p.demand_score DESC, p.id LIMIT 50"
+            )
+        ).all()
+        scorer_versions = Counter(r[0] for r in conn.execute(text("SELECT scorer_version FROM problems")))
+        classifier_versions = Counter(
+            r[0]
+            for r in conn.execute(
+                text("SELECT classifier_version FROM articles WHERE doc_kind = 'discussion'")
+            )
+        )
+    engine.dispose()
+
+    audits: dict[int, list[dict]] = {}
+    audit_path = HERE / "merge_audits.jsonl"
+    for line in audit_path.read_text(encoding="utf-8").splitlines():
+        if line.strip():
+            row = json.loads(line)
+            audits.setdefault(row["audit"], []).append(row)
+
+    # Top-50 judging sheet: keep existing human answers keyed by representative URL.
+    previous = {}
+    if TOP50.exists():
+        for line in TOP50.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                r = json.loads(line)
+                previous[r["url"]] = {k: r.get(k) for k in ("human_useful", "human_note")}
+    sheet = []
+    for rank, r in enumerate(top, start=1):
+        factors = explain(
+            DemandInputs(
+                effective_voices=r[4], source_count=r[5], engagement=r[6], last_seen_at=r[7], category=r[2]
+            ),
+            as_of,
+        )
+        sheet.append(
+            {
+                "rank": rank,
+                "statement": r[1],
+                "category": r[2],
+                "voices": r[3],
+                "sources": r[5],
+                "members": r[8],
+                "platforms": sorted(r[9] or []),
+                "url": r[10],
+                "demand": round(factors["score"], 3),
+                "factors": {k: round(v, 3) for k, v in factors.items() if k != "score"},
+                "human_useful": None,  # true if a builder would want to know about this problem
+                "human_note": None,
+            }
+            | previous.get(r[10], {})
+        )
+    TOP50.write_text(
+        "".join(json.dumps(s, ensure_ascii=False) + "\n" for s in sheet), encoding="utf-8", newline="\n"
+    )
+    judged = [s for s in sheet if s["human_useful"] is not None]
+
+    total_docs = sum(r[1] for r in admitted)
+    total_admitted = sum(r[2] for r in admitted)
+    lines = [
+        "# Problem clustering v1: report",
+        "",
+        f"> Generated by `uv run python evals/problems/cluster_report.py` on {as_of.isoformat(timespec='seconds')} "
+        "from the dev database (corpus: `config/problem_sources.corpus.yaml`). Do not edit numbers by hand.",
+        "",
+        "## Read this first",
+        "",
+        "- **Snapshot, not a stream.** One corpus collection run (about a month of each platform, observed on one day). "
+        "Cluster sizes on a continuous hourly stream will differ.",
+        "- **Assistant-judged audits.** Merge verdicts are the assistant's (`human_audited: false`). "
+        "Audit 2 was run on the same corpus the policy fixes were designed on, so it is optimistic.",
+        f"- **Top-50 usefulness is not judged yet:** {len(judged)}/50 rows have a human answer "
+        "(`evals/problems/top50_v1.jsonl`). No usefulness number is claimed.",
+        f"- Versions in this run: scorer {dict(scorer_versions)}, classifier {dict(classifier_versions)}.",
+        "",
+        "## Admission (classifier `is_problem`)",
+        "",
+        "| Source | Discussions | Admitted as problems | Share |",
+        "|---|---|---|---|",
+    ]
+    for source, docs, adm in admitted:
+        lines.append(f"| {source} | {docs} | {adm} | {100 * adm / docs:.1f}% |")
+    lines += [
+        f"| **total** | {total_docs} | {total_admitted} | {100 * total_admitted / total_docs:.1f}% |",
+        "",
+        "## Problems",
+        "",
+        f"- {multi[3]} problems; {multi[0]} with at least 2 distinct voices, {multi[1]} spanning 2+ sources, "
+        f"{multi[2]} spanning 2+ platforms.",
+        "- Size distribution: " + ", ".join(f"{m} member(s): {c}" for m, c in sizes) + ".",
+        "",
+        "## Merge precision (assistant audits of every join)",
+        "",
+        "| Audit | Policy | Joins | Judged correct | Precision | 95% Wilson CI |",
+        "|---|---|---|---|---|---|",
+    ]
+    for number, rows in sorted(audits.items()):
+        k, n = sum(r["same_problem"] for r in rows), len(rows)
+        lo, hi = wilson(k, n)
+        lines.append(
+            f"| {number} | `{rows[0]['scorer_version']}` | {n} | {k} | {100 * k / n:.1f}% | "
+            f"{100 * lo:.1f}% to {100 * hi:.1f}% |"
+        )
+    last = audits[max(audits)]
+    notes = Counter((r["note"] or "").split(" (")[0] for r in last if not r["same_problem"])
+    lines += [
+        "",
+        f"Remaining errors in audit {max(audits)}: "
+        + "; ".join(f"{note} ({c})" for note, c in notes.most_common())
+        + ".",
+        "",
+        "Merge **recall** is not measured: there is no labeled set of same-problem pairs yet. A known miss: "
+        '"MCP SUPPORT" and "Please add support for model context protocol from anthropic" stayed separate.',
+        "",
+        f"## Top 20 by demand (as of report time; policy `{problem_scorer().version}`)",
+        "",
+        "| # | Statement | Category | Voices | Sources | Platforms | Demand | voices x sources x recency x engagement x category |",
+        "|---|---|---|---|---|---|---|---|",
+    ]
+    for s in sheet[:20]:
+        f = s["factors"]
+        statement = s["statement"].replace("|", "/").replace("\n", " ")[:90]
+        lines.append(
+            f"| {s['rank']} | {statement} | {s['category']} | {s['voices']} | {s['sources']} | "
+            f"{', '.join(s['platforms'])} | {s['demand']:.2f} | "
+            f"{f['voices']:.2f} x {f['sources']:.2f} x {f['recency']:.2f} x {f['engagement']:.2f} x {f['category']:.2f} |"
+        )
+    lines += [
+        "",
+        "## Known issues (v1)",
+        "",
+        "1. **Maintainer roadmaps and tracking issues are admitted and merge with each other.** The labeling guidelines "
+        "never addressed them, so the classifier learned them as `missing_capability` / `cost_or_performance`. "
+        "v2 guidelines should decide whether planning issues are demand evidence.",
+        "2. **Same-thread opinion comments** about one article can merge because their topic is identical.",
+        "3. **Single-platform demand.** No problem in this snapshot spans two platforms, so `source_count` rarely "
+        "exceeds 1 and demand is driven by voices and engagement.",
+        "4. **Version conflicts are decisive** (logit -10): one bug reported against two versions stays split.",
+        "5. **Every GitHub issue is admitted.** The classifier's platform feature dominates for GitHub "
+        "(96% of labeled GitHub items are problems), so admission there is effectively unconditional.",
+        "",
+        "## Reproduce",
+        "",
+        "```bash",
+        "E2E_SOURCES=problem_sources.corpus.yaml E2E_MAX_BATCHES=80 scripts/e2e_local.sh   # corpus",
+        "XM_DATABASE_URL=postgresql+psycopg://xm:xm@localhost:5432/xploremore uv run xm-indexer backfill-problems --reset",
+        "XM_DATABASE_URL=postgresql+psycopg://xm:xm@localhost:5432/xploremore uv run python evals/problems/cluster_report.py",
+        "```",
+        "",
+        "Audits: `uv run python evals/problems/merge_audit.py dump`, then `record N verdicts.txt`.",
+        "",
+    ]
+    REPORT.write_text("\n".join(lines), encoding="utf-8", newline="\n")
+    print(f"wrote {REPORT.relative_to(ROOT)} and {TOP50.relative_to(ROOT)}")
+
+
+if __name__ == "__main__":
+    main()

@@ -3,6 +3,8 @@
 xm-indexer run [--max-batches N]         drain the subscription in micro-batches, then exit
 xm-indexer migrate                       apply database migrations
 xm-indexer seed-sources [--file PATH]... sync all source registries into the sources table
+xm-indexer backfill-clusters [--reset]   assign stories to unclustered articles
+xm-indexer backfill-problems [--reset]   classify discussions and assign problems
 """
 
 from __future__ import annotations
@@ -19,7 +21,7 @@ from xm_core.db.admin import migrate, sync_sources
 from xm_core.db.session import ensure_psycopg_compatible_loop, make_engine, make_sessionmaker
 from xm_core.settings import get_settings
 from xm_embed.embedder import Embedder, FastEmbedEmbedder
-from xm_indexer.backfill import backfill_clusters, reset_clusters
+from xm_indexer.backfill import backfill_clusters, backfill_problems, reset_clusters, reset_problems
 from xm_indexer.bus import BatchSource, PubSubBatchSource
 from xm_indexer.pipeline import Clusterer, process_batch
 
@@ -37,15 +39,19 @@ async def drain(
     settings = get_settings()
     engine = make_engine(settings)
     sessionmaker = make_sessionmaker(engine)
-    totals = {
-        "batches": 0,
-        "applied": 0,
-        "duplicates": 0,
-        "invalid": 0,
-        "failed": 0,
-        "stories_created": 0,
-        "stories_joined": 0,
-    }
+    counters = (
+        "applied",
+        "duplicates",
+        "invalid",
+        "failed",
+        "stories_created",
+        "stories_joined",
+        "discussions",
+        "problems_admitted",
+        "problems_created",
+        "problems_joined",
+    )
+    totals = {"batches": 0, **dict.fromkeys(counters, 0)}
     try:
         for _ in range(max_batches):
             messages = source.pull(batch_size)
@@ -57,7 +63,7 @@ async def drain(
             source.ack(result.ack_ids)
             source.nack(result.nack_ids)
             totals["batches"] += 1
-            for key in ("applied", "duplicates", "invalid", "failed", "stories_created", "stories_joined"):
+            for key in counters:
                 totals[key] += getattr(result, key)
     finally:
         await engine.dispose()
@@ -72,10 +78,7 @@ def _run(max_batches: int) -> int:
         drain(
             PubSubBatchSource(settings.gcp_project, settings.sub_article_extracted_indexer),
             FastEmbedEmbedder(settings.embedding_model, settings.embedding_dim, settings.embedding_cache_dir),
-            Clusterer.load(
-                Path(settings.entities_file),
-                Path(settings.cluster_scorer_file) if settings.cluster_scorer_file else None,
-            ),
+            _load_clusterer(),
             batch_size=settings.indexer_batch_size,
             max_batches=max_batches,
         )
@@ -87,18 +90,28 @@ def _run(max_batches: int) -> int:
     return 1 if totals["failed"] else 0
 
 
-def _backfill(*, reset: bool) -> int:
+def _load_clusterer() -> Clusterer:
+    settings = get_settings()
+    return Clusterer.load(
+        Path(settings.entities_file),
+        Path(settings.cluster_scorer_file) if settings.cluster_scorer_file else None,
+        Path(settings.problem_classifier_file) if settings.problem_classifier_file else None,
+    )
+
+
+def _backfill(*, reset: bool, problems: bool) -> int:
     settings = get_settings()
     ensure_psycopg_compatible_loop()
 
     async def go() -> dict[str, int]:
         engine = make_engine(settings)
         try:
-            clusterer = Clusterer.load(
-                Path(settings.entities_file),
-                Path(settings.cluster_scorer_file) if settings.cluster_scorer_file else None,
-            )
+            clusterer = _load_clusterer()
             sessionmaker = make_sessionmaker(engine)
+            if problems:
+                if reset:
+                    await reset_problems(sessionmaker)
+                return await backfill_problems(sessionmaker, clusterer)
             if reset:
                 await reset_clusters(sessionmaker)
             return await backfill_clusters(sessionmaker, clusterer)
@@ -106,7 +119,7 @@ def _backfill(*, reset: bool) -> int:
             await engine.dispose()
 
     totals = asyncio.run(go())
-    log.info(json.dumps({"event": "clusters_backfilled", **totals}))
+    log.info(json.dumps({"event": "problems_backfilled" if problems else "clusters_backfilled", **totals}))
     return 0
 
 
@@ -125,6 +138,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     backfill = sub.add_parser("backfill-clusters", help="assign stories to unclustered articles")
     backfill.add_argument("--reset", action="store_true", help="drop clustering state and replay")
+    backfill_p = sub.add_parser("backfill-problems", help="classify discussions and assign problems")
+    backfill_p.add_argument("--reset", action="store_true", help="drop problem state and replay")
     args = parser.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO, stream=sys.stdout, format="%(message)s")
@@ -141,7 +156,9 @@ def main(argv: list[str] | None = None) -> int:
             log.info(json.dumps({"event": "sources_synced", "count": count}))
             return 0
         case "backfill-clusters":
-            return _backfill(reset=args.reset)
+            return _backfill(reset=args.reset, problems=False)
+        case "backfill-problems":
+            return _backfill(reset=args.reset, problems=True)
         case "run":
             return _run(args.max_batches)
         case _:

@@ -50,6 +50,7 @@ known-first-party = ["xm_core", "xm_indexer", "xm_cluster", "xm_embed", "xm_sear
 "**/migrations/**" = ["E501"]
 "evals/**" = ["S311"]  # seeded sampling for evaluation, not cryptography
 "evals/problems/evaluate.py" = ["S311", "E501"]  # report generator: markdown table rows read better unwrapped
+"evals/problems/cluster_report.py" = ["E501"]  # report generator
 
 [tool.pyright]
 pythonVersion = "3.13"

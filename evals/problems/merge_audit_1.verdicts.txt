@@ -1,0 +1,33 @@
+Y clipboard snooping; permission manager is the same pain
+Y
+Y
+Y clipboard tooling in the same privacy thread
+N roadmaps are not one problem
+N roadmaps are not one problem
+N roadmaps are not one problem
+Y apps and sites hijacking audio devices
+Y
+Y
+Y same DeepSeek discontinuation event (topic cluster, not really a pain)
+Y
+Y
+Y writing guidance for readable agent output
+N colleagues' messages lacking context is a different pain
+Y Claude Code commit attribution
+Y
+N two different changelog tracking issues, same author
+N generic inspiration vs a specific /compact request
+Y Gemini JSON schema support
+N different feature requests from one template
+Y same null-text parsing bug
+Y no good Linux PDF editor
+N different models: template feature requests (version_conflict missed glm5.3 / qwen3.8)
+N opinions about the same release, not a shared pain
+N different points about one article
+N different points in one debate
+N different points in one debate
+N different workflow questions, not problems
+Y simultaneous AI outages
+N different OpenAI grievances
+N two different Sonnet 5 bugs, same author
+N release announcement vs a support-tier complaint

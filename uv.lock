@@ -1530,6 +1530,7 @@ dependencies = [
     { name = "xm-cluster" },
     { name = "xm-core" },
     { name = "xm-embed" },
+    { name = "xm-problems" },
 ]
 
 [package.metadata]
@@ -1537,6 +1538,7 @@ requires-dist = [
     { name = "xm-cluster", editable = "packages/xm_cluster" },
     { name = "xm-core", editable = "packages/xm_core" },
     { name = "xm-embed", editable = "packages/xm_embed" },
+    { name = "xm-problems", editable = "packages/xm_problems" },
 ]
 
 [[package]]
@@ -1545,10 +1547,16 @@ version = "0.1.0"
 source = { editable = "packages/xm_problems" }
 dependencies = [
     { name = "numpy" },
+    { name = "sqlalchemy" },
+    { name = "xm-cluster" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "numpy", specifier = ">=2.1" }]
+requires-dist = [
+    { name = "numpy", specifier = ">=2.1" },
+    { name = "sqlalchemy", specifier = ">=2.0" },
+    { name = "xm-cluster", editable = "packages/xm_cluster" },
+]
 
 [[package]]
 name = "xm-rank"

@@ -1,0 +1,35 @@
+Y
+Y Zoom abusing privileges, same privacy pain
+Y
+Y
+N roadmaps are not one problem (classifier false positive)
+N roadmaps are not one problem (classifier false positive)
+N roadmaps are not one problem (classifier false positive)
+N roadmap vs RFC, different work
+Y same DeepSeek discontinuation event (topic cluster)
+Y
+Y
+Y apps and sites hijacking audio devices
+Y
+Y
+Y Claude Code commit attribution
+Y
+Y MPS operator coverage
+Y
+N roadmaps are not one problem (classifier false positive)
+N roadmaps are not one problem (classifier false positive)
+Y writing guidance for readable agent output
+N colleagues' messages lacking context is a different pain
+Y null content crashes response parsing
+Y
+N release announcement vs a support-tier complaint
+Y memory leaks from cached generated types
+Y DeepSeek V4 Flash on Ampere GPUs
+Y Gemini JSON schema support
+Y Langfuse SDK v4 support
+Y KV cache for agentic workloads
+N generic inspiration vs a specific /compact request
+Y no good Linux PDF editor
+N two changelog tracking issues, same author (same-author penalty too weak here)
+N opinions about the same release, not a shared pain
+N different points about one article
