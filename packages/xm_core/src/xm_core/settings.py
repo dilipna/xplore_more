@@ -35,6 +35,9 @@ class Settings(BaseSettings):
 
     entities_file: str = "config/entities.yaml"
     cluster_scorer_file: str | None = None  # fitted weights; None uses calibrated priors
+    # Pain-point classifier artifact (evals/problems/evaluate.py). Empty disables problem
+    # intelligence in the indexer: discussions are still stored, just not classified.
+    problem_classifier_file: str = "config/problem_classifier.v1.json"
 
 
 @lru_cache(maxsize=1)

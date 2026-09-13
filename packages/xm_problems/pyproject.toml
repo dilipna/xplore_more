@@ -4,8 +4,13 @@ version = "0.1.0"
 description = "Problem intelligence: pain-point classification, problem clustering policy and demand scoring."
 requires-python = ">=3.13,<3.14"
 dependencies = [
+    "xm-cluster",
     "numpy>=2.1",
+    "sqlalchemy>=2.0",
 ]
+
+[tool.uv.sources]
+xm-cluster = { workspace = true }
 
 [build-system]
 requires = ["uv_build>=0.8,<0.12"]

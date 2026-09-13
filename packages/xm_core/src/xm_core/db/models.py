@@ -94,6 +94,12 @@ class Article(Base):
     engagement_points: Mapped[int | None] = mapped_column(Integer)
     engagement_comments: Mapped[int | None] = mapped_column(Integer)
     engagement_reactions: Mapped[int | None] = mapped_column(Integer)
+    # Problem intelligence (migration 0005): classifier output and problem membership.
+    problem_id: Mapped[int | None] = mapped_column(BigInteger, ForeignKey("problems.id", ondelete="SET NULL"))
+    problem_probability: Mapped[float | None] = mapped_column(Float)
+    problem_category: Mapped[str | None] = mapped_column(String(24))
+    classifier_version: Mapped[str | None] = mapped_column(String(40))
+    problem_join_probability: Mapped[float | None] = mapped_column(Float)
     # Clustering state (xm_cluster.assign)
     story_id: Mapped[int | None] = mapped_column(BigInteger, ForeignKey("stories.id", ondelete="SET NULL"))
     minhash: Mapped[bytes | None] = mapped_column(BYTEA)
@@ -112,6 +118,7 @@ class Article(Base):
         Index("ix_articles_content_hash", "content_hash"),
         Index("ix_articles_discovered_at", "discovered_at"),
         Index("ix_articles_story_id", "story_id"),
+        Index("ix_articles_problem_id", "problem_id"),
         Index("ix_articles_entities", "entities", postgresql_using="gin"),
         Index("ix_articles_tsv", "tsv", postgresql_using="gin"),
         Index(
@@ -144,6 +151,42 @@ class Story(Base):
     __table_args__ = (
         CheckConstraint("size >= 1", name="story_size_positive"),
         Index("ix_stories_last_updated_at", "last_updated_at"),
+    )
+
+
+class Problem(Base):
+    """A specific pain reported by independent voices (see xm_problems.policy for the policy)."""
+
+    __tablename__ = "problems"
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    first_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    member_count: Mapped[int] = mapped_column(Integer)
+    voice_count: Mapped[int] = mapped_column(Integer)  # distinct author_hash
+    effective_voices: Mapped[float] = mapped_column(Float)  # sum over authors of max p_problem
+    source_count: Mapped[int] = mapped_column(Integer)
+    platform_count: Mapped[int] = mapped_column(Integer)
+    engagement: Mapped[int] = mapped_column(Integer)
+    category: Mapped[str | None] = mapped_column(String(24))
+    statement: Mapped[str] = mapped_column(Text)
+    representative_article_id: Mapped[str] = mapped_column(String(64))
+    centroid: Mapped[list[float]] = mapped_column(HALFVEC(EMBEDDING_DIM))
+    demand_score: Mapped[float] = mapped_column(Float, server_default="0")
+    scorer_version: Mapped[str] = mapped_column(String(40))
+    version: Mapped[int] = mapped_column(Integer)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    __table_args__ = (
+        CheckConstraint("member_count >= 1", name="problem_member_count_positive"),
+        Index("ix_problems_last_seen_at", "last_seen_at"),
+        Index("ix_problems_demand_score", "demand_score"),
+        Index(
+            "ix_problems_centroid_hnsw",
+            "centroid",
+            postgresql_using="hnsw",
+            postgresql_ops={"centroid": "halfvec_cosine_ops"},
+        ),
     )
 
 

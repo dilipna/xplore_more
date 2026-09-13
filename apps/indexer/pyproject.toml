@@ -7,6 +7,7 @@ dependencies = [
     "xm-core",
     "xm-cluster",
     "xm-embed",
+    "xm-problems",
 ]
 
 [project.scripts]
@@ -16,6 +17,7 @@ xm-indexer = "xm_indexer.__main__:main"
 xm-core = { workspace = true }
 xm-cluster = { workspace = true }
 xm-embed = { workspace = true }
+xm-problems = { workspace = true }
 
 [build-system]
 requires = ["uv_build>=0.8,<0.12"]

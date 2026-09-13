@@ -95,7 +95,7 @@ async def sessionmaker(migrated_database: str) -> AsyncIterator[async_sessionmak
     engine = create_async_engine(migrated_database)
     async with engine.begin() as conn:
         await conn.execute(
-            text("TRUNCATE processed_events, article_lsh_bands, articles, stories, sources CASCADE")
+            text("TRUNCATE processed_events, article_lsh_bands, articles, stories, problems, sources CASCADE")
         )
         await conn.execute(
             text(

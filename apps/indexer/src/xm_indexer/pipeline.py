@@ -12,16 +12,20 @@ Guarantees (each covered by a test in tests/):
       same transaction, under an advisory lock, so concurrent indexers cannot split one event
       into two stories. Discussions are stored with provenance but never join news stories:
       a comment about a release is not coverage of it. They feed problem clustering.
+  G7  Every newly indexed discussion is classified in the same transaction, and each one the
+      classifier admits as a problem belongs to exactly one problem, assigned under the
+      problem advisory lock (xm_problems.assign).
 """
 
 from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 
 from pydantic import ValidationError
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -36,6 +40,9 @@ from xm_core.events import ArticleExtracted, Envelope
 from xm_core.idempotency import claim
 from xm_embed.embedder import Embedder
 from xm_indexer.bus import ReceivedMessage
+from xm_problems.assign import DocForProblem, acquire_problem_lock, assign_problem
+from xm_problems.classifier import PainClassifier
+from xm_problems.policy import problem_scorer
 
 log = logging.getLogger(__name__)
 
@@ -47,11 +54,17 @@ class Clusterer:
     gazetteer: Gazetteer
     hasher: MinHasher
     scorer: LogisticScorer
+    # Problem intelligence; None stores discussions without classifying them.
+    pain: PainClassifier | None = None
+    problem_scorer: LogisticScorer = field(default_factory=problem_scorer)
 
     @classmethod
-    def load(cls, entities_file: Path, scorer_file: Path | None = None) -> Clusterer:
+    def load(
+        cls, entities_file: Path, scorer_file: Path | None = None, classifier_file: Path | None = None
+    ) -> Clusterer:
         scorer = LogisticScorer.from_file(scorer_file) if scorer_file else LogisticScorer()
-        return cls(gazetteer=Gazetteer.load(entities_file), hasher=MinHasher(), scorer=scorer)
+        pain = PainClassifier.from_file(classifier_file) if classifier_file else None
+        return cls(gazetteer=Gazetteer.load(entities_file), hasher=MinHasher(), scorer=scorer, pain=pain)
 
 
 @dataclass
@@ -65,6 +78,9 @@ class BatchResult:
     stories_created: int = 0
     stories_joined: int = 0
     discussions: int = 0
+    problems_admitted: int = 0
+    problems_created: int = 0
+    problems_joined: int = 0
 
 
 def embedding_text(article: ArticleExtracted) -> str:
@@ -83,8 +99,8 @@ async def _find_content_duplicate(session: AsyncSession, article: ArticleExtract
 
 async def _upsert_article(
     session: AsyncSession, article: ArticleExtracted, vector: list[float]
-) -> tuple[str | None, int | None]:
-    """Insert or update; returns (duplicate_of, existing story_id)."""
+) -> tuple[str | None, int | None, int | None]:
+    """Insert or update; returns (duplicate_of, existing story_id, existing problem_id)."""
     duplicate_of = await _find_content_duplicate(session, article)
     disc = article.discussion
     values = {
@@ -121,10 +137,67 @@ async def _upsert_article(
     # discovered_at is deliberately not updated: first sighting is a point-in-time fact.
     mutable = {k: stmt.excluded[k] for k in values if k not in {"id", "canonical_url", "discovered_at"}}
     upsert = stmt.on_conflict_do_update(index_elements=["id"], set_=mutable).returning(
-        Article.story_id, Article.discovered_at
+        Article.story_id, Article.problem_id
     )
     row = (await session.execute(upsert)).one()
-    return duplicate_of, row.story_id
+    return duplicate_of, row.story_id, row.problem_id
+
+
+async def classify_discussion(
+    session: AsyncSession,
+    *,
+    article_id: str,
+    title: str,
+    lede: str,
+    source_id: str,
+    platform: str | None,
+    is_comment: bool,
+    observed_at: datetime,
+    author_hash: str | None,
+    vector: list[float],
+    existing_problem: int | None,
+    clusterer: Clusterer,
+) -> str:
+    """G7: classify a discussion and, if it is a problem, put it in exactly one problem.
+
+    Returns unclassified | not_problem | created | joined | kept. The caller's transaction
+    must hold the problem lock. A re-extracted document keeps its problem (like G4 for
+    stories); its classification is refreshed.
+    """
+    if clusterer.pain is None:
+        return "unclassified"
+    prediction = clusterer.pain.predict(vector, title, lede, platform, is_comment)
+    await session.execute(
+        text(
+            "UPDATE articles SET problem_probability = :p, problem_category = :c, classifier_version = :v "
+            "WHERE id = :id"
+        ),
+        {"p": prediction.p_problem, "c": prediction.category, "v": clusterer.pain.version, "id": article_id},
+    )
+    if not prediction.is_problem:
+        return "not_problem"
+    if existing_problem is not None:
+        return "kept"
+    body = f"{title}\n{lede}"
+    signature = clusterer.hasher.signature(shingles(body))
+    outcome = await assign_problem(
+        session,
+        DocForProblem(
+            id=article_id,
+            title=title,
+            lede=lede,
+            source_id=source_id,
+            is_comment=is_comment,
+            observed_at=observed_at,
+            embedding=vector,
+            signature=signature,
+            entities=clusterer.gazetteer.extract(body),
+            author_hash=author_hash,
+        ),
+        scorer=clusterer.problem_scorer,
+        hasher=clusterer.hasher,
+    )
+    return "created" if outcome.created else "joined"
 
 
 async def process_batch(
@@ -156,6 +229,10 @@ async def process_batch(
 
     async with sessionmaker() as session, session.begin():
         await acquire_cluster_lock(session)  # G6: serialize story assignment across workers
+        if clusterer.pain is not None and any(env.data.doc_kind == "discussion" for _, env in parsed):
+            # G7. Taken once per transaction, always after the story lock (fixed lock order),
+            # and outside any savepoint so a failed message cannot release it.
+            await acquire_problem_lock(session)
         for (message, envelope), vector in zip(parsed, vectors, strict=True):
             try:
                 async with session.begin_nested():
@@ -169,10 +246,29 @@ async def process_batch(
                         result.duplicates += 1
                     else:
                         article = envelope.data
-                        duplicate_of, existing_story = await _upsert_article(session, article, vector)
+                        duplicate_of, existing_story, existing_problem = await _upsert_article(
+                            session, article, vector
+                        )
                         result.applied += 1
-                        if article.doc_kind == "discussion":
+                        if article.discussion is not None:
                             result.discussions += 1
+                            decision = await classify_discussion(
+                                session,
+                                article_id=article.article_id,
+                                title=article.title,
+                                lede=article.lede,
+                                source_id=article.source_id,
+                                platform=article.discussion.platform,
+                                is_comment=article.discussion.parent_url is not None,
+                                observed_at=article.discovered_at,
+                                author_hash=article.discussion.author_hash,
+                                vector=vector,
+                                existing_problem=existing_problem,
+                                clusterer=clusterer,
+                            )
+                            result.problems_admitted += decision in {"created", "joined", "kept"}
+                            result.problems_created += decision == "created"
+                            result.problems_joined += decision == "joined"
                         elif existing_story is None:
                             outcome = await assign(
                                 session,
