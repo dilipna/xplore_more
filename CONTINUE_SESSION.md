@@ -9,7 +9,7 @@
 1. **State:** **all gates green**: 71 Python tests with 0 skipped, all Go packages, Terraform validated and scanned. **The working tree is clean.**
 2. **The system already runs live on the laptop:** 43 real tech sources + **5 discussion sources** → Go poller → Pub/Sub emulator → Go ingestor → Python indexer (embeddings + story clustering) → Postgres → FastAPI (search, feed, story detail).
 3. **Newest direction (decided by the user):** XploreMore becomes the **problem-discovery backbone for Pro2Pro** (`protopro.vercel.app`). XploreMore finds, clusters and ranks **real problems people face**; Pro2Pro's agents turn them into shipped products. This is **Phase P (Problem Intelligence)** in §6, and it is the **top priority**.
-4. **Progress in Phase P:** **P1 done** (§4.8). **Next task: P2** (pain-point classifier). The dev DB `xploremore` already holds 366 real discussion docs to sample the labeled set from.
+4. **Progress in Phase P:** **P1 done** (§4.8), **P2 done** (§4.9). **Next task: P3** (problem clustering + demand score, migration 0005). The dev DB `xploremore` holds ~1,550 real discussion docs.
 
 ---
 
@@ -138,6 +138,15 @@ Go and Terraform are **not installed locally**. Use `scripts/go.sh` and `scripts
 - **Live measurement (2026-09-13, `E2E_SOURCES=problem_sources.yaml E2E_MAX_BATCHES=40 scripts/e2e_local.sh`):** 366 found → 366 published → 366 extracted → 366 indexed; 0 invalid, 0 rejected, 0 retried, 0 failed; 0 discussions in stories. By platform: GitHub 149 docs / 139 voices, HN 184 / 181 (79 threads), Lobsters 28 / 27, Stack Exchange 5 / 5. Every doc has an author_hash.
 - **Finding:** Stack Overflow volume has collapsed (newest `[kubernetes]` question ~27 days old), so its window is 30 days and it is a minor source.
 - Local salt lives in `.data/author_salt` (gitignored).
+- **Follow-up fix (commit `a687bde`):** the corpus run showed `hn-comments` spending the whole source deadline on sequential thread fetches, so every publish failed on an expired context (225 items dropped silently). Fetch now gets 75% of the budget; threads are expanded 4 at a time; publish failures are logged. Mutation-checked. Re-run: 1,398 found, 1,397 published, 0 warnings, 21 s.
+
+### 4.9 P2 — Pain-point classifier (commits `ae63188`, `8f93a82`)
+- **Corpus:** `config/problem_sources.corpus.yaml` (wide windows, not scheduled) → ~1,550 discussion docs in the dev DB.
+- **Dataset:** `evals/problems/labels_v1.jsonl`: 485 items stratified by source (GitHub 120, Ask HN 120, HN comments 120, Lobsters 100, Stack Overflow 25; seed 17). The file is self-contained (excerpt ≤1,000 chars + url, no author data). Rules are in `GUIDELINES.md`. **Assistant labels, `human_audited: false`**; audit with `evals/problems/audit.py`. Gold counts: not_a_problem 276, missing_capability 88, bug 60, how_to 25, workflow_friction 18, cost_or_performance 18.
+- **Package `xm_problems`:** `cues.py` (cue groups written from the guidelines; their digest is in the schema) and `classifier.py` (`PainClassifier`, numpy only; refuses an artifact whose feature-schema hash differs; a test fails if cues change without retraining). Artifact: `config/problem_classifier.v1.json` (C=0.001, threshold on p_problem 0.645).
+- **Results** (`uv run python evals/problems/evaluate.py` → `docs/reports/problem-classifier-v1.md`, `evals/problems/results_v1.json`; out-of-fold 5×10 CV, nested C + threshold). is_problem P/R: rules 0.63/0.61, zero-shot 0.42/0.98, logreg_embedding 0.80/0.69, **logreg_full 0.80/0.76 (F1 0.78)**, 95% CI P 0.72–0.84, R 0.68–0.81. Six-way macro-F1 0.50.
+- **Honest findings (keep in all docs):** precision is carried by GitHub issues (P 0.96 / R 0.98). On HN/Lobsters/SO it reaches only **P 0.48 / R 0.39**. Population-weighted precision (0.775) misses the 0.80 target. The 18-example classes are not learned. Consequence for P3: use p_problem as a soft weight, require multiple voices, and show platform in evidence. v2 needs active sampling of HN/Lobsters positives plus a human audit.
+- Serving parity numpy vs sklearn: 6e-8. Dataset hash is normalized to LF and matches the git blob.
 
 ## 5. Pro2Pro facts needed for the integration (verified in its code)
 
@@ -171,7 +180,7 @@ Go and Terraform are **not installed locally**. Use `scripts/go.sh` and `scripts
 - Registry: `config/problem_sources.yaml`. Same poller/ingestor safety (SSRF, robots, rate limits). Discussion text comes from APIs (no HTML fetch).
 - **Tests:** contract fixtures (Go + Python), poller tests with httptest servers, dedup by canonical thread/comment URL.
 
-**P2. Pain-point classifier (ML, measured)**
+**P2. Pain-point classifier (ML, measured)** — ✅ DONE (§4.9; the indexer integration is part of P3)
 - **Labels:** `bug_or_reliability`, `missing_capability`, `cost_or_performance`, `workflow_friction`, `how_to_question`, `not_a_problem`.
 - **Dataset:** `evals/problems/labels_v1.jsonl` with about 400–600 items stratified by source. Assistant first-pass labels with `human_audited: false` plus an audit CLI (reuse the clustering audit pattern).
 - **Models:** baselines (keyword cues like "struggling / is there a tool / wish / workaround / keeps failing", and zero-shot embedding centroids) → **logistic regression on bge embeddings + cue features**. CV like the clustering harness, per-class P/R, a precision target for "is a problem" of at least 0.8. Stored as a versioned model artifact with a feature-schema hash.
@@ -229,7 +238,8 @@ Go and Terraform are **not installed locally**. Use `scripts/go.sh` and `scripts
 - [ ] New GCP account/project ($300 credit), then `infra/terraform/bootstrap` (see `infra/terraform/README.md`).
 - [ ] Free **Neon** project (pooled URL → Secret Manager `database-url`) and free **Upstash Redis**.
 - [ ] Optional: a GitHub personal access token (public read-only) as `GITHUB_TOKEN`, for higher issue-API limits.
-- [ ] Audit clustering labels: `uv run python evals/clustering/audit.py`. Later, audit problem labels the same way.
+- [ ] Audit clustering labels: `uv run python evals/clustering/audit.py`.
+- [ ] Audit pain-point labels (low/medium confidence first, 183 items): `uv run python evals/problems/audit.py`, then re-run `evaluate.py`.
 - [ ] When P5 is ready: add `XPLOREMORE_API_URL` / `XPLOREMORE_API_KEY` to Pro2Pro's Render environment.
 
 ## 8. How to run everything locally
