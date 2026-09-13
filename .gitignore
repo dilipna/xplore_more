@@ -52,3 +52,6 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 .mutation/
+
+# Eval caches
+evals/**/.cache/

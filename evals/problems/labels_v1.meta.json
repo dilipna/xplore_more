@@ -1,0 +1,36 @@
+{
+  "created_at": "2026-09-13T22:27:55+00:00",
+  "seed": 17,
+  "quotas": {
+    "github-issues-ai": 120,
+    "hn-ask": 120,
+    "hn-comments": 120,
+    "lobsters-ask": 100,
+    "stackoverflow-ai-infra": 25
+  },
+  "strata": {
+    "github-issues-ai": {
+      "population": 297,
+      "sampled": 120
+    },
+    "hn-ask": {
+      "population": 516,
+      "sampled": 120
+    },
+    "hn-comments": {
+      "population": 470,
+      "sampled": 120
+    },
+    "lobsters-ask": {
+      "population": 245,
+      "sampled": 100
+    },
+    "stackoverflow-ai-infra": {
+      "population": 25,
+      "sampled": 25
+    }
+  },
+  "rows": 485,
+  "text_chars": 1000,
+  "source": "dev database discussion documents collected with config/problem_sources.corpus.yaml"
+}

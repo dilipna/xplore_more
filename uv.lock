@@ -9,6 +9,7 @@ members = [
     "xm-core",
     "xm-embed",
     "xm-indexer",
+    "xm-problems",
     "xm-rank",
     "xm-search",
     "xploremore",
@@ -1539,6 +1540,17 @@ requires-dist = [
 ]
 
 [[package]]
+name = "xm-problems"
+version = "0.1.0"
+source = { editable = "packages/xm_problems" }
+dependencies = [
+    { name = "numpy" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "numpy", specifier = ">=2.1" }]
+
+[[package]]
 name = "xm-rank"
 version = "0.1.0"
 source = { editable = "packages/xm_rank" }
@@ -1576,6 +1588,7 @@ dependencies = [
     { name = "xm-core" },
     { name = "xm-embed" },
     { name = "xm-indexer" },
+    { name = "xm-problems" },
     { name = "xm-rank" },
     { name = "xm-search" },
 ]
@@ -1599,6 +1612,7 @@ requires-dist = [
     { name = "xm-core", editable = "packages/xm_core" },
     { name = "xm-embed", editable = "packages/xm_embed" },
     { name = "xm-indexer", editable = "apps/indexer" },
+    { name = "xm-problems", editable = "packages/xm_problems" },
     { name = "xm-rank", editable = "packages/xm_rank" },
     { name = "xm-search", editable = "packages/xm_search" },
 ]
