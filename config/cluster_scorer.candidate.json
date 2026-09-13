@@ -1,0 +1,16 @@
+{
+  "version": "fitted-20260913",
+  "intercept": -1.9827073852779087,
+  "cosine_center": 0.85,
+  "weights": {
+    "max_member_cosine": 14.370203965808233,
+    "centroid_cosine": 14.370203965808233,
+    "minhash_jaccard": -1.5810104032589263,
+    "title_jaccard": 3.295887830961752,
+    "entity_jaccard": 1.040786100459959,
+    "hours_gap": 0.6171091669916151,
+    "same_source": -1.8491819525220263,
+    "version_conflict": -3.0832640669939972
+  },
+  "threshold": 0.4102
+}

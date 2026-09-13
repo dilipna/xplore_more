@@ -1,0 +1,51 @@
+{
+  "seed": 13,
+  "articles": 838,
+  "window_hours": 72.0,
+  "bins": [
+    [
+      0.7,
+      0.78,
+      25
+    ],
+    [
+      0.78,
+      0.82,
+      30
+    ],
+    [
+      0.82,
+      0.85,
+      40
+    ],
+    [
+      0.85,
+      0.88,
+      45
+    ],
+    [
+      0.88,
+      0.92,
+      45
+    ],
+    [
+      0.92,
+      1.01,
+      40
+    ]
+  ],
+  "strata": {
+    "cross-source cos[0.7,0.78)": 9043,
+    "cross-source cos[0.78,0.82)": 202,
+    "cross-source cos[0.82,0.85)": 33,
+    "cross-source cos[0.85,0.88)": 8,
+    "cross-source cos[0.88,0.92)": 9,
+    "cross-source cos[0.92,1.01)": 4,
+    "same-source cos[0.7,0.78)": 2209,
+    "same-source cos[0.78,0.82)": 256,
+    "same-source cos[0.82,0.85)": 86,
+    "same-source cos[0.85,0.88)": 29,
+    "same-source cos[0.88,0.92)": 15,
+    "same-source cos[0.92,1.01)": 12
+  }
+}

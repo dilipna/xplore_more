@@ -26,6 +26,7 @@ dev = [
     "pyright>=1.1.390",
     "jsonschema>=4.23",
     "referencing>=0.35",
+    "scikit-learn>=1.6",
 ]
 
 [tool.ruff]
@@ -42,11 +43,12 @@ known-first-party = ["xm_core", "xm_indexer", "xm_cluster"]
 [tool.ruff.lint.per-file-ignores]
 "**/tests/**" = ["S", "B"]
 "**/migrations/**" = ["E501"]
+"evals/**" = ["S311"]  # seeded sampling for evaluation, not cryptography
 
 [tool.pyright]
 pythonVersion = "3.13"
 typeCheckingMode = "standard"
-include = ["packages", "apps/indexer"]
+include = ["packages", "apps/indexer", "evals"]
 exclude = ["**/tests/**", "**/.venv/**", "**/migrations/**"]
 
 [tool.pytest.ini_options]

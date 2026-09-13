@@ -10,6 +10,12 @@ median cosine 0.60, p99 0.75; same-series-different-topic pairs 0.80-0.84, measu
 2026-09-13 on 903 live pairs). They are replaced by weights fitted on the labeled pair
 set (evals/clustering) through `LogisticScorer.from_file`, and the evaluation report
 compares both.
+
+Error analysis 2026-09-13 (796 live articles, 15 multi-article stories audited by hand):
+all 7 cross-source merges were correct, while 7 of 8 same-source merges were wrong. Those
+were templated titles naming different releases ("Introducing Gemini 3.7 Flash" / "3.8
+Flash", "Release b10937" / "b10938"). Fix: the `version_conflict` feature and a stronger
+same-source penalty (prior-2026-09-13b). See docs/clustering.md.
 """
 
 from __future__ import annotations
@@ -29,6 +35,7 @@ class PairFeatures:
     entity_jaccard: float  # article entities vs story entity set
     hours_gap: float  # |article time - story last update|
     same_source: bool  # story already has an article from this source
+    version_conflict: bool = False  # both name versions, and they are disjoint
 
     def as_vector(self) -> list[float]:
         return [
@@ -39,6 +46,7 @@ class PairFeatures:
             self.entity_jaccard,
             self.hours_gap,
             float(self.same_source),
+            float(self.version_conflict),
         ]
 
 
@@ -50,12 +58,13 @@ FEATURE_NAMES = [
     "entity_jaccard",
     "hours_gap",
     "same_source",
+    "version_conflict",
 ]
 
 
 @dataclass(frozen=True)
 class LogisticScorer:
-    version: str = "prior-2026-09-13"
+    version: str = "prior-2026-09-13b"
     intercept: float = -3.5
     # Cosine enters centered at 0.85 so the scale of the weight is interpretable.
     cosine_center: float = 0.85
@@ -67,7 +76,8 @@ class LogisticScorer:
             "title_jaccard": 3.0,
             "entity_jaccard": 2.0,
             "hours_gap": -0.03,
-            "same_source": -0.5,
+            "same_source": -2.0,
+            "version_conflict": -6.0,
         }
     )
     threshold: float = 0.5
@@ -83,6 +93,7 @@ class LogisticScorer:
             + w["entity_jaccard"] * f.entity_jaccard
             + w["hours_gap"] * f.hours_gap
             + w["same_source"] * float(f.same_source)
+            + w.get("version_conflict", 0.0) * float(f.version_conflict)
         )
 
     def probability(self, f: PairFeatures) -> float:

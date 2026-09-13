@@ -1,0 +1,230 @@
+{
+  "dataset": "evals\\clustering\\pairs_v1.jsonl",
+  "pairs": 182,
+  "positives": 27,
+  "low_confidence": 13,
+  "human_audited": false,
+  "results": {
+    "prior_scorer (no fitting)": {
+      "sample": {
+        "precision": 0.875,
+        "recall": 0.259,
+        "f1": 0.4,
+        "f1_ci95": [
+          0.167,
+          0.6
+        ]
+      },
+      "population": {
+        "precision": 0.875,
+        "recall": 0.203,
+        "f1": 0.33,
+        "f1_ci95": [
+          0.123,
+          0.558
+        ]
+      }
+    },
+    "cosine_threshold": {
+      "sample": {
+        "precision": 0.324,
+        "recall": 0.722,
+        "f1": 0.447,
+        "f1_ci95": [
+          0.316,
+          0.571
+        ]
+      },
+      "population": {
+        "precision": 0.269,
+        "recall": 0.597,
+        "f1": 0.37,
+        "f1_ci95": [
+          0.24,
+          0.498
+        ]
+      }
+    },
+    "title_jaccard_threshold": {
+      "sample": {
+        "precision": 0.333,
+        "recall": 0.587,
+        "f1": 0.425,
+        "f1_ci95": [
+          0.275,
+          0.551
+        ]
+      },
+      "population": {
+        "precision": 0.21,
+        "recall": 0.648,
+        "f1": 0.317,
+        "f1_ci95": [
+          0.152,
+          0.531
+        ]
+      }
+    },
+    "logistic_fitted": {
+      "sample": {
+        "precision": 0.608,
+        "recall": 0.57,
+        "f1": 0.586,
+        "f1_ci95": [
+          0.364,
+          0.678
+        ]
+      },
+      "population": {
+        "precision": 0.605,
+        "recall": 0.447,
+        "f1": 0.512,
+        "f1_ci95": [
+          0.29,
+          0.651
+        ]
+      }
+    },
+    "logistic_fitted_p80": {
+      "sample": {
+        "precision": 0.692,
+        "recall": 0.443,
+        "f1": 0.536,
+        "f1_ci95": [
+          0.194,
+          0.609
+        ]
+      },
+      "population": {
+        "precision": 0.692,
+        "recall": 0.347,
+        "f1": 0.459,
+        "f1_ci95": [
+          0.146,
+          0.566
+        ]
+      }
+    }
+  },
+  "fitted_scorer": {
+    "weights": {
+      "max_member_cosine": 14.37,
+      "centroid_cosine": 14.37,
+      "minhash_jaccard": -1.581,
+      "title_jaccard": 3.296,
+      "entity_jaccard": 1.041,
+      "hours_gap": 0.617,
+      "same_source": -1.849,
+      "version_conflict": -3.083
+    },
+    "intercept": -1.983,
+    "threshold": 0.41
+  },
+  "prior_errors": [
+    {
+      "pair_id": "p0006",
+      "label": 0,
+      "prob": 0.713
+    },
+    {
+      "pair_id": "p0023",
+      "label": 1,
+      "prob": 0.149
+    },
+    {
+      "pair_id": "p0026",
+      "label": 1,
+      "prob": 0.046
+    },
+    {
+      "pair_id": "p0036",
+      "label": 1,
+      "prob": 0.075
+    },
+    {
+      "pair_id": "p0043",
+      "label": 1,
+      "prob": 0.363
+    },
+    {
+      "pair_id": "p0047",
+      "label": 1,
+      "prob": 0.016
+    },
+    {
+      "pair_id": "p0048",
+      "label": 1,
+      "prob": 0.247
+    },
+    {
+      "pair_id": "p0051",
+      "label": 1,
+      "prob": 0.256
+    },
+    {
+      "pair_id": "p0060",
+      "label": 1,
+      "prob": 0.229
+    },
+    {
+      "pair_id": "p0088",
+      "label": 1,
+      "prob": 0.055
+    },
+    {
+      "pair_id": "p0098",
+      "label": 1,
+      "prob": 0.419
+    },
+    {
+      "pair_id": "p0102",
+      "label": 1,
+      "prob": 0.098
+    },
+    {
+      "pair_id": "p0105",
+      "label": 1,
+      "prob": 0.01
+    },
+    {
+      "pair_id": "p0112",
+      "label": 1,
+      "prob": 0.034
+    },
+    {
+      "pair_id": "p0115",
+      "label": 1,
+      "prob": 0.283
+    },
+    {
+      "pair_id": "p0127",
+      "label": 1,
+      "prob": 0.258
+    },
+    {
+      "pair_id": "p0133",
+      "label": 1,
+      "prob": 0.499
+    },
+    {
+      "pair_id": "p0144",
+      "label": 1,
+      "prob": 0.348
+    },
+    {
+      "pair_id": "p0158",
+      "label": 1,
+      "prob": 0.218
+    },
+    {
+      "pair_id": "p0171",
+      "label": 1,
+      "prob": 0.232
+    },
+    {
+      "pair_id": "p0173",
+      "label": 1,
+      "prob": 0.055
+    }
+  ]
+}

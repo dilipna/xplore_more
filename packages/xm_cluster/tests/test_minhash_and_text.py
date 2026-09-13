@@ -89,3 +89,21 @@ def test_gazetteer_matches_longest_alias_and_respects_case() -> None:
     assert "rust" in gz.extract("Rust 1.90 improves compile times")
     # Word boundaries: 'Metadata' is not Meta, 'gemini-like' still counts only as a word.
     assert "meta" not in gz.extract("metadata catalog improvements")
+
+
+@pytest.mark.parametrize(
+    ("title", "expected"),
+    [
+        ("Introducing Gemini 3.8 Flash and 3.8 Flash Cyber", {"3.8"}),
+        ("Release: datasette 1.0a39", {"1.0a39"}),
+        ("Release v1.37.0-rc.1 · kubernetes/kubernetes", {"1.37.0-rc.1"}),
+        ("Release b10938 · ggml-org/llama.cpp", {"b10938"}),
+        ("OpenAI ships GPT-5.1 today", {"5.1"}),
+        ("Google named a Leader in the 2026 Gartner Magic Quadrant", set()),
+        ("Kubernetes v1.37: Advancing Workload-Aware Scheduling", {"1.37"}),
+    ],
+)
+def test_version_tokens(title: str, expected: set[str]) -> None:
+    from xm_cluster.text import version_tokens
+
+    assert version_tokens(title) == expected
