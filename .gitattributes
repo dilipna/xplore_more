@@ -1,0 +1,6 @@
+# Normalize line endings: containers, shell scripts and Go tooling expect LF.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.gz binary
+*.onnx binary

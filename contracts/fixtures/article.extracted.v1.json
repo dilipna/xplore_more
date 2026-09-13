@@ -2,25 +2,30 @@
   "id": "0192f3a4-5b6c-7d8e-9f01-23456789abce",
   "type": "xm.article.extracted.v1",
   "source": "edge/ingestor",
-  "subject": "b04282bca8097bb4ac7437d061f91672961e10629743138024b551df1964669f",
+  "subject": "b6057b134e61b96fde7799b648e05b79f840502ca05565d16ee82c44f16ba490",
   "time": "2026-09-13T10:00:05Z",
   "schema_version": 1,
-  "idempotency_key": "75eaa55ab98be0b29276cae26642cbccc640de1af70754151102cdf8e61ffd6d",
+  "idempotency_key": "07bbee912c8311ee9de83dfa1af6fea6c77e593ee5a77d8930b33ffe4d1c8e21",
   "caused_by": "0192f3a4-5b6c-7d8e-9f01-23456789abcd",
   "data": {
-    "article_id": "b04282bca8097bb4ac7437d061f91672961e10629743138024b551df1964669f",
-    "canonical_url": "https://www.anthropic.com/news/claude-example",
-    "final_url": "https://www.anthropic.com/news/claude-example",
+    "article_id": "b6057b134e61b96fde7799b648e05b79f840502ca05565d16ee82c44f16ba490",
+    "canonical_url": "https://anthropic.com/news/claude-example",
+    "final_url": "https://anthropic.com/news/claude-example",
     "source_id": "anthropic-news",
     "title": "Introducing a Claude example",
     "lede": "claude example launch text",
-    "text_uri": "gs://xm-prod-text/2026/09/13/b04282bca8097bb4ac7437d061f91672961e10629743138024b551df1964669f.txt.gz",
+    "text_uri": "gs://xm-prod-text/2026/09/13/b6057b134e61b96fde7799b648e05b79f840502ca05565d16ee82c44f16ba490.txt.gz",
     "content_hash": "13fc1fd81e4b4454383d04373bb3ceba058e0d6c288554f25b309aa5d9777549",
     "lang": "en",
     "word_count": 4,
     "published_at": "2026-09-13T09:30:00Z",
     "discovered_at": "2026-09-13T10:00:00Z",
     "extracted_at": "2026-09-13T10:00:05Z",
-    "signals": { "hn_item_id": null, "hn_points": null, "hn_comments": null, "observed_at": null }
+    "signals": {
+      "hn_item_id": null,
+      "hn_points": null,
+      "hn_comments": null,
+      "observed_at": null
+    }
   }
 }
