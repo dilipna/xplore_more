@@ -154,6 +154,23 @@ func TestRetryPolicy(t *testing.T) {
 	}
 }
 
+func TestThrottledFetchRetriesAndIsCountedSeparately(t *testing.T) {
+	throttledErr := fmt.Errorf("%w: %w: slot in 18s, 20s left", fetch.ErrTransient, fetch.ErrThrottled)
+	h := newHandler(&stubFetcher{err: throttledErr}, textstore.File{Dir: t.TempDir()}, &bus.Memory{})
+	if code := serve(h, pushBody(t, discoveredFixture(t))); code != http.StatusServiceUnavailable {
+		t.Fatalf("status %d, want 503", code)
+	}
+	plain := newHandler(&stubFetcher{err: fmt.Errorf("%w: timeout", fetch.ErrTransient)}, textstore.File{Dir: t.TempDir()}, &bus.Memory{})
+	_ = serve(plain, pushBody(t, discoveredFixture(t)))
+
+	if h.Stats.Retried.Load() != 1 || h.Stats.Throttled.Load() != 1 {
+		t.Fatalf("throttled handler: retried=%d throttled=%d", h.Stats.Retried.Load(), h.Stats.Throttled.Load())
+	}
+	if plain.Stats.Retried.Load() != 1 || plain.Stats.Throttled.Load() != 0 {
+		t.Fatalf("plain transient: retried=%d throttled=%d", plain.Stats.Retried.Load(), plain.Stats.Throttled.Load())
+	}
+}
+
 func TestBlockedPageFallsBackToFeedContent(t *testing.T) {
 	var env map[string]any
 	_ = json.Unmarshal(discoveredFixture(t), &env)

@@ -60,6 +60,9 @@ type Stats struct {
 	Extracted atomic.Int64
 	Rejected  atomic.Int64
 	Retried   atomic.Int64
+	// Throttled counts the subset of Retried refused up front by the per-host limiter because
+	// no slot would leave enough fetch time before the deadline (fetch.ErrThrottled).
+	Throttled atomic.Int64
 }
 
 type pushRequest struct {
@@ -73,14 +76,18 @@ type pushRequest struct {
 }
 
 type outcome struct {
-	status int
-	reason string
+	status    int
+	reason    string
+	throttled bool
 }
 
 var (
-	okExtracted = outcome{http.StatusNoContent, "extracted"}
-	retryLater  = func(reason string) outcome { return outcome{http.StatusServiceUnavailable, reason} }
-	reject      = func(reason string) outcome { return outcome{http.StatusNoContent, reason} }
+	okExtracted = outcome{status: http.StatusNoContent, reason: "extracted"}
+	retryLater  = func(reason string) outcome { return outcome{status: http.StatusServiceUnavailable, reason: reason} }
+	throttled   = func(reason string) outcome {
+		return outcome{status: http.StatusServiceUnavailable, reason: reason, throttled: true}
+	}
+	reject = func(reason string) outcome { return outcome{status: http.StatusNoContent, reason: reason} }
 )
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -148,6 +155,9 @@ func (h *Handler) process(ctx context.Context, env events.Envelope[events.Articl
 				return reject("fetch: permanent failure and no usable feed content")
 			}
 			origin, finalURL = events.OriginFeed, d.CanonicalURL
+		case errors.Is(err, fetch.ErrThrottled):
+			// Answered immediately instead of holding the push open until the deadline.
+			return throttled("fetch: " + err.Error())
 		case err != nil:
 			return retryLater("fetch: " + err.Error())
 		default:
@@ -221,12 +231,15 @@ func (h *Handler) finish(w http.ResponseWriter, push pushRequest, articleID stri
 		h.Stats.Extracted.Add(1)
 	case o.status == http.StatusServiceUnavailable:
 		h.Stats.Retried.Add(1)
+		if o.throttled {
+			h.Stats.Throttled.Add(1)
+		}
 		level = slog.LevelWarn
 	default:
 		h.Stats.Rejected.Add(1)
 	}
 	h.Log.Log(context.Background(), level, "ingest",
-		"outcome", o.reason, "status", o.status, "article_id", articleID,
+		"outcome", o.reason, "status", o.status, "throttled", o.throttled, "article_id", articleID,
 		"message_id", push.Message.MessageID, "delivery_attempt", push.DeliveryAttempt)
 	w.WriteHeader(o.status)
 }

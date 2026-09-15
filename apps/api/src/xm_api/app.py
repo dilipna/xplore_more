@@ -28,6 +28,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from xm_api.auth import HEADER as API_KEY_HEADER
 from xm_api.auth import InvalidApiKeyError, KeyResolver, Principal
+from xm_api.cache import ResponseCache
 from xm_api.problems import RANKER, find_problems, get_problem
 from xm_api.ratelimit import RateLimiter
 from xm_api.schemas import (
@@ -60,6 +61,7 @@ class AppState:
     embedder: QueryEmbedder | None
     keys: KeyResolver
     limiter: RateLimiter
+    cache: ResponseCache
     require_key_for_problems: bool
 
 
@@ -137,6 +139,12 @@ def create_app(
             embedder=model,
             keys=KeyResolver(sessionmaker, settings.anon_rate_per_minute),
             limiter=RateLimiter(redis),
+            cache=ResponseCache(
+                redis,
+                prefix=settings.response_cache_prefix,
+                generation_key=settings.response_cache_generation_key,
+                ttl_s=settings.response_cache_ttl_s,
+            ),
             require_key_for_problems=settings.require_api_key_for_problems,
         )
         try:
@@ -222,15 +230,24 @@ def create_app(
         limit: Annotated[int, Query(ge=1, le=50)] = 30,
         window_hours: Annotated[int, Query(ge=1, le=24 * 14)] = 72,
     ) -> FeedResponse:
-        now = datetime.now(UTC)
-        async with st.sessionmaker() as session:
-            candidates = await recent_story_ids(session, now - timedelta(hours=window_hours), FEED_CANDIDATES)
-            features = await story_features(session, candidates, now)
-            scores = {sid: heuristic_importance(f) for sid, f in features.items()}
-            ranked = sorted(scores, key=lambda sid: (-scores[sid], sid))[:limit]
-            results = await summaries(session, ranked, scores)
+        async def compute() -> tuple[FeedResponse, bool]:
+            now = datetime.now(UTC)
+            async with st.sessionmaker() as session:
+                candidates = await recent_story_ids(
+                    session, now - timedelta(hours=window_hours), FEED_CANDIDATES
+                )
+                features = await story_features(session, candidates, now)
+                scores = {sid: heuristic_importance(f) for sid, f in features.items()}
+                ranked = sorted(scores, key=lambda sid: (-scores[sid], sid))[:limit]
+                results = await summaries(session, ranked, scores)
+            return FeedResponse(ranker=f"heuristic/{FEATURE_VERSION}", results=results), True
+
+        body, status = await st.cache.get_or_compute(
+            "feed", {"limit": limit, "window_hours": window_hours}, FeedResponse, compute
+        )
+        response.headers["X-XM-Cache"] = status
         response.headers["Cache-Control"] = "public, max-age=60"
-        return FeedResponse(ranker=f"heuristic/{FEATURE_VERSION}", results=results)
+        return body
 
     @app.get("/v1/stories/{story_id}", response_model=StoryDetail)
     async def story(st: StateDep, _: ProtectedDep, story_id: int) -> StoryDetail:
@@ -272,31 +289,47 @@ def create_app(
         evidence: Annotated[int, Query(ge=0, le=5, description="Evidence items per problem.")] = 3,
     ) -> ProblemsResponse:
         _require_key(st, principal)
-        degraded: list[str] = []
-        embedding: list[float] | None = None
-        if topic and st.embedder is not None:
-            try:
-                embedding = await asyncio.to_thread(st.embedder.embed_query, topic)
-            except Exception:
-                log.exception("topic embedding failed; lexical-only problem retrieval")
-                degraded.append("dense_unavailable")
-        now = datetime.now(UTC)
-        async with st.sessionmaker() as session, session.begin():
-            results = await find_problems(
-                session,
-                as_of=now,
-                topic=topic,
-                embedding=embedding,
-                category=category,
-                since_days=since_days,
-                min_voices=min_voices,
-                limit=limit,
-                evidence_limit=evidence,
-            )
-        for reason in degraded:
+
+        async def compute() -> tuple[ProblemsResponse, bool]:
+            degraded: list[str] = []
+            embedding: list[float] | None = None
+            if topic and st.embedder is not None:
+                try:
+                    embedding = await asyncio.to_thread(st.embedder.embed_query, topic)
+                except Exception:
+                    log.exception("topic embedding failed; lexical-only problem retrieval")
+                    degraded.append("dense_unavailable")
+            now = datetime.now(UTC)
+            async with st.sessionmaker() as session, session.begin():
+                results = await find_problems(
+                    session,
+                    as_of=now,
+                    topic=topic,
+                    embedding=embedding,
+                    category=category,
+                    since_days=since_days,
+                    min_voices=min_voices,
+                    limit=limit,
+                    evidence_limit=evidence,
+                )
+            body = ProblemsResponse(as_of=now, ranker=RANKER, degraded=degraded, results=results)
+            return body, not degraded  # a degraded answer is served, never cached
+
+        params = {
+            # Exact string: the embedding sees it verbatim, so case or spacing can change ranking.
+            "topic": topic,
+            "category": category,
+            "since_days": since_days,
+            "min_voices": min_voices,
+            "limit": limit,
+            "evidence": evidence,
+        }
+        body, status = await st.cache.get_or_compute("problems", params, ProblemsResponse, compute)
+        for reason in body.degraded:
             _mark_degraded(response, reason)
+        response.headers["X-XM-Cache"] = status
         response.headers["Cache-Control"] = "private, max-age=60"
-        return ProblemsResponse(as_of=now, ranker=RANKER, degraded=degraded, results=results)
+        return body
 
     @app.get(
         "/v1/problems/{problem_id}",

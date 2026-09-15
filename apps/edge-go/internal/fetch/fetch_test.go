@@ -113,6 +113,72 @@ func TestBlockedDestinationIsPermanent(t *testing.T) {
 	}
 }
 
+func htmlServer(t *testing.T) *httptest.Server {
+	t.Helper()
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		_, _ = w.Write([]byte("<html></html>"))
+	}))
+	t.Cleanup(srv.Close)
+	return srv
+}
+
+func throttledFetcher() *Fetcher {
+	f := testFetcher()
+	f.opts.PerHostRate = rate.Every(400 * time.Millisecond)
+	f.opts.PerHostBurst = 1
+	f.opts.MinFetchBudget = 200 * time.Millisecond
+	return f
+}
+
+// A slot that would leave less than MinFetchBudget before the deadline is refused at once,
+// and the refused reservation goes back to the limiter instead of delaying later requests.
+func TestSlotLeavingNoFetchTimeFailsFastAndIsReturned(t *testing.T) {
+	srv := htmlServer(t)
+	f := throttledFetcher()
+	if _, err := f.Get(context.Background(), srv.URL+"/a"); err != nil { // takes the burst token
+		t.Fatal(err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Millisecond)
+	start := time.Now()
+	_, err := f.Get(ctx, srv.URL+"/b") // next slot is ~400ms away: 400ms + 200ms budget > 300ms
+	cancel()
+	if !errors.Is(err, ErrThrottled) || !errors.Is(err, ErrTransient) {
+		t.Fatalf("got %v, want a transient throttled error", err)
+	}
+	if elapsed := time.Since(start); elapsed > 100*time.Millisecond {
+		t.Fatalf("refusal took %v; it must not wait", elapsed)
+	}
+
+	start = time.Now()
+	if _, err := f.Get(context.Background(), srv.URL+"/c"); err != nil {
+		t.Fatal(err)
+	}
+	// With the refused reservation cancelled this request gets the ~400ms slot. Had it been
+	// kept, it would wait for the one after (~800ms).
+	if elapsed := time.Since(start); elapsed > 650*time.Millisecond {
+		t.Fatalf("waited %v: the refused slot was not returned to the limiter", elapsed)
+	}
+}
+
+func TestSlotThatFitsTheDeadlineStillWaits(t *testing.T) {
+	srv := htmlServer(t)
+	f := throttledFetcher()
+	if _, err := f.Get(context.Background(), srv.URL+"/a"); err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	start := time.Now()
+	if _, err := f.Get(ctx, srv.URL+"/b"); err != nil {
+		t.Fatalf("slot fits the deadline, got %v", err)
+	}
+	if elapsed := time.Since(start); elapsed < 300*time.Millisecond {
+		t.Fatalf("took %v; limiter not applied", elapsed)
+	}
+}
+
 func TestPerHostRateLimitSpacesRequests(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")

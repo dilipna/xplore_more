@@ -8,6 +8,7 @@ dependencies = [
     "xm-cluster",
     "xm-embed",
     "xm-problems",
+    "redis>=5.2",
 ]
 
 [project.scripts]
