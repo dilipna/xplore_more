@@ -1,19 +1,20 @@
 # XploreMore — Continue Session Handoff
 
-> Last updated: 2026-09-15 (after P4; HEAD `5318614`, working tree clean, nothing pushed). Read this whole file before doing anything; it is the single source of truth for resuming work.
+> Last updated: 2026-09-15 (after P5 + Q1 code + Q2; XploreMore HEAD `527f9ea`, Pro2Pro HEAD `cbdf5ab`, nothing pushed). Read this whole file before doing anything; it is the single source of truth for resuming work.
 
 ---
 
 ## 0. TL;DR for the next session
 
-1. **State:** **all gates green** at `5318614`: **115 Python tests, 0 skipped**, all Go packages, Terraform validated and scanned. **The working tree is clean.** Migrations run through **0006**.
+1. **State:** **all gates green** at `527f9ea`: **126 Python tests, 0 skipped**, all Go packages, Terraform validated and scanned. Migrations run through **0006**. Pro2Pro (`p2pagent`) is at `cbdf5ab` with **119 tests** green (not pushed).
 2. **What runs live on the laptop:**
    - 43 tech sources + **5 discussion sources** → Go poller → Pub/Sub emulator → Go ingestor → Python indexer.
    - The indexer embeds, clusters stories, **classifies pain points** and **clusters problems** into Postgres.
    - FastAPI serves search, feed and stories, plus **`/v1/problems`** with API keys and a Redis rate limit.
    - An **MCP server** exposes the problem API over streamable HTTP.
 3. **Direction (decided by the user):** XploreMore is the **problem-discovery backbone for Pro2Pro** (`protopro.vercel.app`). XploreMore finds, clusters and ranks real problems; Pro2Pro's agents turn them into products. This is **Phase P** (§6), the top priority.
-4. **Phase P progress:** **P1–P4 done** (§4.8–4.11). **Next task: P5, the Pro2Pro integration** in `C:\Users\Dilip\OneDrive\Pictures\p2pagent`. The concrete start plan is in §5.1. After P5: P6 (A/B report), then Phase Q1 (ingestor fail-fast) and the rest of Q2 (caches with single-flight).
+4. **Phase P progress:** **P1–P5 done** (§4.8–4.12). **Q2 caches done** (§4.13). **Q1 fail-fast code done, re-measure pending** (§4.14). **P6 A/B is in progress** (§4.15). Next: finish P6 (report), then the Q1 e2e re-measure.
+   - **Pro2Pro production is probably broken:** Groq retired its default model. Fixed in `76ae381`, but it needs a push/deploy by the user (§7).
 5. **Dev data:** DB `xploremore` holds ~840 articles, ~1,550 discussion docs and **493 problems** (policy `problem-prior-2026-09-13c`, classifier `pain-v1-20260913`). Create a local API key with `uv run xm-api keys create --name local --rate 600`.
 6. **Local ports:** port 8000 is taken by Docker and an unrelated Python 3.12 process (possibly Pro2Pro's API; **don't kill it**). Serve the XploreMore API on **`PORT=8765`** and MCP on **`XM_MCP_PORT=8766`**.
 7. **Gate discipline reminder:** commit with `if scripts/check.sh > log 2>&1; then git commit ...; fi`. Never test `$?` after an `echo`: one handoff commit last session was guarded that way by mistake (the gate had in fact passed).
@@ -186,6 +187,43 @@ ec3b332 Handoff: Problem Intelligence phase for Pro2Pro integration
 - **Fixed:** uvicorn 0.52 `loop="asyncio"` forced ProactorEventLoop on Windows, so `uv run xm-api` couldn't reach psycopg (`loop="none"` on win32).
 - 115 Python tests in total.
 
+### 4.12 P5 — Pro2Pro integration (Pro2Pro commits `76ae381`, `cbdf5ab`; ADR-0012 there)
+- **Baseline finding:** Pro2Pro's suite had 1 failure. Groq retired `llama-4-scout-17b-16e-instruct` (404 `model_not_found`). Re-measured the account: gpt-oss-20b, gpt-oss-120b and qwen3.8-27b are all 8,000 TPM / 1,000 RPD. Default is now `openai/gpt-oss-20b` (`76ae381`).
+- **`tools/xploremore.py`:**
+  - async httpx client with 5 s timeout and `X-XM-Api-Key`
+  - circuit breaker: 3 failures open it for 60 s, then half-open
+  - 429 holds for `Retry-After` (seconds or HTTP-date) without counting as a failure
+  - compact results; if no multi-voice problem matches, one retry with `min_voices=1` plus a `note`
+- **Registration:** `find_problems` / `get_problem` are in-process StructuredTools (`agents/research.py`) and `@mcp.tool()` (`mcp/server.py`). Both call the same coroutine.
+- **Fallback in code:** `availability()` (`not_configured` / `circuit_open` / `ok`) decides whether the tools and the XploreMore prompt are bound at all. Mid-run failures return a non-empty `{"unavailable", "fallback"}` result. MCP-side outages are mirrored into the parent breaker.
+- **Provenance:** attached by code from the tool results in the conversation. Invented ids are dropped and model-supplied provenance is overwritten (`SkipJsonSchema`). It flows through: dedupe by problem id (Chroma metadata) → analyst prompt line with measured demand → additive `ideas.xploremore_problem_id` / `ideas.provenance` → `IdeaOut` / showcase `provenance.card_line` → web card and story page.
+- **Tests:** a vendored contract validates every mocked payload and outgoing query string (`contracts/xploremore/`). Also covered: breaker open/half-open/close, timeouts, 401, bad payload, 422, 429 (seconds + HTTP-date), fallback, provenance, persistence, and the MCP stdio tool list.
+- **Found live, fixed:** on 8k TPM, `with_retry` around the whole ReAct turn re-spent tokens and never converged (`research failed after 4 attempt(s)`, "Used 7547, Requested 2174"). Research now retries per model call (`get_chat_model(retry_calls_as=...)`); the turn timeout went 90 → 240 s.
+- **Local e2e** (real Groq, XploreMore dev API on :8765, scratch DATA_DIR, console email), run `34b02b86…`:
+  - **Result:** reached `awaiting_review` in 279 s wall. Research took 230 s with 11 per-call rate-limit waits.
+  - **XploreMore:** served 5 requests, all 200 (the uvicorn access log showed them). The agent called `find_problems` 3× despite "exactly once". No multi-voice problem matched, so the client relaxed to 1 voice.
+  - **Ideas:** 3. Two had provenance (problems 1866 and 1614, 1 voice / 1 source each), were scored 10 and rejected. One HN/web idea scored 70 and was shortlisted.
+  - **Tokens:** research 10 calls, 29,307 in / 2,957 out; analyst 3 calls, 1,196 / 480. Read from the scratch DB's `llm_calls`; the numbers are recorded in Pro2Pro `PROJECT_BRAIN.md` §15.
+  - **Reproduce:** `PORT=8765 uv run xm-api`, then from p2pagent `XPLOREMORE_API_URL=http://127.0.0.1:8765 XPLOREMORE_API_KEY=... RESEARCH_TOOLS=in_process DATA_DIR=<scratch> REVIEW_EMAIL_TO= RESEND_API_KEY= uv run p2pops-pipeline "AI agent tool calling"`. LLM output is stochastic, so reruns differ.
+
+### 4.13 Q2 — Redis response caches with single-flight (commit `527f9ea`)
+- **`xm_api.cache.ResponseCache`** covers `/v1/feed` and `/v1/problems`. Keys hash the endpoint and its exact parameters; auth and rate limits run first. The response header is `X-XM-Cache: hit|miss|shared|bypass|off`.
+- **Freshness:** each entry stores the generation read *before* computing. The indexer `INCR`s `xm:cache:v1:gen` after each committed batch with `applied > 0` and after backfills (best-effort, `xm_indexer/invalidate.py`). TTL (`XM_RESPONSE_CACHE_TTL_S`, default 60, 0 = off) bounds staleness.
+- **Single-flight:** in-process shared future, plus a cross-instance Redis `SET NX PX` lock. Waiters poll for up to 2 s, then compute anyway, so a dead lock holder costs latency, not availability.
+- **Failure policy:** degraded responses are never cached. A Redis outage bypasses the cache.
+- **Tests:** 11 on real Redis. Removing the generation check fails 2 of them (mutation check). The existing API tests run with the cache off.
+- **Not measured yet:** hit-rate or latency benefit. Write no numbers until a load test exists.
+
+### 4.14 Q1 — Ingestor rate-limit fail-fast (commit `527f9ea`; re-measure pending)
+- **Mechanism:** `rate.Limiter.Wait` already refuses delays longer than the *whole* deadline. It accepted slots that left the HTTP request almost no time, which then timed out and still consumed a politeness slot. `fetch.waitForSlot` now requires `delay + MinFetchBudget (5 s) ≤ remaining`. Otherwise it `CancelAt`s the reservation and returns `ErrTransient`+`ErrThrottled` at once. The ingestor answers 503 immediately and counts `Throttled` separately from `Retried`.
+- **Tests:** fail-fast timing (<100 ms), slot returned, fitting slots still wait, handler counter. Removing `CancelAt` made the next request wait 801 ms against a 650 ms bound (mutation check). The race detector is clean.
+- **TODO:** re-run `E2E_SOURCES=sources.yaml scripts/e2e_local.sh` and compare retried/throttled against the 485 retries in §4.3. This was deliberately not run while the P6 A/B used the same machine and dev DB.
+
+### 4.15 P6 — Discovery A/B (in progress)
+- **Harness:** Pro2Pro `p2pops-discovery-ab` (`src/p2pops/evals/discovery_ab.py`, commit `cbdf5ab`). It runs the real Research Agent plus the real Analyst per topic under two arms.
+- **Held equal:** model, guardrails, analyst prompt and threshold, step ceiling (22 for both), turn timeout, per-call retry, and a 65 s pause before each trial. Arm order alternates by topic; each arm has its own dedupe memory. No DB writes and no email.
+- **Topics:** `evals/pro2pro/topics_v1.txt` (8, fixed before any trial). Output: `evals/pro2pro/ab_v1.jsonl`. Report: `docs/reports/pro2pro-discovery-ab.md` (to write when the run finishes).
+
 ## 5. Pro2Pro facts needed for the integration (verified in its code)
 
 - **Discovery:** a LangGraph ReAct **Research Agent** (`p2pagent/src/p2pops/agents/research.py`) calls three tools:
@@ -260,13 +298,13 @@ ec3b332 Handoff: Problem Intelligence phase for Pro2Pro integration
 - **MCP server** `apps/mcp` (Python `mcp` SDK, **streamable HTTP**, not stdio, to avoid the ADR-0011 subprocess hang) with tools `find_problems`, `get_problem`, `search_stories`.
 - **Contract:** `contracts/api/problems.v1.openapi.json` with contract tests on both sides.
 
-**P5. Pro2Pro integration (edits in `p2pagent` repo)** — ⏭ NEXT (start plan in §5.1)
+**P5. Pro2Pro integration (edits in `p2pagent` repo)** — ✅ DONE (§4.12)
 - New tool `src/p2pops/tools/xploremore.py`: httpx client, 5 s timeout, small circuit breaker, compact results.
 - Register as an in-process `StructuredTool` in `agents/research.py` **and** as `@mcp.tool()` in `mcp/server.py`. Update the agent prompt: prefer `find_problems` first; use `search_hn`/`search_web` to validate or fill gaps; **fall back automatically** if XploreMore is unavailable.
 - Config `XPLOREMORE_API_URL` and `XPLOREMORE_API_KEY` (Render env). Pass provenance (`problem_id`, voices, sources, evidence URLs) into dedupe, the Analyst and the showcase card ("Discovered via XploreMore: 23 people across 5 sources").
 - Tests with a mocked XploreMore; update `PROJECT_BRAIN.md` §15 and add an ADR in Pro2Pro.
 
-**P6. Measure the integration (experiment, not vibes)**
+**P6. Measure the integration (experiment, not vibes)** — ⏳ IN PROGRESS (§4.15)
 - Compare discovery runs, same budget and same guardrails: **XploreMore-sourced vs HN/web-sourced**.
 - Metrics:
   - Guardrail pass rate
@@ -282,8 +320,8 @@ ec3b332 Handoff: Problem Intelligence phase for Pro2Pro integration
 - Point Pro2Pro's Render env at the live XploreMore API.
 
 ### PHASE Q — Carry-over engineering (interleave where it unblocks P)
-1. **Ingestor rate-limit fix:** fail fast when the limiter's reservation delay exceeds the remaining deadline (503 immediately), then re-measure retries on a full e2e run.
-2. **Redis:** API-key rate limiting is ✅ done (in P4). Still to do: feed and problem response caches with single-flight, invalidated by indexer writes or a short TTL.
+1. **Ingestor rate-limit fix:** ✅ code done (§4.14); ⏳ re-measure retries on a full e2e run.
+2. **Redis:** API-key rate limiting ✅ (P4); feed and problem response caches with single-flight ✅ (§4.13). A load test measuring the benefit is still open.
 3. **Search eval + LTR:** judged query set, BM25 vs FTS Recall@100, LightGBM lambdarank, nDCG@10/MRR with CIs, CI gate.
 4. **Importance LTR for the feed:** T+1h features vs T+24h realized coverage, time split. Needs days of continuous ingestion, so start continuous ingestion as soon as GCP is live.
 
@@ -308,7 +346,8 @@ ec3b332 Handoff: Problem Intelligence phase for Pro2Pro integration
 - [ ] Audit clustering labels: `uv run python evals/clustering/audit.py`.
 - [ ] Audit pain-point labels (low/medium confidence first, 183 items): `uv run python evals/problems/audit.py`, then re-run `evaluate.py`.
 - [ ] Judge top-50 problem usefulness: fill `human_useful` in `evals/problems/top50_v1.jsonl`.
-- [ ] When P5 is ready: add `XPLOREMORE_API_URL` / `XPLOREMORE_API_KEY` to Pro2Pro's Render environment.
+- [ ] **Pro2Pro prod fix:** push `p2pagent` master (`76ae381`, `cbdf5ab`) so Render redeploys. Groq retired the old default model, so prod discovery very likely fails until then.
+- [ ] After XploreMore is deployed (P7): add `XPLOREMORE_API_URL` / `XPLOREMORE_API_KEY` to Pro2Pro's Render environment.
 
 ## 8. How to run everything locally
 
@@ -338,6 +377,11 @@ uv run python evals/problems/evaluate.py             # classifier eval + artifac
 uv run python evals/problems/cluster_report.py       # clustering report + top-50 sheet
 uv run python evals/problems/merge_audit.py dump     # then: record N verdicts.txt
 uv run python scripts/mutation_check_cluster_lock.py
+
+# Pro2Pro against local XploreMore (from C:\Users\Dilip\OneDrive\Pictures\p2pagent)
+XPLOREMORE_API_URL=http://127.0.0.1:8765 XPLOREMORE_API_KEY=... uv run p2pops-discovery-ab run \
+  --topics-file ../xplore_more/evals/pro2pro/topics_v1.txt --out ../xplore_more/evals/pro2pro/ab_v1.jsonl --data-dir <scratch>
+uv run p2pops-discovery-ab report --in ../xplore_more/evals/pro2pro/ab_v1.jsonl
 
 scripts/go.sh test ./...                   # Go via Docker
 GO_IMAGE=golang:1.27 CGO_ENABLED=1 scripts/go.sh test -race ./...
@@ -394,7 +438,8 @@ docs/                 clustering.md, problems.md, reports/{clustering-pairs-v1, 
   - Merge audit 2 (65.7%) ran on the same corpus its fixes came from.
   - Merge recall and top-50 usefulness are unmeasured.
   - Everything comes from a one-day corpus snapshot, not a continuous stream.
-- **No results exist yet** for the Pro2Pro A/B (P6), search LTR, personalization, load tests or SLOs. Don't write numbers for them anywhere.
+- **No results exist yet** for search LTR, personalization, load tests, SLOs or cache benefit. Don't write numbers for them anywhere. The P6 A/B numbers come only from `docs/reports/pro2pro-discovery-ab.md` once written.
+- The P5 end-to-end result is **one** stochastic run. It shows the integration works, not that XploreMore-sourced ideas are better.
 - XploreMore **complements** Hacker News and Techmeme. It doesn't claim to compete with them.
 
 ## 11. Prompt to start the next session

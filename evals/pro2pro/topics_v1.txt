@@ -1,0 +1,10 @@
+# Discovery A/B topics v1. Fixed before any trial ran (2026-09-15); not tuned on results.
+# Chosen to span what XploreMore's problem sources cover (AI tooling, infra, dev workflow).
+AI agent tool calling
+LLM inference cost
+vector database operations
+Kubernetes deployments
+RAG retrieval quality
+running local LLMs
+flaky CI pipelines
+observability for LLM apps
