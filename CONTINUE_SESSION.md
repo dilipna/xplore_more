@@ -1,16 +1,22 @@
 # XploreMore — Continue Session Handoff
 
-> Last updated: 2026-09-13 (after P1, commit `1380915` + handoff commit). Read this whole file before doing anything; it is the single source of truth for resuming work.
+> Last updated: 2026-09-15 (after P4; HEAD `5318614`, working tree clean, nothing pushed). Read this whole file before doing anything; it is the single source of truth for resuming work.
 
 ---
 
 ## 0. TL;DR for the next session
 
-1. **State:** **all gates green**: 71 Python tests with 0 skipped, all Go packages, Terraform validated and scanned. **The working tree is clean.**
-2. **The system already runs live on the laptop:** 43 real tech sources + **5 discussion sources** → Go poller → Pub/Sub emulator → Go ingestor → Python indexer (embeddings + story clustering) → Postgres → FastAPI (search, feed, story detail).
-3. **Newest direction (decided by the user):** XploreMore becomes the **problem-discovery backbone for Pro2Pro** (`protopro.vercel.app`). XploreMore finds, clusters and ranks **real problems people face**; Pro2Pro's agents turn them into shipped products. This is **Phase P (Problem Intelligence)** in §6, and it is the **top priority**.
-4. **Progress in Phase P:** **P1** (§4.8), **P2** (§4.9), **P3** (§4.10) and **P4** (§4.11) are done. **Next task: P5** (Pro2Pro integration in `C:\Users\Dilip\OneDrive\Pictures\p2pagent`; read its `PROJECT_BRAIN.md` §15 first). The dev DB `xploremore` holds ~1,550 discussion docs and 493 problems.
-5. **Local ports:** port 8000 is shared with Docker and an unrelated Python 3.12 process that was already running. Serve the API on `PORT=8765` and MCP on `XM_MCP_PORT=8766` locally.
+1. **State:** **all gates green** at `5318614`: **115 Python tests, 0 skipped**, all Go packages, Terraform validated and scanned. **The working tree is clean.** Migrations run through **0006**.
+2. **What runs live on the laptop:**
+   - 43 tech sources + **5 discussion sources** → Go poller → Pub/Sub emulator → Go ingestor → Python indexer.
+   - The indexer embeds, clusters stories, **classifies pain points** and **clusters problems** into Postgres.
+   - FastAPI serves search, feed and stories, plus **`/v1/problems`** with API keys and a Redis rate limit.
+   - An **MCP server** exposes the problem API over streamable HTTP.
+3. **Direction (decided by the user):** XploreMore is the **problem-discovery backbone for Pro2Pro** (`protopro.vercel.app`). XploreMore finds, clusters and ranks real problems; Pro2Pro's agents turn them into products. This is **Phase P** (§6), the top priority.
+4. **Phase P progress:** **P1–P4 done** (§4.8–4.11). **Next task: P5, the Pro2Pro integration** in `C:\Users\Dilip\OneDrive\Pictures\p2pagent`. The concrete start plan is in §5.1. After P5: P6 (A/B report), then Phase Q1 (ingestor fail-fast) and the rest of Q2 (caches with single-flight).
+5. **Dev data:** DB `xploremore` holds ~840 articles, ~1,550 discussion docs and **493 problems** (policy `problem-prior-2026-09-13c`, classifier `pain-v1-20260913`). Create a local API key with `uv run xm-api keys create --name local --rate 600`.
+6. **Local ports:** port 8000 is taken by Docker and an unrelated Python 3.12 process (possibly Pro2Pro's API; **don't kill it**). Serve the XploreMore API on **`PORT=8765`** and MCP on **`XM_MCP_PORT=8766`**.
+7. **Gate discipline reminder:** commit with `if scripts/check.sh > log 2>&1; then git commit ...; fi`. Never test `$?` after an `echo`: one handoff commit last session was guarded that way by mistake (the gate had in fact passed).
 
 ---
 
@@ -55,15 +61,26 @@ It proves what the resume lacks:
 | Data plane | **Python 3.13**, uv workspace, Pydantic v2, SQLAlchemy 2 async + psycopg 3, Alembic |
 | Storage | Postgres 17 + **pgvector** (halfvec HNSW, FTS tsvector); Redis (compose; Upstash later); BigQuery event log; GCS |
 | ML/IR | fastembed ONNX **bge-small-en-v1.5** (384-d), MinHash-LSH, gazetteer NER, logistic pair scorer, RRF, scikit-learn; planned: LightGBM LambdaMART |
-| API | **FastAPI** + uvicorn (planned: MCP server via the Python `mcp` SDK) |
+| API | **FastAPI** + uvicorn; **redis-py** (token-bucket Lua); **mcp SDK 2.2** (`MCPServer`, streamable HTTP; FastMCP was renamed in 2.x) |
 | Infra | **Terraform 1.16.2**, google provider 8.2.0, WIF/OIDC, Cloud Run services/jobs, Scheduler, Secret Manager |
 | CI/Security | GitHub Actions (SHA-pinned), ruff, pyright, pytest, go vet/race/fuzz, gitleaks, Trivy, Syft SBOM, tflint, checkov, actionlint, Renovate |
 
 Go and Terraform are **not installed locally**. Use `scripts/go.sh` and `scripts/tf.sh`, which run them in Docker. **Docker Desktop must be running** (`%LOCALAPPDATA%\Programs\DockerDesktop\Docker Desktop.exe`); it was found stopped at the start of the last session.
 
-## 4. DONE (12 commits)
+## 4. DONE (22 commits)
 
 ```
+5318614 Handoff: P4 done (problem API, keys, rate limits, MCP, contract)
+928333a P4 problem API, API keys, Redis rate limits, MCP over streamable HTTP, OpenAPI contract
+374675f Handoff: P3 done with clustering audits and known issues
+f9fe8b7 P3 problem clustering + demand score: migration 0005, G7, audited merges
+f560857 Handoff: P2 done with classifier results and findings
+8f93a82 Evals: write LF and hash line-ending-normalized datasets
+ae63188 P2 pain-point classifier: stratified labeled set, nested CV harness, shipped artifact
+a687bde Poller: reserve publish time after fetching; expand threads concurrently
+0759aea Handoff: P1 done with live discussion pipeline measurement; e2e script takes E2E_SOURCES
+1380915 P1 discussion sources: doc_kind contract, 5 platform fetchers, migration 0004
+ec3b332 Handoff: Problem Intelligence phase for Pro2Pro integration
 5b320b1 Search + API: hybrid retrieval, RRF story collapse, heuristic feed, FastAPI
 5416b10 Clustering evaluation: live error analysis, labeled pair set, CV harness
 3dc437b Fix lint findings in clustering package
@@ -96,7 +113,7 @@ Go and Terraform are **not installed locally**. Use `scripts/go.sh` and `scripts
 - **Live measurements:** 42 of 43 sources reachable; 953 items in about 4 s; real-page extraction 106 of 117 (91%) before the feed fallback.
 
 ### 4.3 Python core, indexer, embeddings
-- **`xm_core`:** settings, events, ORM, **migrations 0001–0003**, `idempotency.claim`, `db/admin.py`.
+- **`xm_core`:** settings, events, ORM, **migrations 0001–0006** (0004 discussions, 0005 problems, 0006 api_keys), `idempotency.claim`, `db/admin.py`.
 - **`xm_embed`:** `FastEmbedEmbedder.embed / embed_query` (BGE query instruction) / `warm`.
 - **`apps/indexer`:** Pub/Sub pull micro-batches, then embed, then guarantees **G1–G6** in one transaction with per-message savepoints. CLI: `run | migrate | seed-sources | backfill-clusters [--reset]`. The Dockerfile bakes in the model and gazetteer.
 - **Live e2e (`scripts/e2e_local.sh`):** full registry run gave 953 published, **796 new articles indexed, 45 duplicate no-ops, 0 failures**. Finding: 485 ingestor retries caused by per-host limiter waits exceeding the fetch deadline (fix is TODO in §6).
@@ -178,7 +195,31 @@ Go and Terraform are **not installed locally**. Use `scripts/go.sh` and `scripts
 - **Two transports:** in-process `StructuredTool`s, or an MCP stdio server (`src/p2pops/mcp/server.py`, `@mcp.tool()` functions). Production currently prefers in-process tools because the MCP stdio subprocess hung prod runs (**ADR-0011**, commit `5c20f8a`).
 - **Token budget matters:** the agent resends its whole history each turn, so tool results must be **compact** (Pro2Pro caps result sizes; see comments in `mcp/server.py`).
 - **Downstream pipeline:** NeMo Guardrails, then ChromaDB semantic dedupe, then Analyst scoring (conviction 0–100), then `PTP-XXX` numbering, then human approval, then the build squad, then a Vercel deploy.
-- **Handoff file:** `p2pagent/PROJECT_BRAIN.md` §15. Update it when changing Pro2Pro.
+- **Handoff file:** `p2pagent/PROJECT_BRAIN.md` §15 ("Session Handoff — READ THIS FIRST", around line 686; the most recent entry is 2026-07-15, ADR-0011). Update it when changing Pro2Pro.
+- **Repo state checked 2026-09-13:** branch `master`, clean tree, HEAD `9981615` ("PROJECT_BRAIN §15: document the prod pipeline hang root-cause + fix (ADR-0011)"). Only the outline of `PROJECT_BRAIN.md` has been read so far; **read §15, §13 (env/commands) and §14 (important files) fully before editing.**
+
+### 5.1 P5 start plan (do in this order)
+
+1. In `p2pagent`: read `PROJECT_BRAIN.md` §13–15, `src/p2pops/agents/research.py`, `tools/hn.py`, `mcp/server.py` and the existing ADR list. Find Pro2Pro's own test/lint command and run it first (baseline must be green).
+2. **`src/p2pops/tools/xploremore.py`:**
+   - Async httpx client for `GET /v1/problems` and `/v1/problems/{id}`, sending the `X-XM-Api-Key` header, with a 5 s timeout.
+   - A small circuit breaker: open after 3 failures, stay open 60 s.
+   - Treat 429 (honor `Retry-After`) and 5xx or timeouts as "unavailable".
+   - Return compact results, mirroring `apps/mcp/src/xm_mcp/server.py::_problem` (≈1.9k characters for 3 problems).
+3. **Register** `find_problems` / `get_problem` in two places:
+   - As in-process `StructuredTool`s in `agents/research.py`. Production uses in-process tools because of ADR-0011.
+   - As `@mcp.tool()` in `mcp/server.py`.
+4. **Prompt + fallback:** prefer `find_problems` first, and validate or fill gaps with `search_hn`/`search_web`. Fall back automatically in code when the tool is unconfigured (no `XPLOREMORE_API_URL`) or the breaker is open. Don't rely on the LLM for fallback.
+5. **Provenance:** carry `problem_id`, voices, sources and evidence URLs through dedupe → Analyst → showcase card ("Discovered via XploreMore: N people across M sources").
+6. **Tests:**
+   - Mock XploreMore with `httpx.MockTransport`.
+   - Validate mock payloads against a copy of `contracts/api/problems.v1.openapi.json` vendored into Pro2Pro (the contract test on the consumer side).
+   - Cover the fallback path, breaker open/close, and 429 handling.
+7. Write an ADR in Pro2Pro (the next number after 0011), update `PROJECT_BRAIN.md` §15 and `.env.example` (`XPLOREMORE_API_URL`, `XPLOREMORE_API_KEY`), and commit in `p2pagent`. **Do not push** unless asked.
+8. **Local end-to-end:**
+   - Run the XploreMore API on port 8765 with a key.
+   - Point Pro2Pro at it and run one discovery.
+   - Record what happened in XploreMore's §4.12 (no invented numbers).
 
 ## 6. ROADMAP — in priority order
 
@@ -219,7 +260,7 @@ Go and Terraform are **not installed locally**. Use `scripts/go.sh` and `scripts
 - **MCP server** `apps/mcp` (Python `mcp` SDK, **streamable HTTP**, not stdio, to avoid the ADR-0011 subprocess hang) with tools `find_problems`, `get_problem`, `search_stories`.
 - **Contract:** `contracts/api/problems.v1.openapi.json` with contract tests on both sides.
 
-**P5. Pro2Pro integration (edits in `p2pagent` repo)**
+**P5. Pro2Pro integration (edits in `p2pagent` repo)** — ⏭ NEXT (start plan in §5.1)
 - New tool `src/p2pops/tools/xploremore.py`: httpx client, 5 s timeout, small circuit breaker, compact results.
 - Register as an in-process `StructuredTool` in `agents/research.py` **and** as `@mcp.tool()` in `mcp/server.py`. Update the agent prompt: prefer `find_problems` first; use `search_hn`/`search_web` to validate or fill gaps; **fall back automatically** if XploreMore is unavailable.
 - Config `XPLOREMORE_API_URL` and `XPLOREMORE_API_KEY` (Render env). Pass provenance (`problem_id`, voices, sources, evidence URLs) into dedupe, the Analyst and the showcase card ("Discovered via XploreMore: 23 people across 5 sources").
@@ -242,7 +283,7 @@ Go and Terraform are **not installed locally**. Use `scripts/go.sh` and `scripts
 
 ### PHASE Q — Carry-over engineering (interleave where it unblocks P)
 1. **Ingestor rate-limit fix:** fail fast when the limiter's reservation delay exceeds the remaining deadline (503 immediately), then re-measure retries on a full e2e run.
-2. **Redis:** feed/problem caches with single-flight, and API-key rate limiting.
+2. **Redis:** API-key rate limiting is ✅ done (in P4). Still to do: feed and problem response caches with single-flight, invalidated by indexer writes or a short TTL.
 3. **Search eval + LTR:** judged query set, BM25 vs FTS Recall@100, LightGBM lambdarank, nDCG@10/MRR with CIs, CI gate.
 4. **Importance LTR for the feed:** T+1h features vs T+24h realized coverage, time split. Needs days of continuous ingestion, so start continuous ingestion as soon as GCP is live.
 
@@ -251,7 +292,12 @@ Go and Terraform are **not installed locally**. Use `scripts/go.sh` and `scripts
 - **Web frontend:** Next.js static; includes a public "Problems" page.
 - **Reliability:** OpenTelemetry (Pub/Sub trace propagation), Grafana Cloud, SLO doc and burn-rate alerts, k6 open-model load tests, toxiproxy fault injection, gameday postmortem, Cloud Run canary with auto-rollback.
 - **Stretch:** Helm with `ct` on kind, GKE Autopilot perf lab (HPA, NetworkPolicy, PDB), Argo CD, cross-encoder rerank experiment.
-- **Docs:** ADRs, `SECURITY.md`, threat model, `docs/search.md`, `docs/problems.md`, storage economics; archive MLOPS-Project; push `dilipna/xploremore`.
+- **Docs:** ADRs, `SECURITY.md`, threat model, `docs/search.md`, storage economics (`docs/problems.md` is done); archive MLOPS-Project; push `dilipna/xploremore`.
+- **Problem intelligence v2 (after P6):**
+  - Human audits (§7).
+  - Labels v2 with active sampling of HN/Lobsters positives, plus a decision on maintainer roadmaps.
+  - A labeled same-problem pair set, to measure merge recall and fit the problem scorer.
+  - An absolute topic-relevance threshold, which needs a judged query set.
 
 ## 7. User actions still needed
 
@@ -274,12 +320,23 @@ uv sync
 scripts/check.sh                          # ALL gates; commit only if exit code 0
 scripts/e2e_local.sh                      # live end-to-end pipeline (6 sources)
 
+E2E_SOURCES=problem_sources.yaml E2E_MAX_BATCHES=40 scripts/e2e_local.sh          # discussions (hourly registry)
+E2E_SOURCES=problem_sources.corpus.yaml E2E_MAX_BATCHES=80 scripts/e2e_local.sh   # wide one-off corpus
+
 export XM_DATABASE_URL=postgresql+psycopg://xm:xm@localhost:5432/xploremore
 export PUBSUB_EMULATOR_HOST=localhost:8085
 uv run xm-indexer migrate
+uv run xm-indexer seed-sources                       # syncs BOTH registries (never one alone)
 uv run xm-indexer backfill-clusters --reset
-uv run xm-api                              # http://localhost:8000/docs  (downloads bge model on first run)
+uv run xm-indexer backfill-problems --reset          # classify discussions + assign problems
+uv run xm-api keys create --name local --rate 600    # prints the key once
+PORT=8765 uv run xm-api                              # http://localhost:8765/docs (downloads bge on first run)
+XM_API_URL=http://127.0.0.1:8765 XM_API_KEY=... uv run xm-mcp   # MCP at http://127.0.0.1:8766/mcp
+uv run python -m xm_api.contract                     # regenerate problems OpenAPI contract after API changes
 uv run python evals/clustering/evaluate.py
+uv run python evals/problems/evaluate.py             # classifier eval + artifact + report
+uv run python evals/problems/cluster_report.py       # clustering report + top-50 sheet
+uv run python evals/problems/merge_audit.py dump     # then: record N verdicts.txt
 uv run python scripts/mutation_check_cluster_lock.py
 
 scripts/go.sh test ./...                   # Go via Docker
@@ -294,25 +351,35 @@ scripts/tf.sh -chdir=infra/terraform/environments/prod validate
 - psycopg async needs `ensure_psycopg_compatible_loop()`.
 - FastAPI dependency aliases must be at module scope (`from __future__ import annotations`).
 - Before claiming determinism or success, make sure the command actually ran. A crashed script once "matched" an old file.
+- `Path.write_text` writes **CRLF** on Windows; write data files with `newline="\n"` (dataset hashes broke once).
+- uvicorn 0.52 on Windows needs `loop="none"` (already in `xm_api/__main__.py`).
+- `ruff format` can re-join split strings; split long literals into two adjacent literals.
+- Any process you start in the background (API/MCP), stop it at the end by PID on its port only.
 
 ## 9. Repository map
 
 ```
-contracts/            JSON Schemas + fixtures (Go + Python contract tests)
-config/               sources.yaml (43), sources.e2e.yaml (6), entities.yaml, cluster_scorer.candidate.json
-apps/edge-go/         Go poller + ingestor (+ extractcheck), Dockerfile
-apps/indexer/         Python micro-batch indexer (G1–G6), backfill, Dockerfile
-apps/api/             FastAPI: search, feed, stories (Dockerfile TODO)
-packages/xm_core/     settings, events, models, migrations 0001-0003, idempotency, admin
+contracts/events/     JSON Schemas (article.* + discussion.v1) ; fixtures/ (+ legacy/) for Go + Python
+contracts/api/        problems.v1.openapi.json (generated; drift test)
+config/               sources.yaml (43), sources.e2e.yaml (6), problem_sources.yaml (5), problem_sources.corpus.yaml,
+                      entities.yaml, cluster_scorer.candidate.json, problem_classifier.v1.json
+apps/edge-go/         Go poller (poll/discussions.go) + ingestor (+ extractcheck), Dockerfile
+apps/indexer/         micro-batch indexer (G1–G7), backfill-clusters/-problems, Dockerfile
+apps/api/             FastAPI: search, feed, stories, problems; auth.py, ratelimit.py, contract.py (Dockerfile TODO)
+apps/mcp/             xm_mcp.server: MCP tools over streamable HTTP (thin REST client)
+packages/xm_core/     settings, events, models, migrations 0001-0006, idempotency, admin
 packages/xm_cluster/  minhash, text (version_tokens), entities, scoring, assign
+packages/xm_problems/ cues, classifier (PainClassifier), policy, assign (problems), demand
 packages/xm_embed/    embedder (embed, embed_query, warm)
 packages/xm_search/   query, fusion (RRF), retrieval
 packages/xm_rank/     story features (point-in-time) + heuristic importance
 evals/clustering/     sample_pairs, apply_labels, audit, evaluate, pairs_v1*, results_v1.json
+evals/problems/       GUIDELINES.md, sample, apply_labels, audit, evaluate, merge_audit, cluster_report,
+                      labels_v1*.jsonl, assistant_labels_v1/, merge_audits.jsonl, top50_v1.jsonl, results_v1.json
 infra/terraform/      bootstrap, modules (pubsub_pipeline, cloud_run_service, scheduled_job), environments/prod
 deploy/compose/       postgres(pgvector) redis pubsub-emulator ingestor
 scripts/              check.sh, go.sh, tf.sh, e2e_local.sh, pubsub_local_setup.py, mutation_check_cluster_lock.py
-docs/                 clustering.md, reports/clustering-pairs-v1.md
+docs/                 clustering.md, problems.md, reports/{clustering-pairs-v1, problem-classifier-v1, problem-clustering-v1}.md
 .github/workflows/    ci.yml ; renovate.json ; conftest.py (shared fixtures)
 ```
 
@@ -321,5 +388,33 @@ docs/                 clustering.md, reports/clustering-pairs-v1.md
 - Clustering labels are assistant-made and the set is small (27 positives), so its metrics are provisional.
 - **Nothing is deployed to GCP yet.** Terraform is validated and scanned only.
 - The Pub/Sub emulator doesn't report delivery attempts, so DLQ behaviour is only verifiable on real Pub/Sub.
-- **No results exist yet** for problem intelligence, search LTR, personalization, load tests or SLOs. Don't write numbers for them anywhere.
+- **Problem intelligence numbers are provisional:**
+  - Classifier labels, merge verdicts and calibration judgments are all assistant-made (`human_audited: false`).
+  - The classifier is weak outside GitHub (P 0.48 / R 0.39).
+  - Merge audit 2 (65.7%) ran on the same corpus its fixes came from.
+  - Merge recall and top-50 usefulness are unmeasured.
+  - Everything comes from a one-day corpus snapshot, not a continuous stream.
+- **No results exist yet** for the Pro2Pro A/B (P6), search LTR, personalization, load tests or SLOs. Don't write numbers for them anywhere.
 - XploreMore **complements** Hacker News and Techmeme. It doesn't claim to compete with them.
+
+## 11. Prompt to start the next session
+
+```text
+You are continuing XploreMore, my hiring-focused portfolio project. Work fast and continuously, with production quality.
+
+STEP 1 — Load context (do not skip):
+- Read C:\Users\Dilip\OneDrive\Pictures\xplore_more\CONTINUE_SESSION.md completely (single source of truth).
+- Run `git status` and `git log --oneline | head -5`; confirm HEAD matches §0 and the tree is clean.
+- Make sure Docker Desktop is running, then:
+  docker compose -f deploy/compose/docker-compose.yml up -d postgres redis pubsub
+  uv sync
+  scripts/check.sh   (must exit 0 before you change anything)
+
+STEP 2 — Build P5 (Pro2Pro integration) following §5.1 exactly, then P6 (discovery A/B harness + honest report),
+then Phase Q1 (ingestor rate-limit fail-fast) and the rest of Q2 (Redis caches with single-flight).
+
+RULES: as in §2 of CONTINUE_SESSION.md (no fabricated metrics; commit only when scripts/check.sh exits 0,
+checked directly; no LLM agents in XploreMore's serving path; write code with Write/Edit tools on Windows;
+Co-Authored-By trailer; update CONTINUE_SESSION.md after each milestone; short plain-English update after each milestone).
+In p2pagent: run its own test suite before committing there, and do not push unless asked.
+```
