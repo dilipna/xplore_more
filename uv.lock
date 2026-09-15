@@ -1672,6 +1672,7 @@ name = "xm-indexer"
 version = "0.1.0"
 source = { editable = "apps/indexer" }
 dependencies = [
+    { name = "redis" },
     { name = "xm-cluster" },
     { name = "xm-core" },
     { name = "xm-embed" },
@@ -1680,6 +1681,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "redis", specifier = ">=5.2" },
     { name = "xm-cluster", editable = "packages/xm_cluster" },
     { name = "xm-core", editable = "packages/xm_core" },
     { name = "xm-embed", editable = "packages/xm_embed" },

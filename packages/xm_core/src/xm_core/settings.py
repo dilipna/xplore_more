@@ -44,6 +44,15 @@ class Settings(BaseSettings):
     redis_url: SecretStr = SecretStr("redis://localhost:6379/0")
     anon_rate_per_minute: int = Field(default=30, ge=1)
     require_api_key_for_problems: bool = False
+    # Redis response cache for /v1/feed and /v1/problems (xm_api.cache). 0 disables it.
+    # Entries are tagged with a generation the indexer increments after every committed
+    # batch, so new data invalidates at once; the TTL bounds staleness if that bump is lost.
+    response_cache_ttl_s: int = Field(default=60, ge=0)
+    response_cache_prefix: str = "xm:cache:v1:"
+
+    @property
+    def response_cache_generation_key(self) -> str:
+        return f"{self.response_cache_prefix}gen"
 
 
 @lru_cache(maxsize=1)

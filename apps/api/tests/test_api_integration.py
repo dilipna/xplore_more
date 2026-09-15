@@ -107,6 +107,7 @@ def client_for(migrated_database: str, embedder) -> TestClient:
         database_url=SecretStr(migrated_database),
         entities_file=str(ROOT / "config" / "entities.yaml"),
         anon_rate_per_minute=100_000,  # every test client shares one anonymous bucket
+        response_cache_ttl_s=0,  # each test builds its own data; caching is tested in test_response_cache.py
     )
     return TestClient(create_app(settings, embedder=embedder, warm_embedder=False))
 

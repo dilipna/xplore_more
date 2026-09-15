@@ -23,6 +23,7 @@ from xm_core.settings import get_settings
 from xm_embed.embedder import Embedder, FastEmbedEmbedder
 from xm_indexer.backfill import backfill_clusters, backfill_problems, reset_clusters, reset_problems
 from xm_indexer.bus import BatchSource, PubSubBatchSource
+from xm_indexer.invalidate import bump_response_cache_generation
 from xm_indexer.pipeline import Clusterer, process_batch
 
 log = logging.getLogger("xm_indexer")
@@ -62,6 +63,8 @@ async def drain(
             )
             source.ack(result.ack_ids)
             source.nack(result.nack_ids)
+            if result.applied:
+                await bump_response_cache_generation(settings)
             totals["batches"] += 1
             for key in counters:
                 totals[key] += getattr(result, key)
@@ -117,6 +120,7 @@ def _backfill(*, reset: bool, problems: bool) -> int:
             return await backfill_clusters(sessionmaker, clusterer)
         finally:
             await engine.dispose()
+            await bump_response_cache_generation(settings)
 
     totals = asyncio.run(go())
     log.info(json.dumps({"event": "problems_backfilled" if problems else "clusters_backfilled", **totals}))

@@ -31,6 +31,11 @@ var ErrPermanent = errors.New("permanent fetch failure")
 // ErrTransient wraps failures worth retrying later.
 var ErrTransient = errors.New("transient fetch failure")
 
+// ErrThrottled marks a transient failure where the per-host limiter could not grant a slot
+// early enough to leave MinFetchBudget before the deadline. It is always wrapped together
+// with ErrTransient; callers that only care about retry semantics can ignore it.
+var ErrThrottled = errors.New("host rate limit exceeds deadline")
+
 // Result is a successfully fetched document.
 type Result struct {
 	FinalURL    *url.URL
@@ -41,11 +46,14 @@ type Result struct {
 
 // Options bounds a Fetcher.
 type Options struct {
-	UserAgent        string
-	MaxBytes         int64
-	Timeout          time.Duration
-	PerHostRate      rate.Limit // requests/second per host (politeness)
-	PerHostBurst     int
+	UserAgent    string
+	MaxBytes     int64
+	Timeout      time.Duration
+	PerHostRate  rate.Limit // requests/second per host (politeness)
+	PerHostBurst int
+	// MinFetchBudget is the time a request must still have after its rate-limit slot.
+	// Waiting for a slot that leaves less only produces a timed-out fetch and burns the slot.
+	MinFetchBudget   time.Duration
 	RobotsTTL        time.Duration
 	AllowedMIMETypes []string
 }
@@ -58,6 +66,7 @@ func DefaultOptions() Options {
 		Timeout:          15 * time.Second,
 		PerHostRate:      rate.Every(2 * time.Second),
 		PerHostBurst:     2,
+		MinFetchBudget:   5 * time.Second,
 		RobotsTTL:        6 * time.Hour,
 		AllowedMIMETypes: []string{"text/html", "application/xhtml+xml"},
 	}
@@ -100,6 +109,42 @@ func (f *Fetcher) limiter(host string) *rate.Limiter {
 		f.limiters[host] = l
 	}
 	return l
+}
+
+// waitForSlot reserves a per-host rate-limit slot and waits for it, but only when the slot
+// leaves at least MinFetchBudget before ctx's deadline. Otherwise it cancels the reservation
+// (returning the token to the limiter for a request that can use it) and fails at once.
+//
+// rate.Limiter.Wait alone only refuses delays longer than the whole deadline, so a slot granted
+// just before the deadline leaves the HTTP request no time: the delivery times out, is retried,
+// and has still consumed a politeness slot. The full e2e run logged 485 ingestor retries of
+// this family (CONTINUE_SESSION §4.3); the fix is re-measured there.
+func (f *Fetcher) waitForSlot(ctx context.Context, host string) error {
+	now := time.Now()
+	r := f.limiter(host).ReserveN(now, 1)
+	if !r.OK() {
+		return fmt.Errorf("%w: rate limiter: burst below 1", ErrPermanent)
+	}
+	delay := r.DelayFrom(now)
+	if deadline, ok := ctx.Deadline(); ok {
+		if remaining := deadline.Sub(now); delay+f.opts.MinFetchBudget > remaining {
+			r.CancelAt(now)
+			return fmt.Errorf("%w: %w: slot in %v, %v left", ErrTransient, ErrThrottled,
+				delay.Round(time.Millisecond), remaining.Round(time.Millisecond))
+		}
+	}
+	if delay == 0 {
+		return nil
+	}
+	timer := time.NewTimer(delay)
+	defer timer.Stop()
+	select {
+	case <-timer.C:
+		return nil
+	case <-ctx.Done():
+		r.Cancel()
+		return fmt.Errorf("%w: rate limiter: %v", ErrTransient, ctx.Err())
+	}
 }
 
 // allowedByRobots consults a cached robots.txt. Unreachable or 5xx robots files allow
@@ -146,8 +191,8 @@ func (f *Fetcher) Get(ctx context.Context, rawURL string) (*Result, error) {
 	if !f.allowedByRobots(ctx, u) {
 		return nil, fmt.Errorf("%w: disallowed by robots.txt", ErrPermanent)
 	}
-	if err := f.limiter(u.Hostname()).Wait(ctx); err != nil {
-		return nil, fmt.Errorf("%w: rate limiter: %v", ErrTransient, err)
+	if err := f.waitForSlot(ctx, u.Hostname()); err != nil {
+		return nil, err
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)

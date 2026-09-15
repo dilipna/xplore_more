@@ -107,6 +107,7 @@ func run(log *slog.Logger) error {
 	log.Info("ingestor stopped",
 		"extracted", handler.Stats.Extracted.Load(),
 		"rejected", handler.Stats.Rejected.Load(),
-		"retried", handler.Stats.Retried.Load())
+		"retried", handler.Stats.Retried.Load(),
+		"throttled", handler.Stats.Throttled.Load())
 	return nil
 }
