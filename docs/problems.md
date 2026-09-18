@@ -69,6 +69,26 @@ demand = log1p(effective_voices) × (1 + 0.5·log1p(sources)) × 0.5^(age_days/3
 - Outputs are token-lean: 3 problems with evidence came to 1,874 characters, measured live.
 - Tests validate their mock API responses against the committed OpenAPI contract and exercise a real HTTP transport.
 
+**Response cache** (Q2, `xm_api/cache.py`): `/v1/problems` and `/v1/feed` are cached in Redis.
+
+- The key hashes the endpoint and its exact parameters (the topic string verbatim: the embedder sees it that way, so case and spacing can change ranking). Auth and rate limits run before the cache, so a cached body never bypasses a 401 or a 429.
+- Entries carry the cache generation read *before* the response was computed. `xm-indexer` increments it after every committed batch and after backfills, so a batch that commits mid-computation leaves that entry already stale. `XM_RESPONSE_CACHE_TTL_S` (default 60, 0 disables) bounds staleness if an increment is lost.
+- Single-flight: concurrent identical requests share one computation in-process, and across instances a short Redis lock elects one computer while the others poll briefly and then compute anyway.
+- Degraded answers (for example lexical-only after an embedder failure) are served but never cached. A Redis outage bypasses the cache. `X-XM-Cache: hit|miss|shared|bypass|off` says which path ran.
+
+## 5b. Consumer: Pro2Pro (P5)
+
+Pro2Pro's Research Agent calls `find_problems` first and validates or fills gaps with its own
+Hacker News and web tools. Its client (`p2pagent/src/p2pops/tools/xploremore.py`, ADR-0012
+there) holds a 5 s timeout and a circuit breaker, falls back to HN/web **in code** when
+XploreMore is unconfigured or the breaker is open, and carries `problem_id`, voices, sources
+and evidence URLs into its dedupe, Analyst and showcase card. It vendors this repo's
+`contracts/api/problems.v1.openapi.json` and validates both mocked payloads and its own query
+strings against it, so the contract is enforced on both sides.
+
+Whether XploreMore-sourced discovery is actually better is measured in
+`docs/reports/pro2pro-discovery-ab.md`, not assumed.
+
 ## 6. Operating it
 
 ```bash

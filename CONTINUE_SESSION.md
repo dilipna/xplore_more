@@ -219,6 +219,15 @@ ec3b332 Handoff: Problem Intelligence phase for Pro2Pro integration
 - **Tests:** fail-fast timing (<100 ms), slot returned, fitting slots still wait, handler counter. Removing `CancelAt` made the next request wait 801 ms against a 650 ms bound (mutation check). The race detector is clean.
 - **TODO:** re-run `E2E_SOURCES=sources.yaml scripts/e2e_local.sh` and compare retried/throttled against the 485 retries in §4.3. This was deliberately not run while the P6 A/B used the same machine and dev DB.
 
+### 4.16 P7 (partial) — API Dockerfile, Terraform module, deploy workflow
+- **`apps/api/Dockerfile`:** same multi-stage pattern as the indexer (uv build stage, bakes the bge embedding model in, non-root `xm` user, `python:3.13-slim` runtime). **Built and run locally against the real Postgres/Redis containers**: `/healthz` and `/readyz` both returned 200. Not yet pushed anywhere.
+- **`module "api"`** (`infra/terraform/environments/prod/main.tf`): public ingress (`INGRESS_TRAFFIC_ALL`), `allUsers` invoker (auth and rate limits are enforced in the app, not the network edge), `min_instances=0` (free-tier), `api_max_instances` cost ceiling, secrets `database-url` and a new `redis-url` (Upstash, added out-of-band like `database-url` always was). New `xm-api` service account, least-privilege (`secretmanager.secretAccessor` on those two secrets only).
+- **Validated, not applied:** `terraform validate` clean, `tflint --recursive` clean, checkov 103 passed / 0 failed (via the pinned `bridgecrew/checkov` and `terraform-linters/tflint` Docker images already present locally — no new tool installs needed).
+- **`.github/workflows/deploy.yml`** (new): triggers after `ci.yml` goes green on `main`, or `workflow_dispatch`. Builds and pushes edge/indexer/api images, signs each pushed digest keylessly with cosign (OIDC), Trivy-scans it, `terraform apply`s with the new digests, then canaries **only the API** (the one service with public traffic): deploys a revision at 0% traffic, polls its own per-revision URL's `/readyz`, cuts over to 100% only on success. Action SHAs were looked up live via the GitHub API (not guessed) and the whole file passes `actionlint` (via the pinned `rhysd/actionlint` image) with zero findings.
+- **`ci.yml`:** added `api` to the existing image build/Trivy-scan/SBOM matrix (alongside edge and indexer) — this part **is** exercised on every CI run once pushed.
+- **Not run:** `deploy.yml` needs the GCP project, Neon and Upstash to exist and repo variables set (§7) — none of that exists yet. The deployer service account's existing bootstrap roles (`artifactregistry.admin`, `run.admin`, `secretmanager.admin`) already cover everything the workflow needs; bootstrap itself was not changed.
+- **Still open for P7:** MCP Cloud Run service module, poller/indexer scheduled jobs for the discussion sources registry (`problem_sources.yaml`) — today's Terraform only wires the tech-news registry.
+
 ### 4.15 P6 — Discovery A/B (in progress)
 - **Harness:** Pro2Pro `p2pops-discovery-ab` (`src/p2pops/evals/discovery_ab.py`, commit `cbdf5ab`). It runs the real Research Agent plus the real Analyst per topic under two arms.
 - **Held equal:** model, guardrails, analyst prompt and threshold, step ceiling (22 for both), turn timeout, per-call retry, and a 65 s pause before each trial. Arm order alternates by topic; each arm has its own dedupe memory. No DB writes and no email.
@@ -315,9 +324,10 @@ ec3b332 Handoff: Problem Intelligence phase for Pro2Pro integration
   - Tokens and cost per validated problem
 - Report with CIs in `docs/reports/pro2pro-discovery-ab.md`. If the sample is small, say so.
 
-**P7. Go live** (requires the user's GCP/Neon/Upstash setup, §7)
-- API Dockerfile, Terraform `module "api"` (public ingress, `allUsers` invoker for read endpoints, max-instance cap), MCP service module, poller/indexer jobs for problem sources, `deploy.yml` (WIF auth, cosign, terraform apply, canary).
-- Point Pro2Pro's Render env at the live XploreMore API.
+**P7. Go live** — code ✅ done (§4.16); ⏳ blocked on the user's GCP/Neon/Upstash setup (§7)
+- API Dockerfile, Terraform `module "api"` (public ingress, `allUsers` invoker for read endpoints, max-instance cap), `deploy.yml` (WIF auth, cosign, terraform apply, canary) — all written and validated, none deployed.
+- **Still not written:** MCP service module, poller/indexer jobs for problem sources (the prod Terraform only runs `sources.yaml`-style ingestion today, not `problem_sources.yaml`). Do this once the base API is confirmed live.
+- Point Pro2Pro's Render env at the live XploreMore API (needs `XPLOREMORE_API_URL`/`XPLOREMORE_API_KEY` on Render, §7).
 
 ### PHASE Q — Carry-over engineering (interleave where it unblocks P)
 1. **Ingestor rate-limit fix:** ✅ code done (§4.14); ⏳ re-measure retries on a full e2e run.
