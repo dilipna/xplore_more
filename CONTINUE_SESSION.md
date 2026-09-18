@@ -1,23 +1,25 @@
 # XploreMore — Continue Session Handoff
 
-> Last updated: 2026-09-15 (after P5 + Q1 code + Q2; XploreMore HEAD `527f9ea`, Pro2Pro HEAD `cbdf5ab`, nothing pushed). Read this whole file before doing anything; it is the single source of truth for resuming work.
+> Last updated: 2026-09-18 (Phase P fully done at code level, P6 measured, P7 code-complete; two live Pro2Pro regressions found and fixed; XploreMore HEAD `2282ccc` not pushed, Pro2Pro HEAD `e39a338` **pushed, GitHub CI green**). Read this whole file before doing anything; it is the single source of truth for resuming work.
+
+> **HARD CONSTRAINT FOR THE NEXT SESSION:** finish Q3 (search eval + LTR, §6 Phase Q) completely — not started, not sketched, not "here's a plan" — and then keep going into Phase R (§6) until either everything buildable without new infrastructure is done, or you hit one of the three named blockers in §7 that only the user can clear (GCP/Neon/Upstash account creation, a Vercel production deploy, or Q4's literal multi-day data-collection requirement). Do not stop early. Do not ask permission for an implementation choice you can make yourself using the patterns already in this codebase — decide, build, test, move on. Do not report something as done without a passing gate and a real measurement behind it. If you reach a genuine blocker, say so by name and keep working on whatever doesn't depend on it; never sit idle waiting.
 
 ---
 
 ## 0. TL;DR for the next session
 
-1. **State:** **all gates green** at `527f9ea`: **126 Python tests, 0 skipped**, all Go packages, Terraform validated and scanned. Migrations run through **0006**. Pro2Pro (`p2pagent`) is at `cbdf5ab` with **119 tests** green (not pushed).
+1. **State:** **all gates green** at `2282ccc`: **126 Python tests, 0 skipped**, all Go packages, Terraform validated and scanned (tflint clean, checkov 103/0). Migrations run through **0006**. Pro2Pro (`p2pagent`) is at `e39a338`, **120 tests** green, **pushed to `dilipna/Pro2ProAgent` master, GitHub Actions CI green**.
 2. **What runs live on the laptop:**
    - 43 tech sources + **5 discussion sources** → Go poller → Pub/Sub emulator → Go ingestor → Python indexer.
    - The indexer embeds, clusters stories, **classifies pain points** and **clusters problems** into Postgres.
-   - FastAPI serves search, feed and stories, plus **`/v1/problems`** with API keys and a Redis rate limit.
+   - FastAPI serves search, feed and stories, plus **`/v1/problems`** with API keys and a Redis rate limit, now with a **Redis response cache** (single-flight, generation-invalidated).
    - An **MCP server** exposes the problem API over streamable HTTP.
-3. **Direction (decided by the user):** XploreMore is the **problem-discovery backbone for Pro2Pro** (`protopro.vercel.app`). XploreMore finds, clusters and ranks real problems; Pro2Pro's agents turn them into products. This is **Phase P** (§6), the top priority.
-4. **Phase P progress:** **P1–P5 done** (§4.8–4.12). **Q1 and Q2 done** (§4.13–4.14). **P7 partial** (API Dockerfile, Terraform module, deploy.yml — written and validated, not deployed; §4.16). **P6 A/B is in progress** (§4.15). Next: finish P6 (write the results into the report), then whatever the report's findings call for.
-   - **Pro2Pro production is probably broken:** Groq retired its default model. Fixed in `76ae381`, but it needs a push/deploy by the user (§7).
-5. **Dev data:** DB `xploremore` holds ~840 articles, ~1,550 discussion docs and **493 problems** (policy `problem-prior-2026-09-13c`, classifier `pain-v1-20260913`). Create a local API key with `uv run xm-api keys create --name local --rate 600`.
-6. **Local ports:** port 8000 is taken by Docker and an unrelated Python 3.12 process (possibly Pro2Pro's API; **don't kill it**). Serve the XploreMore API on **`PORT=8765`** and MCP on **`XM_MCP_PORT=8766`**.
-7. **Gate discipline reminder:** commit with `if scripts/check.sh > log 2>&1; then git commit ...; fi`. Never test `$?` after an `echo`: one handoff commit last session was guarded that way by mistake (the gate had in fact passed).
+3. **Direction (decided by the user):** XploreMore is the **problem-discovery backbone for Pro2Pro** (`protopro.vercel.app`). XploreMore finds, clusters and ranks real problems; Pro2Pro's agents turn them into products. **Phase P (§6) is now done at the code level — P1 through P7.** The next priority is **Phase Q3/Q4 and Phase R (§6)**, per the hard constraint above.
+4. **Phase P — fully done at code level (§4.8–4.16):** discussion sources, pain classifier, problem clustering, problem API + MCP, Pro2Pro integration, the discovery A/B (measured, 16/16 trials — see §4.15 for the honest finding), and all go-live artifacts (API/MCP Dockerfiles, Terraform modules `api`/`mcp`/`poller_problems`, `deploy.yml` with canary). **Q1 and Q2 done and measured** (§4.13–4.14). Nothing in Phase P is deployed to GCP yet — that's user-gated (§7), not remaining engineering.
+5. **Pro2Pro: two live regressions found and fixed today, both pushed (§4.17).** Groq retired the model Pro2Pro depended on (404, fixed `76ae381`) and — found only by running promptfoo live, not by unit tests — the replacement reasoning model was silently failing the guardrail closed on ordinary inputs (`reasoning_effort` fix, `e39a338`). Promptfoo went 4/5 → 5/5 live. **Still not confirmed:** whether Render actually redeployed (no dashboard access), and the web frontend's provenance UI needs a manual `vercel deploy --prod` to go live (§7).
+6. **Dev data:** DB `xploremore` holds ~840 articles, ~1,550 discussion docs and **493 problems** (policy `problem-prior-2026-09-13c`, classifier `pain-v1-20260913`). Create a local API key with `uv run xm-api keys create --name local --rate 600`.
+7. **Local ports:** port 8000 is taken by Docker and an unrelated Python 3.12 process (possibly Pro2Pro's API; **don't kill it**). Serve the XploreMore API on **`PORT=8765`** and MCP on **`XM_MCP_PORT=8766`**.
+8. **Gate discipline reminder:** commit with `if scripts/check.sh > log 2>&1; then git commit ...; fi`. Never test `$?` after an `echo`: one handoff commit last session was guarded that way by mistake (the gate had in fact passed).
 
 ---
 
@@ -240,6 +242,18 @@ ec3b332 Handoff: Problem Intelligence phase for Pro2Pro integration
 - **Headline result (full detail and CIs in the report):** XploreMore arm shortlisted 0.75 ideas/trial vs baseline's 3.38 (paired diff -2.62 [-3.88, -1.12], the one interval that doesn't cross zero). **But this is not evidence XploreMore-sourced problems are worse** — 3 of 8 XploreMore trials (38%) failed to even complete a research turn, hitting the 240 s timeout after 8-9 rate-limit waits each, because the XploreMore prompt budgets 2 more tool calls on Groq's 8,000 TPM tier. 0 of 8 baseline trials timed out. A failed trial reports 0 ideas, which mechanically drags every XploreMore-arm average down. Of the trials that *did* complete, 67% of all reported ideas carried verified XploreMore provenance — the ADR-0012 mechanism itself worked correctly whenever there was budget to finish.
 - **Honest conclusion:** this experiment shows a **provider-tier/token-budget confound**, not a discovery-quality result. Re-running on a higher-TPM tier is the recommended next step before drawing any conclusion about XploreMore vs HN/web problem quality (see the report's "Recommended follow-up").
 
+### 4.17 Pro2Pro session (2026-09-18) — two live regressions found post-hoc, both fixed, pushed (`p2pagent` `e39a338`)
+- **What triggered this:** the user asked to "complete the protopro integration at any cost" before making their own changes. Re-running Pro2Pro's own test suite (green) wasn't enough — running the **live** `promptfoo` suite against the real, now-current model caught what unit tests couldn't.
+- **Bug 1 (loud):** Groq retired `llama-4-scout-17b-16e-instruct` (404 `model_not_found`). Fixed already in `76ae381` (previous session) — re-confirmed still correct.
+- **Bug 2 (silent, found this session, more severe):** the replacement model, `openai/gpt-oss-20b`, is a **reasoning model** — it spends hidden reasoning tokens before any visible output. `guardrails.py`'s self-check prompt caps `max_tokens: 300` for what used to be a trivial Yes/No classification under the old non-reasoning model. Under the new one, a nontrivial input could burn the *entire* budget on reasoning and return **empty content** (`finish_reason="length"`). NeMo Guardrails treats an unparseable self-check as "blocked" — so **real ideas could be silently rejected as "Blocked by guardrails," with no error, no crash, nothing visible in logs.** This is worse than bug 1: bug 1 stops every run loudly; bug 2 lets runs complete while quietly discarding good ideas.
+  - **Fix:** `get_chat_model(..., reasoning_effort="low")` — new parameter, Groq-only (`extra_body={"reasoning_effort": "low"}`), applied *only* to the two guardrail rails. Measured live: cut the same real prompt's reasoning-token usage from exhausting a 300-token cap to 33, leaving the actual Yes/No answer intact. Never applied to research/analyst/venture calls, where reasoning quality matters.
+  - **A second, distinct thing this uncovered:** once the crash was fixed, one promptfoo fixture ("Kubernetes CrashLoopBackOff...") started failing *legitimately* — visible chain-of-thought showed the model correctly blocking a problem with zero AI/ML angle, per the guardrail's own "AI-related problem" framing (matches `RESEARCH_SYSTEM_PROMPT`'s stated scope everywhere else). **Fix was to re-scope the test fixture to a genuinely AI-related problem, not to loosen the guardrail** — loosening it would let generic DevOps/software noise into real discovery, a product-scope change no one asked for.
+  - **Verified live, not assumed:** promptfoo went from 4/5 to 5/5 against the real Groq API (`npm_config_cache=<fresh dir> npx promptfoo@latest eval --no-cache` — this machine's default npm cache is corrupted, documented in Pro2Pro's own `PROJECT_BRAIN.md` §13). Regression test added: `tests/test_chat_model_retry.py::test_reasoning_effort_reaches_groq_but_not_other_providers`. 120 tests pass.
+- **`render.yaml`:** now declares `XPLOREMORE_API_URL`/`XPLOREMORE_API_KEY` as `sync: false`, so Render's dashboard prompts for them on the next blueprint sync. No values were set (never had any to give it) — the integration stays inert (safe HN/web fallback) in prod until the user adds real values.
+- **Pushed and CI-verified:** `git push origin master` → `e39a338`, confirmed via the GitHub API that the triggered `ci` workflow run completed with `conclusion: success`.
+- **What is NOT verified, and can't be from here:** whether Render's auto-deploy-on-push is actually enabled (flagged as unconfirmed in Pro2Pro's own handoff doc before this session too) — check the Render dashboard. The web frontend's new provenance card/story-page UI (built this session, `pnpm lint`/`build` clean, pushed to GitHub) is **not live** on `protopro.vercel.app` — that repo's Vercel deploys are a manual `cd web && npx vercel@latest deploy --prod --scope asmq333`, never auto-deploy-on-push, and no one ran it.
+- **If Pro2Pro's default model or provider changes again:** re-run `promptfoo eval` live before trusting it. Pro2Pro's own CI never calls a real LLM by design (documented in its `PROJECT_BRAIN.md`) — this exact class of regression is structurally invisible to CI.
+
 ## 5. Pro2Pro facts needed for the integration (verified in its code)
 
 - **Discovery:** a LangGraph ReAct **Research Agent** (`p2pagent/src/p2pops/agents/research.py`) calls three tools:
@@ -337,20 +351,20 @@ ec3b332 Handoff: Problem Intelligence phase for Pro2Pro integration
 
 ### PHASE Q — Carry-over engineering (interleave where it unblocks P)
 1. **Ingestor rate-limit fix:** ✅ done, code + re-measured on a full e2e run (§4.14).
-2. **Redis:** API-key rate limiting ✅ (P4); feed and problem response caches with single-flight ✅ (§4.13). A load test measuring the benefit is still open.
-3. **Search eval + LTR:** judged query set, BM25 vs FTS Recall@100, LightGBM lambdarank, nDCG@10/MRR with CIs, CI gate.
-4. **Importance LTR for the feed:** T+1h features vs T+24h realized coverage, time split. Needs days of continuous ingestion, so start continuous ingestion as soon as GCP is live.
+2. **Redis:** API-key rate limiting ✅ (P4); feed and problem response caches with single-flight ✅ (§4.13). A load test measuring the benefit is still open (needs a live target, see below — do a local `k6`/`hey` load test against `PORT=8765 uv run xm-api` if you don't want to wait on GCP).
+3. **Search eval + LTR — ⏭ NEXT, buildable now, no GCP needed:** judged query set (assistant-labeled against the real dev DB, `human_audited: false`, disclosed like every other label set in this project), BM25/FTS-only vs the current hybrid retrieval, Recall@10/50, nDCG@10, MRR with bootstrap CIs, a report in `docs/reports/search-eval-v1.md`. Then a LightGBM LambdaMART reranker fit on that judged set, evaluated the same way, plus a CI gate that fails on a regression past a documented threshold. **This is the hard-constraint target — finish it, don't just start it.**
+4. **Importance LTR for the feed:** T+1h features vs T+24h realized coverage, time split. **Genuinely blocked** — it needs days of continuous ingestion, which is wall-clock time, not effort. Do not attempt to fake this with a short window; say plainly it's blocked and move on.
 
 ### PHASE R — Personalization, reliability, stretch (after P)
-- **Personalization:** signed uid, events beacon, affinities, Thompson exploration, MMR, propensity logging, IPS/SNIPS on a simulator, privacy (`DELETE /me`).
-- **Web frontend:** Next.js static; includes a public "Problems" page.
-- **Reliability:** OpenTelemetry (Pub/Sub trace propagation), Grafana Cloud, SLO doc and burn-rate alerts, k6 open-model load tests, toxiproxy fault injection, gameday postmortem, Cloud Run canary with auto-rollback.
-- **Stretch:** Helm with `ct` on kind, GKE Autopilot perf lab (HPA, NetworkPolicy, PDB), Argo CD, cross-encoder rerank experiment.
-- **Docs:** ADRs, `SECURITY.md`, threat model, `docs/search.md`, storage economics (`docs/problems.md` is done); archive MLOPS-Project; push `dilipna/xploremore`.
-- **Problem intelligence v2 (after P6):**
-  - Human audits (§7).
+- **Personalization — buildable now, no GCP needed:** signed uid, events beacon, affinities, Thompson exploration, MMR, propensity logging, IPS/SNIPS on a simulator, privacy (`DELETE /me`). All of this can be built and tested against the local dev DB.
+- **Web frontend — buildable now, no GCP needed:** Next.js static; includes a public "Problems" page. XploreMore has no `web/` at all yet (unlike Pro2Pro) — this is a full build, not a tweak.
+- **Reliability — mostly blocked on live GCP:** OpenTelemetry (Pub/Sub trace propagation) and the SLO doc's structure can be written now; Grafana Cloud wiring, k6 load tests against a real Cloud Run service, toxiproxy fault injection against real infra, a gameday, and Cloud Run canary with auto-rollback all need the service to actually be deployed first (§7). Don't skip the whole item — write what's genuinely achievable (the SLO doc, the OTel instrumentation code, a load test script parameterized to run locally against `xm-api`) and flag the rest as blocked by name.
+- **Stretch — blocked on live GCP/GKE:** Helm with `ct` on kind is doable locally; GKE Autopilot perf lab, Argo CD and the cross-encoder rerank experiment need either a live cluster or are genuinely optional polish — lowest priority, do them last if time remains.
+- **Docs — buildable now:** ADRs, `SECURITY.md`, threat model, `docs/search.md` (write this as part of Q3 above, don't defer it), storage economics (`docs/problems.md` is done). Archiving MLOPS-Project and pushing `dilipna/xploremore` are the user's GitHub actions, not yours — ask, don't do.
+- **Problem intelligence v2 (after P6) — buildable now:**
   - Labels v2 with active sampling of HN/Lobsters positives, plus a decision on maintainer roadmaps.
   - A labeled same-problem pair set, to measure merge recall and fit the problem scorer.
+  - Human audits (§7) are the user's own judgment work — not something to do on their behalf.
   - An absolute topic-relevance threshold, which needs a judged query set.
 
 ## 7. User actions still needed
@@ -362,8 +376,9 @@ ec3b332 Handoff: Problem Intelligence phase for Pro2Pro integration
 - [ ] Audit clustering labels: `uv run python evals/clustering/audit.py`.
 - [ ] Audit pain-point labels (low/medium confidence first, 183 items): `uv run python evals/problems/audit.py`, then re-run `evaluate.py`.
 - [ ] Judge top-50 problem usefulness: fill `human_useful` in `evals/problems/top50_v1.jsonl`.
-- [ ] **Pro2Pro prod fix:** push `p2pagent` master (`76ae381`, `cbdf5ab`) so Render redeploys. Groq retired the old default model, so prod discovery very likely fails until then.
-- [ ] After XploreMore is deployed (P7): add `XPLOREMORE_API_URL` / `XPLOREMORE_API_KEY` to Pro2Pro's Render environment.
+- [x] ~~Push `p2pagent` master so Render redeploys the Groq-model fix.~~ Done 2026-09-18: pushed to `e39a338`, GitHub CI green. **Still needs you:** confirm in the Render dashboard whether the redeploy actually happened (auto-deploy-on-push was never confirmed enabled).
+- [ ] **Deploy the web frontend:** `cd web && npx vercel@latest deploy --prod --scope asmq333` in `p2pagent`, to publish the new "Discovered via XploreMore" showcase card/story-page UI (built and pushed 2026-09-18, not live yet — Vercel here is never auto-deploy-on-push).
+- [ ] After XploreMore is deployed (P7): add `XPLOREMORE_API_URL` / `XPLOREMORE_API_KEY` in Pro2Pro's Render dashboard (the blueprint now declares both, `sync: false`, so it will prompt for them).
 
 ## 8. How to run everything locally
 
@@ -454,28 +469,46 @@ docs/                 clustering.md, problems.md, reports/{clustering-pairs-v1, 
   - Merge audit 2 (65.7%) ran on the same corpus its fixes came from.
   - Merge recall and top-50 usefulness are unmeasured.
   - Everything comes from a one-day corpus snapshot, not a continuous stream.
-- **No results exist yet** for search LTR, personalization, load tests, SLOs or cache benefit. Don't write numbers for them anywhere. The P6 A/B numbers come only from `docs/reports/pro2pro-discovery-ab.md` once written.
-- The P5 end-to-end result is **one** stochastic run. It shows the integration works, not that XploreMore-sourced ideas are better.
+- **No results exist yet** for search LTR, personalization, load tests, SLOs or cache benefit. Don't write numbers for them anywhere.
+- The P5 end-to-end result and the P6 A/B are the only Pro2Pro-integration measurements that exist; both are honestly caveated in their own sections (§4.12, §4.15) — don't strengthen their conclusions when citing them elsewhere.
 - XploreMore **complements** Hacker News and Techmeme. It doesn't claim to compete with them.
 
 ## 11. Prompt to start the next session
 
 ```text
-You are continuing XploreMore, my hiring-focused portfolio project. Work fast and continuously, with production quality.
+You are continuing XploreMore, my hiring-focused portfolio project. Phase P (problem intelligence
+for Pro2Pro) is done at the code level. Work fast and continuously, with production quality, and
+do not stop until you hit a real blocker or run out of things that don't need my input.
 
 STEP 1 — Load context (do not skip):
-- Read C:\Users\Dilip\OneDrive\Pictures\xplore_more\CONTINUE_SESSION.md completely (single source of truth).
-- Run `git status` and `git log --oneline | head -5`; confirm HEAD matches §0 and the tree is clean.
+- Read C:\Users\Dilip\OneDrive\Pictures\xplore_more\CONTINUE_SESSION.md completely, including the
+  hard-constraint note right under the title and all of §6's PHASE Q/R annotations (which items
+  are buildable now vs genuinely blocked on me).
+- Run `git status` and `git log --oneline | head -5` in both this repo and
+  C:\Users\Dilip\OneDrive\Pictures\p2pagent; confirm HEAD matches §0 and both trees are clean.
 - Make sure Docker Desktop is running, then:
   docker compose -f deploy/compose/docker-compose.yml up -d postgres redis pubsub
   uv sync
   scripts/check.sh   (must exit 0 before you change anything)
 
-STEP 2 — Build P5 (Pro2Pro integration) following §5.1 exactly, then P6 (discovery A/B harness + honest report),
-then Phase Q1 (ingestor rate-limit fail-fast) and the rest of Q2 (Redis caches with single-flight).
+STEP 2 — HARD CONSTRAINT, exactly as stated in the note under the title:
+Finish Q3 (search eval + LTR, PHASE Q item 3) completely: a judged query set, retrieval
+evaluation (BM25/FTS-only vs the current hybrid, Recall@10/50, nDCG@10, MRR with bootstrap CIs),
+a LightGBM LambdaMART reranker fit and evaluated the same way, a written report
+(docs/reports/search-eval-v1.md), and a CI gate. Then keep going into PHASE R in the order its
+annotations suggest (personalization, then the web frontend, then whatever reliability/docs work
+doesn't need live GCP) until you either finish everything buildable without new infrastructure or
+hit one of these three named blockers — and only these three excuse leaving something undone:
+  1. GCP/Neon/Upstash accounts not created (blocks all of Phase P's actual deployment, §7).
+  2. A Vercel production deploy or any other action that publishes to a live site I haven't asked for.
+  3. Q4's importance-LTR needs days of continuous ingestion — wall-clock time, not effort.
+Do not ask permission for implementation choices you can make yourself from the patterns already
+in this codebase. Do not report something done without a passing gate and a real measurement.
 
-RULES: as in §2 of CONTINUE_SESSION.md (no fabricated metrics; commit only when scripts/check.sh exits 0,
-checked directly; no LLM agents in XploreMore's serving path; write code with Write/Edit tools on Windows;
-Co-Authored-By trailer; update CONTINUE_SESSION.md after each milestone; short plain-English update after each milestone).
-In p2pagent: run its own test suite before committing there, and do not push unless asked.
+RULES: as in §2 of CONTINUE_SESSION.md (no fabricated metrics; commit only when scripts/check.sh
+exits 0, checked directly; no LLM agents in XploreMore's serving path; write code with Write/Edit
+tools on Windows; Co-Authored-By trailer; update CONTINUE_SESSION.md after each milestone; short
+plain-English update after each milestone). In p2pagent: run its own test suite before committing
+there; you may push if you find and fix a live regression the way this session did, but say so
+plainly rather than pushing silently.
 ```
