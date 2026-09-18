@@ -13,7 +13,7 @@
    - FastAPI serves search, feed and stories, plus **`/v1/problems`** with API keys and a Redis rate limit.
    - An **MCP server** exposes the problem API over streamable HTTP.
 3. **Direction (decided by the user):** XploreMore is the **problem-discovery backbone for Pro2Pro** (`protopro.vercel.app`). XploreMore finds, clusters and ranks real problems; Pro2Pro's agents turn them into products. This is **Phase P** (§6), the top priority.
-4. **Phase P progress:** **P1–P5 done** (§4.8–4.12). **Q2 caches done** (§4.13). **Q1 fail-fast code done, re-measure pending** (§4.14). **P6 A/B is in progress** (§4.15). Next: finish P6 (report), then the Q1 e2e re-measure.
+4. **Phase P progress:** **P1–P5 done** (§4.8–4.12). **Q1 and Q2 done** (§4.13–4.14). **P7 partial** (API Dockerfile, Terraform module, deploy.yml — written and validated, not deployed; §4.16). **P6 A/B is in progress** (§4.15). Next: finish P6 (write the results into the report), then whatever the report's findings call for.
    - **Pro2Pro production is probably broken:** Groq retired its default model. Fixed in `76ae381`, but it needs a push/deploy by the user (§7).
 5. **Dev data:** DB `xploremore` holds ~840 articles, ~1,550 discussion docs and **493 problems** (policy `problem-prior-2026-09-13c`, classifier `pain-v1-20260913`). Create a local API key with `uv run xm-api keys create --name local --rate 600`.
 6. **Local ports:** port 8000 is taken by Docker and an unrelated Python 3.12 process (possibly Pro2Pro's API; **don't kill it**). Serve the XploreMore API on **`PORT=8765`** and MCP on **`XM_MCP_PORT=8766`**.
@@ -214,10 +214,13 @@ ec3b332 Handoff: Problem Intelligence phase for Pro2Pro integration
 - **Tests:** 11 on real Redis. Removing the generation check fails 2 of them (mutation check). The existing API tests run with the cache off.
 - **Not measured yet:** hit-rate or latency benefit. Write no numbers until a load test exists.
 
-### 4.14 Q1 — Ingestor rate-limit fail-fast (commit `527f9ea`; re-measure pending)
+### 4.14 Q1 — Ingestor rate-limit fail-fast (commit `527f9ea`; re-measured 2026-09-18)
 - **Mechanism:** `rate.Limiter.Wait` already refuses delays longer than the *whole* deadline. It accepted slots that left the HTTP request almost no time, which then timed out and still consumed a politeness slot. `fetch.waitForSlot` now requires `delay + MinFetchBudget (5 s) ≤ remaining`. Otherwise it `CancelAt`s the reservation and returns `ErrTransient`+`ErrThrottled` at once. The ingestor answers 503 immediately and counts `Throttled` separately from `Retried`.
 - **Tests:** fail-fast timing (<100 ms), slot returned, fitting slots still wait, handler counter. Removing `CancelAt` made the next request wait 801 ms against a 650 ms bound (mutation check). The race detector is clean.
-- **TODO:** re-run `E2E_SOURCES=sources.yaml scripts/e2e_local.sh` and compare retried/throttled against the 485 retries in §4.3. This was deliberately not run while the P6 A/B used the same machine and dev DB.
+- **Re-measured** (`E2E_SOURCES=sources.yaml E2E_MAX_BATCHES=25 scripts/e2e_local.sh`, full 43-source registry, rebuilt ingestor image so the fix is actually in the container): poller found/published 1,036 items; the ingestor logged **1,155 push deliveries** in 153 s (02:27:38–02:30:11Z) — **403 extracted (35%)**, **752 returned 503**, of which **727 were `throttled:true`** (limiter-refused before any fetch, logged with the exact slot delay, e.g. `"slot in 15.909s, 20s left"`) and only **25 were genuine transient failures** (20 remote 429s, 5 network errors). **Zero** fetches burned their timeout waiting on the limiter and then failed — that was the entire bug.
+  - **Caveat, stated plainly:** this is not an apples-to-apples count against the "485 retries" in §4.3. That run's settings (wait time, max-batches) aren't fully recorded, and the fix changes what a "retry" *is*: previously a limiter-caused wait that timed out was indistinguishable from a genuine failure, both counted as one generic retry; now the same case is a `throttled` 503 costing ~0 ms instead of the full fetch timeout. A fail-fast design can show a *higher* count of 503s while doing far less wasted work per one — comparing raw retry counts across the two runs would overstate or understate the fix depending on which direction you looked at it, so this report gives the throttled/genuine breakdown instead of a before/after delta.
+  - Indexer only drained 25 batches (104 applied, 101 duplicates, 0 failed) in the fixed 45 s wait window — most of the 1,155 deliveries were still cycling through Pub/Sub's own backoff when indexing started, so total-indexed counts from this run are not comparable to §4.3 either.
+  - Reproduce: `E2E_SOURCES=sources.yaml E2E_MAX_BATCHES=25 scripts/e2e_local.sh`, then `docker compose -f deploy/compose/docker-compose.yml --profile pipeline logs ingestor` and grep for `"throttled"`.
 
 ### 4.16 P7 (partial) — API Dockerfile, Terraform module, deploy workflow
 - **`apps/api/Dockerfile`:** same multi-stage pattern as the indexer (uv build stage, bakes the bge embedding model in, non-root `xm` user, `python:3.13-slim` runtime). **Built and run locally against the real Postgres/Redis containers**: `/healthz` and `/readyz` both returned 200. Not yet pushed anywhere.
@@ -330,7 +333,7 @@ ec3b332 Handoff: Problem Intelligence phase for Pro2Pro integration
 - Point Pro2Pro's Render env at the live XploreMore API (needs `XPLOREMORE_API_URL`/`XPLOREMORE_API_KEY` on Render, §7).
 
 ### PHASE Q — Carry-over engineering (interleave where it unblocks P)
-1. **Ingestor rate-limit fix:** ✅ code done (§4.14); ⏳ re-measure retries on a full e2e run.
+1. **Ingestor rate-limit fix:** ✅ done, code + re-measured on a full e2e run (§4.14).
 2. **Redis:** API-key rate limiting ✅ (P4); feed and problem response caches with single-flight ✅ (§4.13). A load test measuring the benefit is still open.
 3. **Search eval + LTR:** judged query set, BM25 vs FTS Recall@100, LightGBM lambdarank, nDCG@10/MRR with CIs, CI gate.
 4. **Importance LTR for the feed:** T+1h features vs T+24h realized coverage, time split. Needs days of continuous ingestion, so start continuous ingestion as soon as GCP is live.
