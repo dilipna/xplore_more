@@ -23,6 +23,7 @@ environments/
 | `xm-indexer` | pull `article-extracted`; read text; read `database-url` secret | secret-level binding |
 | `xm-pubsub-push` | invoke the ingestor | `roles/run.invoker` on that one service |
 | `xm-scheduler` | run the two jobs | job-level invoker bindings |
+| `xm-api` | serve public reads; read `database-url` and `redis-url` secrets | secret-level bindings; no write access anywhere |
 
 ## First-time setup
 
@@ -39,17 +40,36 @@ terraform apply -var project_id=YOUR_PROJECT -var github_repository_id=$(gh api 
 terraform init -migrate-state -backend-config="bucket=YOUR_PROJECT-tfstate" -backend-config="prefix=bootstrap"
 #    (add `backend "gcs" {}` to versions.tf first)
 
-# 4. Store GitHub repository variables from the outputs:
-#    GCP_PROJECT_ID, GCP_WORKLOAD_IDENTITY_PROVIDER, GCP_DEPLOYER_SA, GCP_PLANNER_SA
+# 4. Store GitHub repository variables from the outputs (Settings -> Secrets and variables ->
+#    Actions -> Variables). ci.yml needs none of these; deploy.yml (below) needs all of them:
+#    GCP_PROJECT_ID, GCP_REGION, GCP_WORKLOAD_IDENTITY_PROVIDER, GCP_DEPLOYER_SA, GCP_PLANNER_SA,
+#    GCP_STATE_BUCKET (= state_bucket output), GCP_ARTIFACT_REGISTRY (= registry output).
 
-# 5. Add the database URL secret value (never in Terraform state):
+# 5. Add secret values (never in Terraform state):
 printf '%s' "$NEON_POOLED_URL" | gcloud secrets versions add database-url --data-file=-
+printf '%s' "$UPSTASH_REDIS_URL" | gcloud secrets versions add redis-url --data-file=-
 
 # 6. Apply the environment.
 cd ../environments/prod
 terraform init -backend-config="bucket=YOUR_PROJECT-tfstate"
 terraform apply -var project_id=YOUR_PROJECT
 ```
+
+## Deploying (`.github/workflows/deploy.yml`)
+
+Runs automatically after `ci.yml` goes green on `main`, or on demand
+(`gh workflow run deploy.yml`). Builds and pushes each service image, signs it keylessly with
+cosign (OIDC, no stored key), Trivy-scans the pushed digest, applies Terraform with the new
+digests, then canaries the public API specifically: a new revision is deployed at 0% traffic,
+smoke-checked on its own per-revision URL (`/readyz`), and only then cut over to 100% traffic.
+The ingestor and the two Cloud Run jobs have no public traffic to canary, so Terraform's own
+rolling update is enough for them.
+
+**Not yet run.** It needs the GCP project, Neon and Upstash to exist and the repository
+variables above to be set — none of which has happened yet (tracked in the main repo's
+`CONTINUE_SESSION.md` §7). It has been validated with `actionlint` and its Dockerfile has been
+built and run locally against real Postgres and Redis (`/healthz` and `/readyz` both 200), but
+the workflow itself is unexercised until that infrastructure exists.
 
 ## Documented exceptions to security scanners
 

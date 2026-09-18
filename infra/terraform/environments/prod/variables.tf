@@ -19,6 +19,24 @@ variable "indexer_image" {
   default     = "us-docker.pkg.dev/cloudrun/container/job"
 }
 
+variable "api_image" {
+  description = "Initial API image. CI deploys subsequent digests."
+  type        = string
+  default     = "us-docker.pkg.dev/cloudrun/container/hello"
+}
+
+variable "api_max_instances" {
+  description = "Hard cost ceiling for the public API."
+  type        = number
+  default     = 5
+}
+
+variable "api_anon_rate_per_minute" {
+  description = "Unauthenticated per-IP rate limit (search/feed; problems can require a key)."
+  type        = number
+  default     = 30
+}
+
 variable "poller_schedule" {
   description = "Every 15 minutes: ~96 state writes/day stays inside the Cloud Storage free tier."
   type        = string

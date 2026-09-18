@@ -2,6 +2,10 @@ output "ingestor_uri" {
   value = module.ingestor.uri
 }
 
+output "api_uri" {
+  value = module.api.uri
+}
+
 output "service_accounts" {
   value = { for k, v in google_service_account.workload : k => v.email }
 }

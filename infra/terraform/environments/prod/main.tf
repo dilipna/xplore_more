@@ -11,6 +11,7 @@ resource "google_service_account" "workload" {
     indexer     = "Trusted zone: writes Postgres from article-extracted"
     pubsub-push = "Signs OIDC tokens for Pub/Sub push to the ingestor"
     scheduler   = "Triggers Cloud Run jobs"
+    api         = "Public read API: search, feed, problems"
   }
   account_id   = "xm-${each.key}"
   display_name = "XploreMore ${each.key}"
@@ -95,6 +96,27 @@ resource "google_secret_manager_secret_iam_member" "indexer_database_url" {
   secret_id = google_secret_manager_secret.database_url.id
   role      = "roles/secretmanager.secretAccessor"
   member    = local.sa["indexer"]
+}
+
+resource "google_secret_manager_secret_iam_member" "api_database_url" {
+  secret_id = google_secret_manager_secret.database_url.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = local.sa["api"]
+}
+
+# Upstash Redis REST/TCP connection string (rediss://). Value is added out-of-band, same as
+# database-url: neither the URL nor its embedded credential ever enters Terraform state.
+resource "google_secret_manager_secret" "redis_url" {
+  secret_id = "redis-url"
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret_iam_member" "api_redis_url" {
+  secret_id = google_secret_manager_secret.redis_url.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = local.sa["api"]
 }
 
 # --- Event log (BigQuery) -----------------------------------------------------------------
@@ -247,4 +269,36 @@ module "indexer" {
   secret_env = {
     XM_DATABASE_URL = google_secret_manager_secret.database_url.secret_id
   }
+}
+
+# --- Public API -----------------------------------------------------------------------
+
+module "api" {
+  source                = "../../modules/cloud_run_service"
+  project_id            = var.project_id
+  region                = var.region
+  name                  = "xm-api"
+  image                 = var.api_image
+  service_account_email = google_service_account.workload["api"].email
+  ingress               = "INGRESS_TRAFFIC_ALL" # public read API
+  min_instances         = 0                     # free-tier: scales to zero between requests
+  max_instances         = var.api_max_instances # hard cost ceiling
+  concurrency           = 40
+  cpu                   = "1"
+  memory                = "1Gi" # embedding model + query-time inference
+  request_timeout       = "30s"
+  health_path           = "/healthz"
+  labels                = local.labels
+  env = {
+    XM_GCP_PROJECT          = var.project_id
+    XM_ENTITIES_FILE        = "/app/config/entities.yaml"
+    XM_ANON_RATE_PER_MINUTE = tostring(var.api_anon_rate_per_minute)
+  }
+  secret_env = {
+    XM_DATABASE_URL = google_secret_manager_secret.database_url.secret_id
+    XM_REDIS_URL    = google_secret_manager_secret.redis_url.secret_id
+  }
+  # Read endpoints are public by design (search/feed/problems); auth and rate limiting are
+  # enforced in the app (xm_api.auth / xm_api.ratelimit), not at the network edge.
+  invoker_members = ["allUsers"]
 }
