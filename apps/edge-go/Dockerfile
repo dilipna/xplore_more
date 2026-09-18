@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-# Build context: repository root (the image embeds config/sources.yaml).
+# Build context: repository root (the image embeds config/sources.yaml and problem_sources.yaml).
 
 FROM golang:1.27-alpine AS build
 WORKDIR /src
@@ -14,6 +14,7 @@ RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache
 FROM gcr.io/distroless/static-debian12:nonroot
 COPY --from=build /out/ /app/
 COPY config/sources.yaml /app/config/sources.yaml
+COPY config/problem_sources.yaml /app/config/problem_sources.yaml
 ENV XM_SOURCES_FILE=/app/config/sources.yaml
 USER nonroot:nonroot
 ENTRYPOINT ["/app/ingestor"]

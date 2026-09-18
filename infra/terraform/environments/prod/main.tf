@@ -12,6 +12,7 @@ resource "google_service_account" "workload" {
     pubsub-push = "Signs OIDC tokens for Pub/Sub push to the ingestor"
     scheduler   = "Triggers Cloud Run jobs"
     api         = "Public read API: search, feed, problems"
+    mcp         = "MCP server: thin client of the public API for agent tool use"
   }
   account_id   = "xm-${each.key}"
   display_name = "XploreMore ${each.key}"
@@ -117,6 +118,23 @@ resource "google_secret_manager_secret_iam_member" "api_redis_url" {
   secret_id = google_secret_manager_secret.redis_url.id
   role      = "roles/secretmanager.secretAccessor"
   member    = local.sa["api"]
+}
+
+# Salts author_hash for discussion sources (P1); the poller refuses to run discussion sources
+# without it (>= 16 chars). Value is added out-of-band, same as the other secrets. Only the
+# poller needs it -- the ingestor never fetches discussion HTML, and the indexer only ever
+# sees the already-hashed value on the event.
+resource "google_secret_manager_secret" "author_salt" {
+  secret_id = "author-salt"
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret_iam_member" "poller_author_salt" {
+  secret_id = google_secret_manager_secret.author_salt.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = local.sa["poller"]
 }
 
 # --- Event log (BigQuery) -----------------------------------------------------------------
@@ -248,6 +266,32 @@ module "poller" {
   }
 }
 
+module "poller_problems" {
+  source                          = "../../modules/scheduled_job"
+  project_id                      = var.project_id
+  region                          = var.region
+  name                            = "xm-poller-problems"
+  image                           = var.edge_image
+  command                         = ["/app/poller"]
+  args                            = ["--sources", "/app/config/problem_sources.yaml"]
+  schedule                        = var.poller_problems_schedule
+  service_account_email           = google_service_account.workload["poller"].email
+  scheduler_service_account_email = google_service_account.workload["scheduler"].email
+  task_timeout                    = "300s"
+  labels                          = local.labels
+  env = {
+    XM_GCP_PROJECT              = var.project_id
+    XM_STATE_BUCKET             = google_storage_bucket.state.name
+    XM_TOPIC_ARTICLE_DISCOVERED = module.discovered.topic_name
+    # A distinct state object from the tech-news poller (module.poller), so the two runs'
+    # seen-item/ETag tracking never collides (see poll.XM_STATE_OBJECT, §4.8).
+    XM_STATE_OBJECT = "poller/state-problems.json"
+  }
+  secret_env = {
+    XM_AUTHOR_SALT = google_secret_manager_secret.author_salt.secret_id
+  }
+}
+
 module "indexer" {
   source                          = "../../modules/scheduled_job"
   project_id                      = var.project_id
@@ -300,5 +344,35 @@ module "api" {
   }
   # Read endpoints are public by design (search/feed/problems); auth and rate limiting are
   # enforced in the app (xm_api.auth / xm_api.ratelimit), not at the network edge.
+  invoker_members = ["allUsers"]
+}
+
+# --- MCP server -------------------------------------------------------------------------
+
+module "mcp" {
+  source                = "../../modules/cloud_run_service"
+  project_id            = var.project_id
+  region                = var.region
+  name                  = "xm-mcp"
+  image                 = var.mcp_image
+  service_account_email = google_service_account.workload["mcp"].email
+  ingress               = "INGRESS_TRAFFIC_ALL" # called by Pro2Pro (Render), outside the VPC
+  min_instances         = 0
+  max_instances         = var.mcp_max_instances
+  concurrency           = 40
+  cpu                   = "1"
+  memory                = "256Mi" # a thin httpx client; no model, no database driver
+  request_timeout       = "30s"
+  health_path           = "/mcp" # stateless-http MCP has no separate health route; the
+  # protocol endpoint itself answering is the readiness signal Cloud Run's probes need.
+  labels = local.labels
+  env = {
+    # Calls the public API over the internet, the same path any other client uses -- no
+    # private networking between the two services, so no shared VPC is needed for either.
+    XM_API_URL = module.api.uri
+  }
+  # No invoker restriction: it is a public MCP endpoint for external agents (Pro2Pro), same
+  # posture as the API it wraps. XM_API_KEY can be added as a secret later if the deployment
+  # starts requiring a key for /v1/problems (XM_REQUIRE_API_KEY_FOR_PROBLEMS).
   invoker_members = ["allUsers"]
 }
