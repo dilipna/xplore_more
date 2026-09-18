@@ -2,10 +2,11 @@ name: deploy
 
 # Runs only after CI has gone green on main, or on demand. Builds each service image, signs it
 # keylessly with cosign (OIDC, no stored key), pushes to Artifact Registry, applies Terraform
-# with the new image digests, then canaries the public API: a fresh revision is deployed at 0%
-# traffic, smoke-checked on its own per-revision URL, and only then cut over to 100%. The
-# ingestor and the two Cloud Run jobs (poller, indexer) have no public traffic to canary, so
-# Terraform's own rolling update is enough for them.
+# with the new image digests, then canaries the public API specifically: a fresh revision is
+# deployed at 0% traffic, smoke-checked on its own per-revision URL, and only then cut over to
+# 100%. Everything else -- the ingestor, the two Cloud Run jobs (poller, poller-problems,
+# indexer), and the MCP server (thin and stateless, embeds nothing, has no warm-up cost) --
+# has no meaningful canary risk, so Terraform's own rolling update is enough for them.
 #
 # Requires infra/terraform/bootstrap to have been applied (see infra/terraform/README.md) and
 # these repository variables set from its outputs: GCP_PROJECT_ID, GCP_REGION,
@@ -39,12 +40,14 @@ jobs:
       edge: ${{ steps.digest-edge.outputs.digest }}
       indexer: ${{ steps.digest-indexer.outputs.digest }}
       api: ${{ steps.digest-api.outputs.digest }}
+      mcp: ${{ steps.digest-mcp.outputs.digest }}
     strategy:
       matrix:
         image:
           - { name: edge, dockerfile: apps/edge-go/Dockerfile }
           - { name: indexer, dockerfile: apps/indexer/Dockerfile }
           - { name: api, dockerfile: apps/api/Dockerfile }
+          - { name: mcp, dockerfile: apps/mcp/Dockerfile }
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -89,6 +92,9 @@ jobs:
       - id: digest-api
         if: matrix.image.name == 'api'
         run: echo "digest=${{ vars.GCP_ARTIFACT_REGISTRY }}/xm-api@${{ steps.build.outputs.digest }}" >> "$GITHUB_OUTPUT"
+      - id: digest-mcp
+        if: matrix.image.name == 'mcp'
+        run: echo "digest=${{ vars.GCP_ARTIFACT_REGISTRY }}/xm-mcp@${{ steps.build.outputs.digest }}" >> "$GITHUB_OUTPUT"
 
   terraform-apply:
     needs: build-and-push
@@ -118,7 +124,8 @@ jobs:
             -var "region=${{ vars.GCP_REGION }}" \
             -var "edge_image=${{ needs.build-and-push.outputs.edge }}" \
             -var "indexer_image=${{ needs.build-and-push.outputs.indexer }}" \
-            -var "api_image=${{ needs.build-and-push.outputs.api }}"
+            -var "api_image=${{ needs.build-and-push.outputs.api }}" \
+            -var "mcp_image=${{ needs.build-and-push.outputs.mcp }}"
 
   canary-api:
     needs: [build-and-push, terraform-apply]

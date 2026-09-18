@@ -25,6 +25,18 @@ variable "api_image" {
   default     = "us-docker.pkg.dev/cloudrun/container/hello"
 }
 
+variable "mcp_image" {
+  description = "Initial MCP image. CI deploys subsequent digests."
+  type        = string
+  default     = "us-docker.pkg.dev/cloudrun/container/hello"
+}
+
+variable "mcp_max_instances" {
+  description = "Hard cost ceiling for the MCP server (thin, stateless -- cheap per instance)."
+  type        = number
+  default     = 3
+}
+
 variable "api_max_instances" {
   description = "Hard cost ceiling for the public API."
   type        = number
@@ -41,6 +53,12 @@ variable "poller_schedule" {
   description = "Every 15 minutes: ~96 state writes/day stays inside the Cloud Storage free tier."
   type        = string
   default     = "*/15 * * * *"
+}
+
+variable "poller_problems_schedule" {
+  description = "Discussion sources (Ask HN, HN comments, GitHub issues, Lobsters, Stack Exchange). Every 30 minutes: wider maturity windows than tech news, so less frequent polling still catches engagement."
+  type        = string
+  default     = "*/30 * * * *"
 }
 
 variable "indexer_schedule" {
