@@ -6,6 +6,10 @@ output "api_uri" {
   value = module.api.uri
 }
 
+output "web_uri" {
+  value = module.web.uri
+}
+
 output "mcp_uri" {
   value = module.mcp.uri
 }

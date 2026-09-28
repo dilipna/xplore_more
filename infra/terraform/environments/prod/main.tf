@@ -13,6 +13,7 @@ resource "google_service_account" "workload" {
     scheduler   = "Triggers Cloud Run jobs"
     api         = "Public read API: search, feed, problems"
     mcp         = "MCP server: thin client of the public API for agent tool use"
+    web         = "Public website: server-rendered client of the API"
   }
   account_id   = "xm-${each.key}"
   display_name = "XploreMore ${each.key}"
@@ -325,7 +326,7 @@ module "api" {
   image                 = var.api_image
   service_account_email = google_service_account.workload["api"].email
   ingress               = "INGRESS_TRAFFIC_ALL" # public read API
-  min_instances         = 0                     # free-tier: scales to zero between requests
+  min_instances         = var.api_min_instances # 0 = free-tier scale-to-zero; 1 keeps it warm for a demo
   max_instances         = var.api_max_instances # hard cost ceiling
   concurrency           = 40
   cpu                   = "1"
@@ -344,6 +345,51 @@ module "api" {
   }
   # Read endpoints are public by design (search/feed/problems); auth and rate limiting are
   # enforced in the app (xm_api.auth / xm_api.ratelimit), not at the network edge.
+  invoker_members = ["allUsers"]
+}
+
+# --- Website ------------------------------------------------------------------------------
+
+# The website calls the API server-side, so every visitor arrives at the API from the web
+# service's egress IP. Anonymous limits are per IP (30/min), which a few simultaneous visitors
+# would exhaust -- so the web service authenticates with its own higher-rate key
+# (`xm-api keys create --name web --rate 1200`, value added out-of-band like the other secrets).
+resource "google_secret_manager_secret" "web_api_key" {
+  secret_id = "web-api-key"
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret_iam_member" "web_api_key" {
+  secret_id = google_secret_manager_secret.web_api_key.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = local.sa["web"]
+}
+
+module "web" {
+  source                = "../../modules/cloud_run_service"
+  project_id            = var.project_id
+  region                = var.region
+  name                  = "xm-web"
+  image                 = var.web_image
+  service_account_email = google_service_account.workload["web"].email
+  ingress               = "INGRESS_TRAFFIC_ALL"
+  min_instances         = var.web_min_instances
+  max_instances         = var.web_max_instances
+  concurrency           = 80
+  cpu                   = "1"
+  memory                = "512Mi"
+  request_timeout       = "30s"
+  health_path           = "/healthz" # a route handler that never calls the API
+  labels                = local.labels
+  env = {
+    XM_API_URL  = module.api.uri
+    XM_REPO_URL = var.repo_url
+  }
+  secret_env = {
+    XM_API_KEY = google_secret_manager_secret.web_api_key.secret_id
+  }
   invoker_members = ["allUsers"]
 }
 

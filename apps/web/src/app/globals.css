@@ -1,0 +1,118 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   XploreMore design tokens — "instrument panel"
+   A deep blue-black field, one signal teal for demand/relevance, amber for
+   categories, and monospace for every number so figures line up and read as data.
+--------------------------------------------------------------------------- */
+
+@theme {
+  --color-field-950: #07090d;
+  --color-field-900: #0b0f15;
+  --color-field-850: #10151d;
+  --color-field-800: #151b25;
+  --color-field-700: #1f2733;
+  --color-field-600: #2b3542;
+
+  --color-fg-50: #eef2f7;
+  --color-fg-200: #c9d3df;
+  --color-fg-400: #93a1b3;
+  --color-fg-500: #6f7d8f;
+  --color-fg-600: #515d6d;
+
+  --color-signal-300: #8ff5dc;
+  --color-signal-400: #4ee8c4;
+  --color-signal-500: #22c9a3;
+  --color-signal-700: #0f6b58;
+  --color-signal-900: #0a2e27;
+
+  --color-amber-300: #fcd38a;
+  --color-amber-400: #f5b642;
+
+  --color-hn: #ff8a3d;
+  --color-github: #a8b5ff;
+  --color-lobsters: #f07575;
+  --color-stackexchange: #f7a24a;
+}
+
+@theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+}
+
+html {
+  scroll-behavior: smooth;
+  color-scheme: dark;
+}
+
+body {
+  background: var(--color-field-950);
+  color: var(--color-fg-50);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--color-signal-700);
+  color: var(--color-fg-50);
+}
+
+/* Faint measurement grid behind the page header — reads as "instrument", not decoration. */
+.grid-field {
+  background-image:
+    linear-gradient(to right, rgb(255 255 255 / 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.035) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: linear-gradient(to bottom, black 0%, transparent 85%);
+}
+
+.hairline {
+  border-color: rgb(255 255 255 / 0.08);
+}
+
+.panel {
+  background: var(--color-field-900);
+  border: 1px solid rgb(255 255 255 / 0.07);
+  border-radius: 14px;
+}
+
+.panel-hover {
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+.panel-hover:hover {
+  border-color: rgb(78 232 196 / 0.35);
+  background: var(--color-field-850);
+}
+
+@keyframes pulse-live {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgb(78 232 196 / 0.55);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgb(78 232 196 / 0);
+  }
+}
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: var(--color-signal-400);
+  animation: pulse-live 2.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-dot {
+    animation: none;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+input[type="search"]::-webkit-search-cancel-button {
+  filter: invert(0.7);
+}

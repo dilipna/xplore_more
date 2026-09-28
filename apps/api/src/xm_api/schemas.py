@@ -49,6 +49,24 @@ class StoryDetail(_Out):
     articles: list[ArticleOut]
 
 
+class StatsResponse(_Out):
+    """Corpus-level counts for a dashboard header. Cheap aggregate queries, cached like the feed."""
+
+    as_of: datetime
+    sources: int = Field(description="Enabled sources across both registries (tech news + discussions).")
+    articles: int
+    discussions: int
+    voices: int = Field(description="Distinct discussion authors (salted hashes; no identities).")
+    platforms: list[str]
+    stories: int
+    multi_source_stories: int = Field(description="Stories covered by two or more sources (deduplicated).")
+    problems: int = Field(description="Problems seen in the last 30 days (the /v1/problems default window).")
+    multi_voice_problems: int = Field(
+        description="Of those, problems reported by two or more distinct people."
+    )
+    last_indexed_at: datetime | None
+
+
 # --- Problems (contract: contracts/api/problems.v1.openapi.json) ------------------------
 # Compact by design: agents resend tool results every turn, so every field must earn its tokens.
 

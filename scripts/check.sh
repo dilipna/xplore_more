@@ -12,4 +12,7 @@ echo "==> python: pytest";         uv run pytest -q
 echo "==> go: fmt";                test -z "$(scripts/go.sh fmt ./... | tr -d '[:space:]')" || { echo "gofmt changed files"; exit 1; }
 echo "==> go: vet";                scripts/go.sh vet ./...
 echo "==> go: test";               scripts/go.sh test ./...
+echo "==> web: install";           (cd apps/web && pnpm install --frozen-lockfile --silent)
+echo "==> web: lint";              (cd apps/web && pnpm lint)
+echo "==> web: typecheck + build"; (cd apps/web && pnpm build >/dev/null)
 echo "all checks passed"

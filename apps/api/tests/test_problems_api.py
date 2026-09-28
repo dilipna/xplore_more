@@ -172,6 +172,16 @@ async def test_key_can_be_required_for_problems(problems, sessionmaker, migrated
         assert c.get("/v1/problems", headers={"X-XM-Api-Key": key}).status_code == 200
 
 
+def test_stats_count_the_corpus_the_indexer_built(problems, migrated_database, embedder) -> None:
+    with client(migrated_database, embedder) as c:
+        body = c.get("/v1/stats").json()
+    # 6 discussions by 6 distinct authors -> 3 problems (TOOLS x3 voices, PDF x2, the niche one x1).
+    assert body["discussions"] == 6 and body["voices"] == 6
+    assert body["problems"] == 3 and body["multi_voice_problems"] == 2
+    assert body["platforms"] == ["hn"]
+    assert body["last_indexed_at"] is not None
+
+
 def test_rate_limiter_fails_open_when_redis_is_down(problems, migrated_database, embedder) -> None:
     with client(migrated_database, embedder, redis_url=SecretStr("redis://127.0.0.1:1/0")) as c:
         response = c.get("/v1/problems")

@@ -18,7 +18,7 @@ export XM_AUTHOR_SALT
 
 COMPOSE=(docker compose -f deploy/compose/docker-compose.yml --profile pipeline)
 export PUBSUB_EMULATOR_HOST=localhost:8085
-export XM_DATABASE_URL=postgresql+psycopg://xm:xm@localhost:5432/xploremore
+export XM_DATABASE_URL="${XM_DATABASE_URL:-postgresql+psycopg://xm:xm@localhost:${XM_PG_PORT:-5432}/xploremore}"
 export XM_GCP_PROJECT=xm-local
 
 echo "==> starting postgres + pubsub emulator"
