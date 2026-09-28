@@ -37,8 +37,10 @@ from xm_api.schemas import (
     ProblemDetail,
     ProblemsResponse,
     SearchResponse,
+    StatsResponse,
     StoryDetail,
 )
+from xm_api.stats import corpus_stats
 from xm_api.stories import recent_story_ids, story_articles, summaries
 from xm_cluster.entities import Gazetteer
 from xm_core.db.session import make_engine, make_sessionmaker
@@ -245,6 +247,17 @@ def create_app(
         body, status = await st.cache.get_or_compute(
             "feed", {"limit": limit, "window_hours": window_hours}, FeedResponse, compute
         )
+        response.headers["X-XM-Cache"] = status
+        response.headers["Cache-Control"] = "public, max-age=60"
+        return body
+
+    @app.get("/v1/stats", response_model=StatsResponse)
+    async def stats(st: StateDep, _: ProtectedDep, response: Response) -> StatsResponse:
+        async def compute() -> tuple[StatsResponse, bool]:
+            async with st.sessionmaker() as session:
+                return await corpus_stats(session, datetime.now(UTC)), True
+
+        body, status = await st.cache.get_or_compute("stats", {}, StatsResponse, compute)
         response.headers["X-XM-Cache"] = status
         response.headers["Cache-Control"] = "public, max-age=60"
         return body

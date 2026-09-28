@@ -37,6 +37,35 @@ variable "mcp_max_instances" {
   default     = 3
 }
 
+variable "api_min_instances" {
+  description = "0 scales to zero (free tier). Set 1 during demos to avoid cold starts (~$0.5/day)."
+  type        = number
+  default     = 0
+}
+
+variable "web_image" {
+  description = "Initial website image. CI deploys subsequent digests."
+  type        = string
+  default     = "us-docker.pkg.dev/cloudrun/container/hello"
+}
+
+variable "web_min_instances" {
+  description = "0 scales to zero. Set 1 during demos."
+  type        = number
+  default     = 0
+}
+
+variable "web_max_instances" {
+  type    = number
+  default = 3
+}
+
+variable "repo_url" {
+  description = "Public source repository linked from the website."
+  type        = string
+  default     = "https://github.com/dilipna/xploremore"
+}
+
 variable "api_max_instances" {
   description = "Hard cost ceiling for the public API."
   type        = number

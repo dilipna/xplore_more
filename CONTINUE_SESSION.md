@@ -1,25 +1,26 @@
 # XploreMore — Continue Session Handoff
 
-> Last updated: 2026-09-18 (Phase P fully done at code level, P6 measured, P7 code-complete; two live Pro2Pro regressions found and fixed; XploreMore HEAD `2282ccc` not pushed, Pro2Pro HEAD `e39a338` **pushed, GitHub CI green**). Read this whole file before doing anything; it is the single source of truth for resuming work.
+> Last updated: 2026-09-28 (a `apps/web` Next.js site was built end-to-end against the real API this session — **all of it currently UNCOMMITTED**; XploreMore HEAD is still `e66fd57`, Pro2Pro HEAD is still `e39a338` pushed/CI-green from the prior session). Read this whole file before doing anything; it is the single source of truth for resuming work.
 
-> **HARD CONSTRAINT FOR THE NEXT SESSION:** finish Q3 (search eval + LTR, §6 Phase Q) completely — not started, not sketched, not "here's a plan" — and then keep going into Phase R (§6) until either everything buildable without new infrastructure is done, or you hit one of the three named blockers in §7 that only the user can clear (GCP/Neon/Upstash account creation, a Vercel production deploy, or Q4's literal multi-day data-collection requirement). Do not stop early. Do not ask permission for an implementation choice you can make yourself using the patterns already in this codebase — decide, build, test, move on. Do not report something as done without a passing gate and a real measurement behind it. If you reach a genuine blocker, say so by name and keep working on whatever doesn't depend on it; never sit idle waiting.
+> **🚨 DEMO IN 2 DAYS, DECIDED THIS SESSION: the user is presenting this whole project to top AI companies (OpenAI named explicitly). Every priority below is superseded by demo-readiness.** The previous "finish Q3/Phase R" hard constraint is **suspended** — Q3 (search LTR) is now a nice-to-have if time remains, not the priority. See §4.18 for exactly what changed this session and §11 for the next-session plan. The single biggest open risk: **nothing has ever been deployed to GCP**, and the user chose a public GCP URL as the demo's centerpiece (over a local-only demo) in this session. That is a real, unproven path with 2 days of runway — treat "does the local demo work end-to-end, guaranteed" as the non-negotiable floor, and "public URL live" as the stretch goal attempted with enough time left to fall back if it breaks.
 
 ---
 
 ## 0. TL;DR for the next session
 
-1. **State:** **all gates green** at `2282ccc`: **126 Python tests, 0 skipped**, all Go packages, Terraform validated and scanned (tflint clean, checkov 103/0). Migrations run through **0006**. Pro2Pro (`p2pagent`) is at `e39a338`, **120 tests** green, **pushed to `dilipna/Pro2ProAgent` master, GitHub Actions CI green**.
+1. **State:** last committed HEAD is `e66fd57` (Phase P code-complete, Q1/Q2 done, all gates green there). **This session added a full `apps/web` Next.js site plus API/Terraform/CI changes — all uncommitted.** First action next session: run `scripts/check.sh` (now includes web lint/typecheck/build, see §4.18) and commit through the gate before anything else, exactly like every other session.
 2. **What runs live on the laptop:**
    - 43 tech sources + **5 discussion sources** → Go poller → Pub/Sub emulator → Go ingestor → Python indexer.
    - The indexer embeds, clusters stories, **classifies pain points** and **clusters problems** into Postgres.
-   - FastAPI serves search, feed and stories, plus **`/v1/problems`** with API keys and a Redis rate limit, now with a **Redis response cache** (single-flight, generation-invalidated).
+   - FastAPI serves search, feed, stories, `/v1/problems` and a new **`/v1/stats`** (§4.18), with API keys, a Redis rate limit and a Redis response cache.
    - An **MCP server** exposes the problem API over streamable HTTP.
-3. **Direction (decided by the user):** XploreMore is the **problem-discovery backbone for Pro2Pro** (`protopro.vercel.app`). XploreMore finds, clusters and ranks real problems; Pro2Pro's agents turn them into products. **Phase P (§6) is now done at the code level — P1 through P7.** The next priority is **Phase Q3/Q4 and Phase R (§6)**, per the hard constraint above.
-4. **Phase P — fully done at code level (§4.8–4.16):** discussion sources, pain classifier, problem clustering, problem API + MCP, Pro2Pro integration, the discovery A/B (measured, 16/16 trials — see §4.15 for the honest finding), and all go-live artifacts (API/MCP Dockerfiles, Terraform modules `api`/`mcp`/`poller_problems`, `deploy.yml` with canary). **Q1 and Q2 done and measured** (§4.13–4.14). Nothing in Phase P is deployed to GCP yet — that's user-gated (§7), not remaining engineering.
-5. **Pro2Pro: two live regressions found and fixed today, both pushed (§4.17).** Groq retired the model Pro2Pro depended on (404, fixed `76ae381`) and — found only by running promptfoo live, not by unit tests — the replacement reasoning model was silently failing the guardrail closed on ordinary inputs (`reasoning_effort` fix, `e39a338`). Promptfoo went 4/5 → 5/5 live. **Still not confirmed:** whether Render actually redeployed (no dashboard access), and the web frontend's provenance UI needs a manual `vercel deploy --prod` to go live (§7).
-6. **Dev data:** DB `xploremore` holds ~840 articles, ~1,550 discussion docs and **493 problems** (policy `problem-prior-2026-09-13c`, classifier `pain-v1-20260913`). Create a local API key with `uv run xm-api keys create --name local --rate 600`.
-7. **Local ports:** port 8000 is taken by Docker and an unrelated Python 3.12 process (possibly Pro2Pro's API; **don't kill it**). Serve the XploreMore API on **`PORT=8765`** and MCP on **`XM_MCP_PORT=8766`**.
-8. **Gate discipline reminder:** commit with `if scripts/check.sh > log 2>&1; then git commit ...; fi`. Never test `$?` after an `echo`: one handoff commit last session was guarded that way by mistake (the gate had in fact passed).
+   - **New this session:** a `apps/web` Next.js 16 site (Problems / Search / Feed / How-it-works) that renders this data for a human. Verified working locally against the real API — see §4.18 for screenshots-equivalent detail and exact issues found.
+3. **Direction (decided by the user):** XploreMore is the **problem-discovery backbone for Pro2Pro** (`protopro.vercel.app`), AND (decided this session) a **public-facing demo site** for a hiring seminar in 2 days. Phase P (§6) is code-complete — P1 through P7. **Demo readiness now overrides the Phase Q/R roadmap** — see the banner above and §11.
+4. **Phase P — fully done at code level (§4.8–4.16), still nothing deployed to GCP.** Q1 and Q2 done and measured (§4.13–4.14).
+5. **Pro2Pro (previous session):** two live regressions found and fixed, both pushed to `e39a338`, GitHub CI green (§4.17). **Still not confirmed:** whether Render actually redeployed, and the web frontend's provenance UI needs a manual `vercel deploy --prod` to go live (§7) — low priority for the XploreMore demo itself, but worth 5 minutes if there's slack.
+6. **Dev data is real but stale for a demo.** This session ran a full tech-registry poll (237 new stories) and a wide discussion-corpus poll (1,371 discussion items published) **but the indexing/backfill for the discussion half did not finish before the session ended** (see §4.18 — the background refresh was cut off mid-run). **Do not trust `problems` counts until you re-run `uv run xm-indexer run` to drain the queue and check `/v1/stats` yourself.** DB `xploremore` had ~840 articles / ~1,550 discussions / 493 problems as of 2026-09-18; it's larger now but the exact post-refresh numbers are unverified.
+7. **Local ports:** port 8000 and the default Postgres port 5432 are both taken by **other, unrelated projects'** Docker containers on this machine (do not stop them). This session made both overridable: `XM_PG_PORT=5433 docker compose ... up -d` for Postgres, and `PORT=8765` for the XploreMore API (unchanged). The web app's dev server runs on port **3100** (`apps/web/package.json`). Source `apps/web`'s env from `XM_API_URL=http://127.0.0.1:8765`.
+8. **Gate discipline reminder:** commit with `if scripts/check.sh > log 2>&1; then git commit ...; fi`. Never test `$?` after an `echo`.
 
 ---
 
@@ -254,6 +255,48 @@ ec3b332 Handoff: Problem Intelligence phase for Pro2Pro integration
 - **What is NOT verified, and can't be from here:** whether Render's auto-deploy-on-push is actually enabled (flagged as unconfirmed in Pro2Pro's own handoff doc before this session too) — check the Render dashboard. The web frontend's new provenance card/story-page UI (built this session, `pnpm lint`/`build` clean, pushed to GitHub) is **not live** on `protopro.vercel.app` — that repo's Vercel deploys are a manual `cd web && npx vercel@latest deploy --prod --scope asmq333`, never auto-deploy-on-push, and no one ran it.
 - **If Pro2Pro's default model or provider changes again:** re-run `promptfoo eval` live before trusting it. Pro2Pro's own CI never calls a real LLM by design (documented in its `PROJECT_BRAIN.md`) — this exact class of regression is structurally invisible to CI.
 
+### 4.18 Demo session (2026-09-28) — `apps/web` built, GCP web/deploy targets added — **ALL UNCOMMITTED**
+
+**Trigger:** mid-session the user revealed a hiring seminar in 2 days (top AI companies, OpenAI named) and asked to demo the *whole* project. XploreMore had no UI at all — an API, an MCP server, a pipeline, only curl-able — so a public-facing site became the top priority, ahead of the previously-planned Q3 search LTR work. Asked and confirmed with the user: **public GCP URL** (not local-only) as the demo target, **5–10 minute** slot.
+
+**New `apps/web`** — Next.js 16.2.10 / React 19.2.4 / Tailwind 4, same toolchain as Pro2Pro's `web/` (copied `tsconfig.json`, `eslint.config.mjs`, `postcss.config.mjs` verbatim so nothing here is untested). Everything server-renders at request time (`dynamic = "force-dynamic"` on every data page) and reads `XM_API_URL`/`XM_API_KEY` server-side only — no CORS, no key ever reaches the browser, and a slow/down API degrades to an explicit "unavailable" panel instead of a broken page.
+
+- **`/` (Problems):** the demand-ranked problem list with topic/category filters, a stats strip from the new `/v1/stats` endpoint, and single-voice fallback (mirrors the API's own `min_voices` relaxation) when a topic has no multi-voice match.
+- **`/problems/[id]`:** the standout page — a live "why it ranks here" panel showing the actual 5 demand factors (`xm_problems.demand.explain()`) the API returned, each with its formula and a plain-English note, plus every evidence post with the classifier's `p_problem` confidence. This is the page to linger on in the demo; it makes the ranking legible instead of a black box.
+- **`/search`:** hybrid search with a **live Server-Timing breakdown** (embed / lexical / dense / fusion / hydrate, each stage's real millisecond cost from the actual response header) in a sidebar — a genuinely strong "under the hood" moment for a search/ranking audience.
+- **`/feed`:** the deduplicated tech feed, window toggle (24h/3d/7d).
+- **`/stories/[id]`:** every article merged into one story.
+- **`/how-it-works`:** an inline-SVG architecture diagram (ingest lane vs. serve lane, "no LLM in this path" labeled directly on the diagram) plus a **"measured, not claimed" grid** — six cards, each pulling a real number from a committed report (classifier P/R, clustering audit %, the Q1 throttle counts, the Pro2Pro A/B) with its caveat and a link to the source doc. This is the slide that proves rigor to a technical audience without anyone having to take numbers on faith.
+- Design: dark "instrument panel" theme (teal signal color, monospace numbers), distinct from Pro2Pro's "obsidian & ember" so the two sites don't look like the same project. `not-found.tsx` / `error.tsx` handled. Favicon done as inline SVG (`icon.svg`).
+- **Statement-truncation bug found and fixed:** problem statements are stored cut at 280 chars server-side (`xm_problems.assign.STATEMENT_CHARS`); the UI was ending them mid-word. Fixed with `displayStatement()`/`echoesStatement()` in `lib/format.ts`, which also picks a *different* evidence post than the one the statement was extracted from for the card's pull-quote (the point of clustering is showing a second voice, not repeating the first).
+- **Verified live, not just built:** ran the real API + web dev server together and hit every route with curl (all 200, including a real 404 page) and with headless Chrome screenshots (`$TEMP/scratchpad/shots/*.png` in this session's scratchpad — gone once that temp dir is cleaned, re-shoot with `scripts/shoot.sh`-equivalent if needed, see below). Home, problem-detail and how-it-works pages were visually reviewed; search and feed were exercised by curl/status-code only, not screenshotted — **do that first next session**, low risk but unverified.
+- **Not yet done:** the footer/nav still need a once-over on mobile width (never checked below 1440px); the search page's low-relevance tail results are visibly off-topic for narrow queries, which is exactly what Q3's search eval would quantify (mentioned but not fixed — a demo talking point, not a bug: "the eval to fix this is next on the roadmap").
+
+**API addition:** `GET /v1/stats` (`apps/api/src/xm_api/{app,stats,schemas}.py`) — corpus-level counts (sources, articles, discussions, voices, stories, multi-source stories, problems, multi-voice problems, last-indexed timestamp) in one query, cached through the existing Redis response cache. Deliberately kept **outside** the `/v1/problems` OpenAPI contract (the contract test filters by path prefix, confirmed unaffected). New test `test_stats_count_the_corpus_the_indexer_built` in `apps/api/tests/test_problems_api.py`, passing against the real indexer-built fixture data (7/7 tests in that file green).
+
+**Local port conflicts resolved generically, not worked around one-off:**
+- `deploy/compose/docker-compose.yml`: Postgres's host port is now `${XM_PG_PORT:-5432}` — default unchanged, so CI and anyone else's `docker compose up` is unaffected; this machine specifically has an unrelated project's Postgres on 5432, so use `XM_PG_PORT=5433`.
+- `scripts/e2e_local.sh`: same override, respects an already-set `XM_DATABASE_URL` first.
+- Neither `conftest.py`'s test DB port nor CI's `ci.yml` Postgres service needed changes (they don't collide on this machine / run in an isolated CI runner).
+
+**Terraform additions** (`infra/terraform/environments/prod/{main,variables,outputs}.tf`), on top of the existing (previous-session) `api`/`mcp`/`poller_problems` modules:
+- **New `module "web"`:** public ingress, its own least-privilege `xm-web` service account, a new `web-api-key` secret (the website hits the API server-side from one shared egress IP, so it needs its own higher-rate key — `xm-api keys create --name web --rate 1200` — rather than sharing the 30/min anonymous IP bucket with every visitor). `XM_API_URL` is wired straight to `module.api.uri`, plain internet-to-internet HTTP, no shared VPC needed.
+- **New `apps/web/Dockerfile` and `/healthz` route:** same standalone-output pattern as Pro2Pro's web Dockerfile. The health route deliberately never calls the API, so an API outage degrades pages instead of restart-looping the website.
+- **`api_min_instances` / `web_min_instances` variables** (default 0, free-tier scale-to-zero): set to `1` for the demo window only, to avoid a cold-start stall live in front of an audience — remember to set them back to `0` afterward, or note the ~$0.50–1/day cost is acceptable to leave running.
+- **Validated, not applied:** re-ran `terraform validate` after every change; not re-run through tflint/checkov this session (do that before committing — same Docker images as before, `bridgecrew/checkov` and `terraform-linters/tflint`, both already local from the last session).
+
+**`.github/workflows/deploy.yml` — rewritten, not patched**, after finding two real bugs in the previous version while reasoning through it (never executed, since no GCP project exists — caught by re-reading, not by a failed run):
+1. Its `terraform-apply` job read `steps.build.outputs.digest` from `needs.build-and-push.outputs.*` — but a **matrix job's outputs are whichever leg finishes last**, so all four (now five) per-image digest outputs would silently collapse to one image's digest. Fixed by dropping per-image job outputs entirely; every image is pushed tagged with the immutable commit SHA (`env.TAG`), and every later job references `$REG/xm-<name>:$TAG` directly.
+2. It never deployed the ingestor, the two Cloud Run jobs, or the MCP server at all — `terraform apply` alone doesn't roll a new image onto an *existing* Cloud Run service (`main.tf`'s `lifecycle { ignore_changes = [image] }`, deliberate so CI can converge config without fighting the deploy step, but it means something else must actually move the image forward). Added a **`rollout`** job (`gcloud run deploy`/`gcloud run jobs update --image` for everything with no public traffic to canary) between `infra` (terraform apply) and `canary` (the API's 0%-traffic-then-cutover dance, which now also smoke-checks a real `/v1/problems?limit=1` call, not just `/readyz`). The website deploys last, after the API it depends on is confirmed live.
+- Re-linted with the pinned `rhysd/actionlint` Docker image after every change: **0 findings** on the final version (also cleaned up the shellcheck SC2086 warnings by moving `--project`/`--region`/`--quiet` into `CLOUDSDK_CORE_PROJECT` / `CLOUDSDK_RUN_REGION` / `CLOUDSDK_CORE_DISABLE_PROMPTS` env vars instead of an unquoted `$FLAGS` splice).
+- `web` added to `ci.yml`'s existing image build/Trivy/SBOM matrix too, with its own build `context: apps/web` (the others use the repo root) — the matrix now carries a `context` field per image instead of assuming `.` for everyone.
+
+**`scripts/check.sh`** gained three new steps: `pnpm install --frozen-lockfile` (web), `pnpm lint`, `pnpm build` (which also typechecks). **This has not been run yet this session** — do it first, before touching anything else next session.
+
+**Data refresh — started, not finished.** Ran a full 43-source tech poll (237 new stories, 249 applied) and a wide discussion-corpus poll (1,371 discussion items published across all 5 platforms) specifically so the demo doesn't show a stale-looking corpus. The background job was still draining the discussion half into problems (indexer batches) when the session/terminal ended — **the log cuts off mid-run**, so the `problems`/`multi_voice_problems` counts in `/v1/stats` right now reflect the OLD data, not this poll. **First real thing to verify next session:** bring Docker back up (`XM_PG_PORT=5433 docker compose -f deploy/compose/docker-compose.yml up -d postgres redis pubsub`), run `uv run xm-indexer run --max-batches 100` (repeat until `applied` returns 0) and `uv run xm-indexer backfill-problems` if needed, then hit `/v1/stats` yourself and use the real number in any demo copy — don't reuse the "1,553 discussions → 493 problems" figure from §4.10 without re-checking it.
+
+**Screenshot tooling (informal, not committed):** headless Chrome (`chrome.exe --headless=new --window-size=1440,2200 --screenshot=...`) was used ad hoc from bash to visually review pages, since this machine has no MCP browser tool wired up. Worth formalizing as a tiny `scripts/screenshot.sh` next session if backup demo screenshots are needed (recommended — see §11).
+
 ## 5. Pro2Pro facts needed for the integration (verified in its code)
 
 - **Discovery:** a LangGraph ReAct **Research Agent** (`p2pagent/src/p2pops/agents/research.py`) calls three tools:
@@ -369,9 +412,13 @@ ec3b332 Handoff: Problem Intelligence phase for Pro2Pro integration
 
 ## 7. User actions still needed
 
-- [ ] Create GitHub repo `dilipna/xploremore` and push (`git remote add origin https://github.com/dilipna/xploremore.git && git push -u origin main`).
-- [ ] New GCP account/project ($300 credit), then `infra/terraform/bootstrap` (see `infra/terraform/README.md`).
-- [ ] Free **Neon** project (pooled URL → Secret Manager `database-url`) and free **Upstash Redis**.
+**🚨 Blocking the public-URL demo (do these TODAY if the GCP path is still wanted for the seminar):**
+- [ ] Create GitHub repo `dilipna/xploremore` and push (`git remote add origin https://github.com/dilipna/xploremore.git && git push -u origin main`) — `deploy.yml` triggers off `ci` on `main`, so this has to exist before any automated deploy can run at all.
+- [ ] New GCP project + billing ($300 credit), then run `infra/terraform/bootstrap` (needs your `gcloud auth login` — the next session can talk you through the exact commands from `infra/terraform/README.md`, but the account/billing/`gcloud` login itself is not something an agent can do for you).
+- [ ] Free **Neon** project (pooled connection string) and free **Upstash Redis** — both needed before `infra/terraform/environments/prod` can apply cleanly, since the API/web services read their URLs from Secret Manager.
+- [ ] Set the 6 GitHub repo variables from bootstrap's outputs (`GCP_PROJECT_ID`, `GCP_REGION`, `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_DEPLOYER_SA`, `GCP_STATE_BUCKET`, `GCP_ARTIFACT_REGISTRY`) so `deploy.yml` can authenticate.
+- [ ] If any of the above can't realistically happen today: **say so explicitly next session** rather than let it become a silent blocker discovered hours before the demo — the fallback (a rock-solid local demo, `pnpm dev` + the API on this laptop) needs its own dry run and is the safer bet on a compressed timeline.
+
 - [ ] Optional: a GitHub personal access token (public read-only) as `GITHUB_TOKEN`, for higher issue-API limits.
 - [ ] Audit clustering labels: `uv run python evals/clustering/audit.py`.
 - [ ] Audit pain-point labels (low/medium confidence first, 183 items): `uv run python evals/problems/audit.py`, then re-run `evaluate.py`.
@@ -384,16 +431,18 @@ ec3b332 Handoff: Problem Intelligence phase for Pro2Pro integration
 
 ```bash
 cd C:\Users\Dilip\OneDrive\Pictures\xplore_more
-# 1) Docker Desktop must be running, then:
+# 1) Docker Desktop must be running, then (this machine has another project's Postgres on
+#    the default 5432, so use XM_PG_PORT — omit it if 5432 is actually free for you):
+export XM_PG_PORT=5433
 docker compose -f deploy/compose/docker-compose.yml up -d postgres redis pubsub
 uv sync
-scripts/check.sh                          # ALL gates; commit only if exit code 0
+scripts/check.sh                          # ALL gates incl. apps/web; commit only if exit code 0
 scripts/e2e_local.sh                      # live end-to-end pipeline (6 sources)
 
 E2E_SOURCES=problem_sources.yaml E2E_MAX_BATCHES=40 scripts/e2e_local.sh          # discussions (hourly registry)
 E2E_SOURCES=problem_sources.corpus.yaml E2E_MAX_BATCHES=80 scripts/e2e_local.sh   # wide one-off corpus
 
-export XM_DATABASE_URL=postgresql+psycopg://xm:xm@localhost:5432/xploremore
+export XM_DATABASE_URL=postgresql+psycopg://xm:xm@localhost:${XM_PG_PORT:-5432}/xploremore
 export PUBSUB_EMULATOR_HOST=localhost:8085
 uv run xm-indexer migrate
 uv run xm-indexer seed-sources                       # syncs BOTH registries (never one alone)
@@ -402,6 +451,7 @@ uv run xm-indexer backfill-problems --reset          # classify discussions + as
 uv run xm-api keys create --name local --rate 600    # prints the key once
 PORT=8765 uv run xm-api                              # http://localhost:8765/docs (downloads bge on first run)
 XM_API_URL=http://127.0.0.1:8765 XM_API_KEY=... uv run xm-mcp   # MCP at http://127.0.0.1:8766/mcp
+cd apps/web && XM_API_URL=http://127.0.0.1:8765 pnpm dev   # web site at http://localhost:3100 (new this session)
 uv run python -m xm_api.contract                     # regenerate problems OpenAPI contract after API changes
 uv run python evals/clustering/evaluate.py
 uv run python evals/problems/evaluate.py             # classifier eval + artifact + report
@@ -476,39 +526,50 @@ docs/                 clustering.md, problems.md, reports/{clustering-pairs-v1, 
 ## 11. Prompt to start the next session
 
 ```text
-You are continuing XploreMore, my hiring-focused portfolio project. Phase P (problem intelligence
-for Pro2Pro) is done at the code level. Work fast and continuously, with production quality, and
-do not stop until you hit a real blocker or run out of things that don't need my input.
+You are continuing XploreMore, my hiring-focused portfolio project. I am demoing this whole
+project to top AI companies (OpenAI among them) in 2 days. Everything you do this session is in
+service of that demo landing well — read CONTINUE_SESSION.md's banner at the very top and §4.18
+in full before anything else. Work fast and continuously; do not stop for permission on choices
+you can make yourself from patterns already in this codebase.
 
-STEP 1 — Load context (do not skip):
-- Read C:\Users\Dilip\OneDrive\Pictures\xplore_more\CONTINUE_SESSION.md completely, including the
-  hard-constraint note right under the title and all of §6's PHASE Q/R annotations (which items
-  are buildable now vs genuinely blocked on me).
-- Run `git status` and `git log --oneline | head -5` in both this repo and
-  C:\Users\Dilip\OneDrive\Pictures\p2pagent; confirm HEAD matches §0 and both trees are clean.
-- Make sure Docker Desktop is running, then:
-  docker compose -f deploy/compose/docker-compose.yml up -d postgres redis pubsub
-  uv sync
-  scripts/check.sh   (must exit 0 before you change anything)
+STEP 1 — Land what's already built (do not skip, do not re-build any of this):
+- Read CONTINUE_SESSION.md completely, especially §4.18 (a full apps/web Next.js site was built
+  last session and is sitting uncommitted) and §0 point 6 (the data refresh didn't finish).
+- Bring Docker back up: XM_PG_PORT=5433 docker compose -f deploy/compose/docker-compose.yml up -d
+  postgres redis pubsub   (adjust the port if 5432 is actually free for you).
+- Run scripts/check.sh (now includes apps/web lint/typecheck/build). If it's green, commit
+  everything with the gate discipline in §0.8. If it's red, fix what's broken before anything
+  else — this is last session's work, not yours to redesign.
+- Drain the indexer so /v1/stats reflects the real, fresh corpus: uv run xm-indexer run
+  --max-batches 100 (repeat until "applied": 0), then uv run xm-indexer backfill-problems if the
+  discussion counts still look stale. Check /v1/stats yourself; do not reuse any number from
+  earlier in this file without re-verifying it today.
 
-STEP 2 — HARD CONSTRAINT, exactly as stated in the note under the title:
-Finish Q3 (search eval + LTR, PHASE Q item 3) completely: a judged query set, retrieval
-evaluation (BM25/FTS-only vs the current hybrid, Recall@10/50, nDCG@10, MRR with bootstrap CIs),
-a LightGBM LambdaMART reranker fit and evaluated the same way, a written report
-(docs/reports/search-eval-v1.md), and a CI gate. Then keep going into PHASE R in the order its
-annotations suggest (personalization, then the web frontend, then whatever reliability/docs work
-doesn't need live GCP) until you either finish everything buildable without new infrastructure or
-hit one of these three named blockers — and only these three excuse leaving something undone:
-  1. GCP/Neon/Upstash accounts not created (blocks all of Phase P's actual deployment, §7).
-  2. A Vercel production deploy or any other action that publishes to a live site I haven't asked for.
-  3. Q4's importance-LTR needs days of continuous ingestion — wall-clock time, not effort.
-Do not ask permission for implementation choices you can make yourself from the patterns already
-in this codebase. Do not report something done without a passing gate and a real measurement.
+STEP 2 — Prove the local demo works end to end, before touching GCP:
+  PORT=8765 uv run xm-api  (in one terminal)
+  cd apps/web && XM_API_URL=http://127.0.0.1:8765 pnpm dev  (in another; site on :3100)
+Click through Problems -> a problem detail -> Search -> Feed -> How it works yourself. This is
+the non-negotiable fallback if GCP deployment doesn't land in time — it must work perfectly.
 
-RULES: as in §2 of CONTINUE_SESSION.md (no fabricated metrics; commit only when scripts/check.sh
-exits 0, checked directly; no LLM agents in XploreMore's serving path; write code with Write/Edit
-tools on Windows; Co-Authored-By trailer; update CONTINUE_SESSION.md after each milestone; short
-plain-English update after each milestone). In p2pagent: run its own test suite before committing
-there; you may push if you find and fix a live regression the way this session did, but say so
-plainly rather than pushing silently.
+STEP 3 — Public GCP URL (the user's chosen demo centerpiece), gated on the user actions in §7:
+If the GCP project/Neon/Upstash/repo-variables aren't done yet, say so plainly and immediately —
+don't discover it's missing hours before the demo. If they are done: push main, watch ci.yml go
+green, trigger deploy.yml (workflow_dispatch if you don't want to wait for the ci->deploy chain),
+and verify the live URL the same way you verified it locally in Step 2. Budget real time for this
+to go wrong on a first-ever deploy; if it's not solid with a day of margin left, fall back to
+Step 2's local demo and say so rather than risk an unproven deploy live in front of the audience.
+
+STEP 4 — If time remains after Steps 1-3 are rock solid:
+- A short docs/demo-runbook.md: the exact click-path/script for the 5-10 min slot, plus 3-4
+  backup screenshots (headless Chrome, see §4.18) in case live internet/demo fails.
+- Q3 (search eval + LTR) is a strong technical story for this audience specifically but is now
+  optional, time-permitting — a judged query set + Recall/nDCG/MRR with CIs, written up, beats a
+  half-finished LightGBM ranker. Don't start it unless Steps 1-3 are genuinely done.
+- Mobile-width check on apps/web (never verified below 1440px per §4.18).
+
+RULES: as in §2 of CONTINUE_SESSION.md (no fabricated metrics — this especially matters live in
+front of an audience; commit only when scripts/check.sh exits 0, checked directly; no LLM agents
+in XploreMore's serving path; write code with Write/Edit tools on Windows; Co-Authored-By
+trailer; update CONTINUE_SESSION.md after each milestone; short plain-English update after each
+milestone). Never claim something works live until you've actually clicked through it yourself.
 ```
