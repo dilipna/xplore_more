@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-const REPO_URL = process.env.XM_REPO_URL ?? "https://github.com/dilipna/xploremore";
+const REPO_URL = process.env.XM_REPO_URL ?? "https://github.com/dilipna/xplore_more";
 
 export function SiteFooter() {
   return (

@@ -61,7 +61,7 @@ type Options struct {
 // DefaultOptions are conservative production defaults.
 func DefaultOptions() Options {
 	return Options{
-		UserAgent:        "XploreMoreBot/0.1 (+https://github.com/dilipna/xploremore)",
+		UserAgent:        "XploreMoreBot/0.1 (+https://github.com/dilipna/xplore_more)",
 		MaxBytes:         5 << 20,
 		Timeout:          15 * time.Second,
 		PerHostRate:      rate.Every(2 * time.Second),

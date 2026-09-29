@@ -12,7 +12,7 @@ variable "region" {
 variable "github_repository" {
   description = "owner/name of the only GitHub repository allowed to exchange OIDC tokens."
   type        = string
-  default     = "dilipna/xploremore"
+  default     = "dilipna/xplore_more"
 
   validation {
     condition     = can(regex("^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$", var.github_repository))

@@ -39,7 +39,7 @@ Run these in **Git Bash** from the repo root (`C:\Users\Dilip\OneDrive\Pictures\
    5. `http://localhost:3100/how-it-works` (About)
    6. The search eval report, **opened locally**: `docs/reports/search-eval-v1.md` in VS Code, with Markdown preview (`Ctrl+Shift+V`). See the warning below.
 
-> ⚠️ **The "report ↗" links on About, and "GitHub" in the footer, point to `github.com/dilipna/xploremore`, which does not exist until the repo is pushed.** Until then, don't click them live; show the report from the local tab instead. Pushing is two commands (see CONTINUE_SESSION.md §7). Do it the day before if you want the links live.
+> ⚠️ **The "report ↗" links on About, and "GitHub" in the footer, point to `github.com/dilipna/xplore_more`, which does not exist until the repo is pushed.** Until then, don't click them live; show the report from the local tab instead. Pushing is two commands (see CONTINUE_SESSION.md §7). Do it the day before if you want the links live.
 
 ### Optional: refresh the corpus the morning of the demo
 This makes the header say "updated minutes ago". The problem ranking may reorder afterwards, so re-run the pre-flight and re-check tabs 2 and 3.

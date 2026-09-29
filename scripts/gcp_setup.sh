@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # One-time GCP setup, meant for Google Cloud Shell (gcloud is already logged in there).
 #
-#   git clone https://github.com/dilipna/xploremore.git && cd xploremore
+#   git clone https://github.com/dilipna/xplore_more.git && cd xplore_more
 #   bash scripts/gcp_setup.sh YOUR_PROJECT_ID [BILLING_ACCOUNT_ID]
 #
 # 1. Applies infra/terraform/bootstrap (APIs, state bucket, keyless GitHub OIDC identities,
@@ -16,7 +16,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 PROJECT="${1:?usage: bash scripts/gcp_setup.sh PROJECT_ID [BILLING_ACCOUNT_ID]}"
 BILLING="${2:-}"
-REPO="${GITHUB_REPOSITORY:-dilipna/xploremore}"
+REPO="${GITHUB_REPOSITORY:-dilipna/xplore_more}"
 REGION="${REGION:-us-central1}"
 TF_VERSION="1.16.2"
 
