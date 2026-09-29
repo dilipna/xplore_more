@@ -106,29 +106,42 @@ async def retrieve_stories(
         trace.dense_hits = len(dense)
 
     t2 = time.perf_counter()
-    article_scores = rrf([lexical, dense])
-    if not article_scores:
+    ids = set(lexical) | set(dense)
+    if not ids:
         trace.fusion_ms = (time.perf_counter() - t2) * 1000
         return []
-    lex_rank = {aid: i for i, aid in enumerate(lexical, start=1)}
-    dense_rank = {aid: i for i, aid in enumerate(dense, start=1)}
-
     rows = await session.execute(
         text("SELECT id, story_id FROM articles WHERE id = ANY(:ids) AND story_id IS NOT NULL"),
-        {"ids": list(article_scores)},
+        {"ids": list(ids)},
     )
+    hits = fuse_to_stories(lexical, dense, {aid: sid for aid, sid in rows}, limit=limit)
+    trace.fusion_ms = (time.perf_counter() - t2) * 1000
+    return hits
+
+
+def fuse_to_stories(
+    lexical: list[str], dense: list[str], article_story: dict[str, int], *, limit: int = 50
+) -> list[StoryHit]:
+    """RRF over the two article rankings, collapsed to stories (best member wins).
+
+    Pure so the offline eval and its CI gate run exactly the serving fusion on frozen rankings.
+    Articles without a story (not yet clustered) are dropped.
+    """
+    article_scores = rrf([lexical, dense])
+    lex_rank = {aid: i for i, aid in enumerate(lexical, start=1)}
+    dense_rank = {aid: i for i, aid in enumerate(dense, start=1)}
     best: dict[int, StoryHit] = {}
-    for article_id, story_id in rows:
-        score = article_scores[article_id]
+    for article_id, score in article_scores.items():
+        story_id = article_story.get(str(article_id))
+        if story_id is None:
+            continue
         current = best.get(story_id)
         if current is None or score > current.score:
             best[story_id] = StoryHit(
                 story_id=story_id,
                 score=score,
-                best_article_id=article_id,
-                lexical_rank=lex_rank.get(article_id),
-                dense_rank=dense_rank.get(article_id),
+                best_article_id=str(article_id),
+                lexical_rank=lex_rank.get(str(article_id)),
+                dense_rank=dense_rank.get(str(article_id)),
             )
-    hits = sorted(best.values(), key=lambda h: (-h.score, h.story_id))[:limit]
-    trace.fusion_ms = (time.perf_counter() - t2) * 1000
-    return hits
+    return sorted(best.values(), key=lambda h: (-h.score, h.story_id))[:limit]

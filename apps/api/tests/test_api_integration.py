@@ -102,12 +102,13 @@ async def seeded(sessionmaker, embedder, clusterer) -> None:
     assert result.applied == len(ARTICLES)
 
 
-def client_for(migrated_database: str, embedder) -> TestClient:
+def client_for(migrated_database: str, embedder, **overrides: Any) -> TestClient:
     settings = Settings(
         database_url=SecretStr(migrated_database),
         entities_file=str(ROOT / "config" / "entities.yaml"),
         anon_rate_per_minute=100_000,  # every test client shares one anonymous bucket
         response_cache_ttl_s=0,  # each test builds its own data; caching is tested in test_response_cache.py
+        **overrides,
     )
     return TestClient(create_app(settings, embedder=embedder, warm_embedder=False))
 
@@ -146,6 +147,35 @@ def test_search_degrades_to_lexical_when_embedder_fails(seeded, migrated_databas
     assert response.json()["degraded"] == ["dense_unavailable"]
     assert response.headers["X-XM-Degraded"] == "dense_unavailable"
     assert response.json()["results"][0]["title"] == "Kubernetes 1.40 released"
+
+
+RERANKER = str(ROOT / "config" / "search_reranker.v1.json")
+
+
+def test_search_with_reranker_enabled_reorders_and_reports_the_stage(
+    seeded, migrated_database, embedder
+) -> None:
+    with client_for(migrated_database, embedder, search_reranker_file=RERANKER) as client:
+        response = client.get("/v1/search", params={"q": "kubernetes pod resizing", "limit": 2})
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body["results"]) <= 2
+    assert body["results"][0]["title"] == "Kubernetes 1.40 released"
+    assert "rerank;dur=" in response.headers["Server-Timing"]
+
+
+def test_reranker_is_skipped_when_search_is_degraded(seeded, migrated_database) -> None:
+    with client_for(migrated_database, FailingEmbedder(), search_reranker_file=RERANKER) as client:
+        response = client.get("/v1/search", params={"q": "kubernetes"})
+    assert response.status_code == 200
+    assert response.json()["degraded"] == ["dense_unavailable"]
+    assert "rerank;dur=" not in response.headers["Server-Timing"]
+
+
+def test_reranker_is_off_by_default(seeded, migrated_database, embedder) -> None:
+    with client_for(migrated_database, embedder) as client:
+        response = client.get("/v1/search", params={"q": "kubernetes"})
+    assert "rerank;dur=" not in response.headers["Server-Timing"]
 
 
 @pytest.mark.parametrize(

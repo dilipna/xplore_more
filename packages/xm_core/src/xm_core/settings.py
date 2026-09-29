@@ -38,6 +38,10 @@ class Settings(BaseSettings):
     # Pain-point classifier artifact (evals/problems/evaluate.py). Empty disables problem
     # intelligence in the indexer: discussions are still stored, just not classified.
     problem_classifier_file: str = "config/problem_classifier.v1.json"
+    # Learned reranker for /v1/search (evals/search/evaluate.py). Off by default: on the v1
+    # judged set its nDCG@10 gain over RRF has a CI that includes zero
+    # (docs/reports/search-eval-v1.md). Set to config/search_reranker.v1.json to enable.
+    search_reranker_file: str | None = None
 
     # API protection. Upstash Redis in prod (rediss://). If Redis is unreachable the API
     # fails OPEN (serves, marks X-XM-Degraded: rate_limit) because it is a read-only API.

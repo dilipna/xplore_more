@@ -33,6 +33,7 @@ dev = [
     "jsonschema>=4.23",
     "referencing>=0.35",
     "scikit-learn>=1.6",
+    "lightgbm>=4.6",
 ]
 
 [tool.ruff]
@@ -52,6 +53,7 @@ known-first-party = ["xm_core", "xm_indexer", "xm_cluster", "xm_embed", "xm_sear
 "evals/**" = ["S311"]  # seeded sampling for evaluation, not cryptography
 "evals/problems/evaluate.py" = ["S311", "E501"]  # report generator: markdown table rows read better unwrapped
 "evals/problems/cluster_report.py" = ["E501"]  # report generator
+"evals/search/evaluate.py" = ["E501"]  # report generator: markdown table rows read better unwrapped
 
 [tool.pyright]
 pythonVersion = "3.13"
@@ -63,7 +65,7 @@ exclude = ["**/tests/**", "**/.venv/**", "**/migrations/**"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "session"
 asyncio_default_test_loop_scope = "session"
-testpaths = ["packages", "apps/indexer", "apps/api", "apps/mcp"]
+testpaths = ["packages", "apps/indexer", "apps/api", "apps/mcp", "evals/search"]
 markers = [
     "integration: requires docker compose services (postgres, redis, pubsub emulator)",
     "guarantees: tests that prove a documented system guarantee",

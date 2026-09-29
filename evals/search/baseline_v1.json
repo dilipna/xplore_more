@@ -1,0 +1,15 @@
+{
+  "note": "Recorded by evals/search/evaluate.py. The CI gate (evals/search/test_gate.py) fails when a metric drops more than `tolerance` below these values on the frozen snapshot.",
+  "tolerance": 0.01,
+  "queries": 62,
+  "hybrid": {
+    "ndcg@10": 0.8049235545212013,
+    "recall@10": 0.7448219001112738,
+    "recall@50": 0.9060975683603767,
+    "mrr": 0.9327956989247311
+  },
+  "rerank_in_sample": {
+    "ndcg@10": 0.8883134654482844
+  },
+  "features_sha256": "f6844abbc8026281de74e57f753b967b6b8325be8be16ef64a8342266a2749b1"
+}
