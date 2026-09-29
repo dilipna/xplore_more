@@ -203,9 +203,9 @@ export function getFeed(windowHours: number, limit = 25) {
 /** The feed's top stories for the ticker and the home page: last 24 h, widened to 3 days when a
  *  quiet night leaves too few. Deduplicated per request, so both callers share one API call. */
 export const getTopStories = cache(async () => {
-  const day = await getFeed(24, 15);
-  if (!day.data || day.data.results.length >= 6) return { ...day, windowHours: 24 };
-  return { ...(await getFeed(72, 15)), windowHours: 72 };
+  const day = await getFeed(24, 30);
+  if (!day.data || day.data.results.length >= 8) return { ...day, windowHours: 24 };
+  return { ...(await getFeed(72, 30)), windowHours: 72 };
 });
 
 export function getStory(id: number) {

@@ -385,6 +385,18 @@ The user liked the black/neon theme but said the site looked AI-generated and as
 - **Pre-flight bug found and fixed:** under `set -o pipefail`, `printf "$body" | grep -q` intermittently failed on the (now larger) home page, because `grep -q` exits early and `printf` gets SIGPIPE. It now uses here-strings. It passed 3 of 3 runs, and the negative test (API dead behind a running web app) still fails every page. Markers were updated for the new copy.
 - **Verified:** lint and build clean; 35 pages clean at 390 px; backups regenerated in `.data/shots/` (`home-*`, `problems-*`, …; screenshot tools now name `/` "home"). The runbook's click path gained Stop 1b (`/problems`).
 
+### 4.23 Session 3, 2026-09-29: repo pushed, social-feed UI, GCP scripts
+
+- **GitHub:** the user created **`dilipna/xplore_more`** (public; note the underscore). Everything that names the repo was updated first (`b6d1b0e`): bootstrap `github_repository` (the OIDC trust, which would otherwise have rejected every deploy), web/footer links, prod `repo_url`, crawler UA, `scripts/gcp_setup.sh`, docs. The Go module path `github.com/dilipna/xploremore/apps/edge-go` was deliberately left alone (an import name, never fetched). Before pushing, the full history was scanned for secrets with a regex sweep (the gitleaks image couldn't be pulled: Docker Hub TLS is intercepted on this network, the certificate is for `*.e-dte.com`). It was clean; the local salt and web key never appear. Pushed; GitHub `main` = local, and `ci` started on its own.
+- **GCP go-live tooling (`267ea58`):** `scripts/gcp_setup.sh` (Cloud Shell) and `scripts/seed_neon.sh`. The dump/restore was rehearsed into a scratch DB (rc 0, all rows). **Ordering matters:** seed Neon *before* the first deploy, because the canary smoke-checks `/v1/problems?limit=1`, which needs the schema. The web key and author salt are reused from `.data/` on purpose: the seeded `api_keys` table already holds the web key's hash, and reusing the salt keeps voice counts consistent with the seeded author hashes.
+- **UI (user asked for a real-time platform "like Facebook, Reddit"):** a three-column social layout (`components/shell.tsx`). Left: sections, topics and problem types (`left-nav.tsx`). Right: trending problems and live numbers (`right-rail.tsx`). The middle holds post cards:
+  - `story-card.tsx`: source avatar with a stable color, name and "and N more", time, domain, a New badge under 3 h, and "N sources / N articles / Read original".
+  - `problem-card.tsx`: a Reddit-style people-count column, platform, category, a second-voice quote, the top post's real points and replies, and the demand score.
+  - Home has Top/New tabs and mixes in problem posts ranked 6–9 (the rail shows 1–5), with a "N new stories" toast on auto-refresh (`feed-pulse.tsx`, which compares real ids).
+  - Search keeps the timing panel in the rail and repeats it above the results below xl.
+  - Source display names come from the `sources` table (`lib/sources.ts`). Everything shown is real data; no invented likes.
+- Verified: lint and build clean; preflight passes; 37 pages clean at 390 px; backups regenerated.
+
 ## 5. Pro2Pro facts needed for the integration (verified in its code)
 
 - **Discovery:** a LangGraph ReAct **Research Agent** (`p2pagent/src/p2pops/agents/research.py`) calls three tools:
