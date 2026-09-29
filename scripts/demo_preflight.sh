@@ -36,13 +36,14 @@ done <<EOF
 /problems/$DEMO_PROBLEM 200 ranks
 /search?q=kubernetes 200 hood
 /search?q=vllm 200 stories
+/search?q=rust%20adoption 200 stories
 /feed 200 deduplicated
 /how-it-works 200 nDCG@10
 /nope 404 404
 EOF
 
 if command -v node >/dev/null 2>&1; then
-  PAGES="/ /problems/$DEMO_PROBLEM /search?q=kubernetes /search?q=vllm /feed /how-it-works" \
+  PAGES="/ /problems/$DEMO_PROBLEM /search?q=kubernetes /search?q=rust%20adoption /feed /how-it-works" \
     node scripts/mobile_check.mjs "$WEB" .data/shots_preflight >/dev/null 2>&1
   check "phone width (390 px)" $? "(scripts/mobile_check.mjs)"
 fi

@@ -22,7 +22,7 @@ fi
 
 mkdir -p "$OUT"
 for page in $PAGES; do
-  name="$(echo "$page" | sed -e 's#^/##' -e 's#[/?=&]#_#g')"
+  name="$(echo "$page" | sed -e 's#^/##' -e 's#%20#_#g' -e 's#[/?=&]#_#g')"
   name="${name:-problems}"
   for spec in desktop:1440,2400; do
     label="${spec%%:*}"
