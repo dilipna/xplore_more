@@ -18,8 +18,8 @@ export default async function StoryPage({ params }: { params: Promise<{ id: stri
 
   return (
     <div className="mx-auto max-w-4xl px-5 py-10">
-      <Link href="/search" className="font-mono text-xs text-fg-500 hover:text-fg-50">
-        ← search
+      <Link href="/" className="text-sm text-fg-500 hover:text-signal-300">
+        ← News
       </Link>
       {!d ? (
         <div className="mt-8">
@@ -31,16 +31,15 @@ export default async function StoryPage({ params }: { params: Promise<{ id: stri
             {d.story.title}
           </h1>
           <div className="mt-8 grid grid-cols-3 gap-6">
-            <Metric value={d.story.source_count} label="independent sources" />
-            <Metric value={d.story.article_count} label="articles merged" />
+            <Metric value={d.story.source_count} label="sources" />
+            <Metric value={d.story.article_count} label="articles" />
             <Metric value={relativeTime(d.story.first_seen_at)} label="first seen" />
           </div>
           <section className="mt-12">
-            <Eyebrow>Every article in this story</Eyebrow>
+            <Eyebrow>Coverage</Eyebrow>
             <p className="mt-3 text-sm leading-relaxed text-fg-400">
-              Clustered by MinHash-LSH near-duplicate detection plus dense-embedding candidates, then a logistic pair
-              scorer (calibrated prior weights) over embedding similarity, titles, entities, timing and conflicting
-              version numbers — so &ldquo;vLLM 0.9&rdquo; and &ldquo;vLLM 0.10&rdquo; never merge.
+              Articles are grouped automatically when their text, meaning, names and timing line up. Different version
+              numbers never merge, so &ldquo;vLLM 0.9&rdquo; and &ldquo;vLLM 0.10&rdquo; stay separate stories.
             </p>
             <ol className="mt-6 flex flex-col gap-3">
               {d.articles.map((a) => (

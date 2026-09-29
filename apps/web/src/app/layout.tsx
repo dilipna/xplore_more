@@ -10,11 +10,11 @@ const jetbrains = JetBrains_Mono({ variable: "--font-jetbrains", subsets: ["lati
 
 export const metadata: Metadata = {
   title: {
-    default: "XploreMore — what engineers are struggling with, ranked by demand",
+    default: "XploreMore: tech news and the problems engineers keep reporting",
     template: "%s · XploreMore",
   },
   description:
-    "XploreMore mines real pain points from Hacker News, GitHub issues, Lobsters and Stack Exchange, clusters them across people and platforms, and ranks them by demand. Hybrid search and a deduplicated tech feed on the same pipeline.",
+    "Top tech stories from 43 sources, one story per event, plus the problems engineers keep reporting on Hacker News, GitHub, Lobsters and Stack Exchange.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

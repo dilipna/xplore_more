@@ -7,7 +7,7 @@ import { parseServerTiming, search } from "@/lib/api";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Search" };
 
-const SUGGESTED = ["vllm", "claude", "kubernetes", "rag evaluation", "open weights model"];
+const SUGGESTED = ["vllm", "kubernetes", "rust adoption", "rag evaluation", "open weights model"];
 
 const STAGE: Record<string, { label: string; what: string }> = {
   embed: { label: "Embed query", what: "bge-small-en-v1.5 on CPU (ONNX), with the BGE query instruction" },
@@ -31,40 +31,33 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
 
   return (
     <>
-      <PageIntro eyebrow="Hybrid search" title="Search the tech news, one story per event.">
-        <p className="mt-5 max-w-2xl text-pretty text-lg leading-relaxed text-fg-400">
-          Lexical and semantic retrieval fused with Reciprocal Rank Fusion, then collapsed so ten outlets covering one
-          release show up as one story.
+      <PageIntro title="Search">
+        <p className="mt-3 max-w-2xl text-fg-400">
+          Matches words and meaning at the same time, so a question finds the right story even when it uses different
+          words. Coverage of the same event comes back as one result.
         </p>
-        <form action="/search" method="get" className="mt-8 flex flex-col gap-3 md:flex-row">
+        <form action="/search" method="get" className="mt-6 flex max-w-2xl gap-2">
           <input
             type="search"
             name="q"
             defaultValue={q}
-            placeholder="Search — try vllm, claude, kubernetes…"
-            className="h-12 flex-1 rounded-xl border hairline bg-field-900 px-4 text-[15px] text-fg-50 placeholder:text-fg-600 focus:border-signal-400 focus:shadow-[0_0_0_3px_rgb(57_255_127/0.15),0_0_24px_-6px_rgb(57_255_127/0.6)] focus:outline-none"
+            placeholder="Try vllm, kubernetes, rust adoption"
+            className="h-11 min-w-0 flex-1 rounded-lg border hairline bg-field-900 px-3 text-[15px] text-fg-50 placeholder:text-fg-600 focus:border-signal-400 focus:outline-none"
             aria-label="Search query"
             autoFocus={!q}
           />
-          <button
-            type="submit"
-            className="h-12 rounded-xl bg-signal-400 px-6 text-sm font-semibold text-field-950 shadow-[0_0_24px_-6px_rgb(57_255_127/0.8)] transition-all hover:bg-signal-300 hover:shadow-[0_0_32px_-4px_rgb(57_255_127/0.9)]"
-          >
+          <button type="submit" className="h-11 rounded-lg bg-signal-400 px-5 text-sm font-semibold text-field-950 hover:bg-signal-300">
             Search
           </button>
         </form>
-        <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
-          <span className="mr-1 font-mono text-[11px] uppercase tracking-wider text-fg-600">try</span>
-          {SUGGESTED.map((s) => (
-            <Link
-              key={s}
-              href={`/search?q=${encodeURIComponent(s)}`}
-              className="rounded-full border hairline px-3 py-1 text-fg-400 transition-colors hover:border-signal-500/50 hover:text-fg-50"
-            >
-              {s}
+        <p className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-sm text-fg-500">
+          Popular:
+          {SUGGESTED.map((t) => (
+            <Link key={t} href={`/search?q=${encodeURIComponent(t)}`} className="text-fg-200 hover:text-signal-300">
+              {t}
             </Link>
           ))}
-        </div>
+        </p>
       </PageIntro>
 
       {result && (
@@ -76,13 +69,13 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
               <p className="text-fg-400">No stories match “{q}”.</p>
             ) : (
               <>
-                <p className="mb-4 text-sm text-fg-400">
-                  {result.data.results.length} stories for “{q}”
+                <p className="mb-1 text-sm text-fg-400">
+                  {result.data.results.length} results for &ldquo;{q}&rdquo;
                   {result.data.degraded.length > 0 && (
-                    <span className="text-amber-300"> — degraded: {result.data.degraded.join(", ")}</span>
+                    <span className="text-amber-300"> (keyword matches only right now)</span>
                   )}
                 </p>
-                <ol className="flex flex-col gap-3">
+                <ol>
                   {result.data.results.map((story, i) => (
                     <StoryRow key={story.id} story={story} rank={i + 1} />
                   ))}
@@ -95,7 +88,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
             <aside className="panel h-fit p-5 lg:sticky lg:top-24">
               <Eyebrow>Under the hood</Eyebrow>
               <p className="mt-3 text-xs leading-relaxed text-fg-500">
-                Real stage timings from this request&apos;s <span className="font-mono">Server-Timing</span> header.
+                How long each step of this search took, from the API&apos;s <span className="font-mono">Server-Timing</span> header.
               </p>
               <div className="mt-5 flex flex-col gap-4">
                 {stages.map((s) => (
@@ -116,11 +109,11 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
               </div>
               <div className="mt-5 border-t hairline pt-4 font-mono text-[11px] leading-relaxed text-fg-500">
                 <div className="flex justify-between">
-                  <span>server stages</span>
+                  <span>total on the server</span>
                   <span className="text-fg-200 tabular-nums">{serverTotal.toFixed(1)} ms</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>round trip from this page</span>
+                  <span>round trip</span>
                   <span className="text-fg-200 tabular-nums">{Math.round(result.elapsedMs)} ms</span>
                 </div>
               </div>

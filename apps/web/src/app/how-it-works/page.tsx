@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ArchitectureDiagram } from "@/components/architecture-diagram";
 import { Eyebrow, PageIntro } from "@/components/ui";
 
-export const metadata: Metadata = { title: "How it works" };
+export const metadata: Metadata = { title: "About" };
 
 const REPO_URL = process.env.XM_REPO_URL ?? "https://github.com/dilipna/xploremore";
 const doc = (path: string) => `${REPO_URL}/blob/main/${path}`;
@@ -87,7 +87,7 @@ const MEASUREMENTS: Measurement[] = [
     area: "Agent integration A/B",
     headline: "16 live trials · honest confound",
     detail:
-      "Pro2Pro's research agent with XploreMore vs its own HN/web search, same model and guardrails. The XploreMore arm shortlisted fewer ideas — but 3 of its 8 trials timed out on an 8k-tokens/min provider tier (0 of 8 baseline), so this measures a token budget, not problem quality.",
+      "Pro2Pro's research agent with XploreMore vs its own HN/web search, same model and guardrails. The XploreMore arm shortlisted fewer ideas, but 3 of its 8 trials timed out on an 8k-tokens/min provider tier (0 of 8 baseline), so this measures a token budget, not problem quality.",
     caveat: "Small sample; the report recommends a re-run on a higher-throughput tier before any quality claim.",
     report: "docs/reports/pro2pro-discovery-ab.md",
     reportLabel: "A/B report",
@@ -101,7 +101,7 @@ const PRINCIPLES = [
   },
   {
     title: "Untrusted fetching is isolated",
-    body: "The Go ingestor fetches arbitrary web pages with SSRF protection, robots.txt, per-host rate limits and a size cap after decompression — and has no database credentials at all.",
+    body: "The Go ingestor fetches arbitrary web pages with SSRF protection, robots.txt, per-host rate limits and a size cap after decompression, and it has no database credentials at all.",
   },
   {
     title: "Interpretable ranking",
@@ -116,11 +116,12 @@ const PRINCIPLES = [
 export default function HowItWorksPage() {
   return (
     <>
-      <PageIntro eyebrow="How it works" title="A search and ranking system for real problems.">
-        <p className="mt-5 max-w-3xl text-pretty text-lg leading-relaxed text-fg-400">
-          News is mostly announcements; problems live in discussions. XploreMore ingests both, deduplicates coverage
-          into stories, classifies which discussion posts report a real pain point, clusters them across people and
-          platforms, and ranks the result by demand — then serves it to people here and to agents over MCP.
+      <PageIntro title="How XploreMore works">
+        <p className="mt-3 max-w-3xl text-fg-400">
+          Most tech news is announcements. The problems people actually hit show up in discussions. XploreMore reads
+          both, folds duplicate coverage into single stories, picks out the posts that describe a real problem, groups
+          them across people, and ranks them by how many people report them. The same data is served here and to AI
+          agents through an API.
         </p>
       </PageIntro>
 
@@ -137,8 +138,11 @@ export default function HowItWorksPage() {
       </section>
 
       <section className="mx-auto max-w-6xl px-5 pb-12">
-        <Eyebrow>Measured, not claimed</Eyebrow>
-        <h2 className="mt-3 text-2xl font-semibold tracking-tight">Every number links to the report that produced it.</h2>
+        <h2 className="text-2xl font-semibold tracking-tight">Results</h2>
+        <p className="mt-2 max-w-3xl text-fg-400">
+          Each number links to the report it came from. Where the labels were made by an AI assistant and not yet
+          checked by a person, the card says so.
+        </p>
         <div className="mt-8 grid gap-4 md:grid-cols-2">
           {MEASUREMENTS.map((m) => (
             <article key={m.area} className="panel flex flex-col p-6">
@@ -160,7 +164,7 @@ export default function HowItWorksPage() {
       </section>
 
       <section className="mx-auto max-w-6xl px-5 pb-16">
-        <Eyebrow>Design principles</Eyebrow>
+        <Eyebrow>Design choices</Eyebrow>
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           {PRINCIPLES.map((p) => (
             <div key={p.title} className="border-l-2 border-signal-700 pl-5">

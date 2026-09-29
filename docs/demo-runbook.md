@@ -32,16 +32,17 @@ Run these in **Git Bash** from the repo root (`C:\Users\Dilip\OneDrive\Pictures\
    ```
    It must end with `PREFLIGHT PASSED`. It checks: API ready, search not degraded, every demo route renders real data rather than the fallback panel, and no sideways scrolling at phone width.
 6. **Browser:** open these tabs in order and zoom to 110–125% if projecting. Turn on Do Not Disturb.
-   1. `http://localhost:3100/`
-   2. `http://localhost:3100/problems/1526`
-   3. `http://localhost:3100/search?q=kubernetes`
-   4. `http://localhost:3100/how-it-works`
-   5. The search eval report, **opened locally**: `docs/reports/search-eval-v1.md` in VS Code, with Markdown preview (`Ctrl+Shift+V`). See the warning below.
+   1. `http://localhost:3100/` (News)
+   2. `http://localhost:3100/problems`
+   3. `http://localhost:3100/problems/1526`
+   4. `http://localhost:3100/search?q=kubernetes`
+   5. `http://localhost:3100/how-it-works` (About)
+   6. The search eval report, **opened locally**: `docs/reports/search-eval-v1.md` in VS Code, with Markdown preview (`Ctrl+Shift+V`). See the warning below.
 
-> ⚠️ **The "report ↗" links on How it works, and "source ↗" in the footer, point to `github.com/dilipna/xploremore`, which does not exist until the repo is pushed.** Until then, don't click them live; show the report from the local tab instead. Pushing is two commands (see CONTINUE_SESSION.md §7). Do it the day before if you want the links live.
+> ⚠️ **The "report ↗" links on About, and "GitHub" in the footer, point to `github.com/dilipna/xploremore`, which does not exist until the repo is pushed.** Until then, don't click them live; show the report from the local tab instead. Pushing is two commands (see CONTINUE_SESSION.md §7). Do it the day before if you want the links live.
 
 ### Optional: refresh the corpus the morning of the demo
-This makes the header say "indexed minutes ago". The problem ranking may reorder afterwards, so re-run the pre-flight and re-check tab 2.
+This makes the header say "updated minutes ago". The problem ranking may reorder afterwards, so re-run the pre-flight and re-check tabs 2 and 3.
 ```bash
 XM_PG_PORT=5433 E2E_SOURCES=problem_sources.corpus.yaml E2E_MAX_BATCHES=400 E2E_WAIT_SECONDS=60 bash scripts/e2e_local.sh
 XM_PG_PORT=5433 E2E_SOURCES=sources.yaml E2E_MAX_BATCHES=200 E2E_WAIT_SECONDS=150 bash scripts/e2e_local.sh
@@ -61,15 +62,15 @@ The numbers below were read from `/v1/stats` on **2026-09-29 02:52 UTC** (evenin
 | Articles → stories | 1,597 articles → 1,578 stories (14 multi-source) |
 | Problems (30-day window) | 709, of which 29 were reported by 2+ people |
 
-### Stop 1: Home, `/` (≈1.5 min)
-- **Show:**
-  - The live layer first. Point to the **TOP NEWS ticker** under the header, the **LIVE** badge with its ticking UTC clock and "indexed … ago" counter, and the **refresh countdown** in the hero: the page re-fetches itself every 60 s.
-  - Then the count-up stats strip and **Top stories right now**, with the #1 lead card and ranks 2–6.
-  - Then scroll to **Most-demanded problems**. Point at a card's "N people · N sources" and the demand bar.
-- **Say about the live layer, if asked:** "Everything moving on this page is real. The ticker and top stories are the live ranked feed, duplicate coverage is collapsed into one story, and the counters are the corpus's actual numbers from the stats endpoint."
-- **Say:** "This reads 2,412 real discussions from Hacker News, GitHub issues, Lobsters and Stack Exchange. A classifier decides which posts report a real pain point; clustering merges the same pain across different people; the list is ranked by demand. There's no LLM anywhere in this serving path: it's CPU embeddings, classical IR and a small logistic model."
+### Stop 1: News, `/` (≈1 min)
+- **Show:** the **Trending** ticker under the header and "Live · updated … ago" at the top right (the page quietly re-fetches every minute). Then the **Top stories** list: when several outlets cover one event it's one entry, marked "2 sources". Then the right column, **Most reported problems** and **By the numbers**.
+- **Say:** "This is the tech news from 43 sources, one entry per event, plus the problems engineers keep reporting. Everything here is live data from the API. There's no LLM anywhere in the serving path: it's CPU embeddings, classical IR and small models."
+
+### Stop 1b: Problems, `/problems` (≈1 min)
+- **Show:** the ranked rows ("4 people · Hacker News · Workflow friction"), the demand score on the right, one category tab, then click **Popular: vllm** to show the topic filter.
+- **Say:** "This reads 2,412 real discussions from Hacker News, GitHub issues, Lobsters and Stack Exchange. A classifier decides which posts report a real problem; clustering merges the same problem across different people; the list is ranked by demand."
 - **Honest line, if asked about quality:** "The pain-point classifier is P 0.80 / R 0.76 overall, but that's carried by GitHub issues. On HN and Lobsters it's much weaker (P 0.48), and the labels are AI-made, not yet human-audited."
-- The #1 card today is an HN thread about Claude Code commit signatures (4 people). That's simply what the live data ranks first. The ranking shifts whenever the corpus refreshes.
+- The #1 row today is an HN thread about Claude Code commit signatures (4 people). That's simply what the live data ranks first. The ranking shifts whenever the corpus refreshes.
 
 ### Stop 2: Problem detail, `/problems/1526`, "Why it ranks here" (≈2 min, **linger here**)
 - **Show:** the five factors in the left panel, then the three GitHub issues on the right with their classifier confidences (0.85 / 0.83 / 0.69).
@@ -83,8 +84,8 @@ The numbers below were read from `/v1/stats` on **2026-09-29 02:52 UTC** (evenin
 - **Say (the Q3 point):** "We don't trust vibes. We built a 3.5k-judgment eval, 62 queries, and hybrid retrieval beats Postgres full-text search by **+0.123 nDCG@10, 95% CI [+0.077, +0.173]**, and dense alone by +0.061 [+0.028, +0.096]. We also trained a LambdaMART reranker and **didn't ship it on by default**, because its gain, +0.012 [−0.005, +0.030], isn't significant. A mutation-tested CI gate stops anyone regressing search. The relevance labels are AI-judged and provisional."
 - Read the timings off the screen; don't quote fixed numbers. They're single requests on a laptop, not a measured latency budget, and there's no load test yet.
 
-### Stop 4: How it works, `/how-it-works` (≈1.5 min)
-- **Show:** the architecture diagram (ingest lane on top, serve lane below, labelled "no LLM in this path"), then the **Measured, not claimed** grid. The first two cards are the search eval.
+### Stop 4: About, `/how-it-works` (≈1.5 min)
+- **Show:** the architecture diagram (ingest lane on top, serve lane below, labelled "no LLM in this path"), then the **Results** cards. The first two are the search eval.
 - **Say:** "The Go edge fetches untrusted web pages with SSRF protection and has no database credentials. Pub/Sub delivers at least once; the indexer makes effects exactly-once with idempotency keys claimed in the same transaction. Every number on this page links to the report that produced it, and each one carries its caveat. The agent A/B, for example, turned out to measure a provider token budget, not problem quality, and it says so."
 
 ### Stop 5: The search eval report (local tab, ≈1.5 min)
@@ -100,7 +101,7 @@ The numbers below were read from `/v1/stats` on **2026-09-29 02:52 UTC** (evenin
 
 | Symptom | Likely cause | Do this (in order) |
 |---|---|---|
-| A page shows "The XploreMore API didn't answer…" and the header says **API unreachable** | API process stopped or crashed | This is the designed graceful degradation, so say so ("the site degrades instead of breaking"). Restart terminal A's command and reload. |
+| A page shows "Couldn't load … right now. The API didn't answer." and the header says **API unreachable** | API process stopped or crashed | This is the designed graceful degradation, so say so ("the site degrades instead of breaking"). Restart terminal A's command and reload. |
 | Pages load but a panel says unavailable only sometimes | Rate limit: the web app started without `XM_API_KEY` | Restart terminal B with the key (step 4). |
 | Search shows "degraded: dense_unavailable" | Embedding model failed to load | Search still answers (lexical-only); that's the degradation path, so explain it. Restart the API afterwards. |
 | `localhost:3100` doesn't load at all | Web process stopped | Re-run terminal B's `pnpm start` (no rebuild needed). |
@@ -108,7 +109,7 @@ The numbers below were read from `/v1/stats` on **2026-09-29 02:52 UTC** (evenin
 | The first search after a restart is slow | Cold embedding model | The pre-flight warms it. After any restart, run one search before presenting. |
 | Laptop or projector failure | n/a | Backup screenshots (below). |
 
-**Backup screenshots** (taken 2026-09-28 from the live stack after the neon redesign, gitignored) are in `.data/shots/`: `problems-desktop.png` (home), `problems_1526-desktop.png`, `search_q_kubernetes-desktop.png`, `search_q_rust_adoption-desktop.png`, `how-it-works-desktop.png`, `feed-desktop.png`, plus `*-mobile.png` phone renders of home, problem 1526, the rust search and the feed. Both tools emulate reduced motion, so the counters show their final real values, not a mid-animation frame. The repo is inside OneDrive, so if OneDrive sync is on they should also be reachable from another device. Check that before relying on it. To regenerate them with the stack running: `bash scripts/screenshot.sh` (desktop) and `node scripts/mobile_check.mjs` (phone).
+**Backup screenshots** (taken 2026-09-28 from the live stack, final design, gitignored) are in `.data/shots/`: `home-desktop.png`, `problems-desktop.png`, `problems_1526-desktop.png`, `search_q_kubernetes-desktop.png`, `search_q_rust_adoption-desktop.png`, `how-it-works-desktop.png`, `feed-desktop.png`, plus `*-mobile.png` phone renders of home, problems, problem 1526 and the rust search. Both tools emulate reduced motion, so the counters show their final real values, not a mid-animation frame. The repo is inside OneDrive, so if OneDrive sync is on they should also be reachable from another device. Check that before relying on it. To regenerate them with the stack running: `bash scripts/screenshot.sh` (desktop) and `node scripts/mobile_check.mjs` (phone).
 
 ---
 

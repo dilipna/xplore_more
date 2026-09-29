@@ -26,24 +26,26 @@ check "api search" "$([ -n "$timing" ] && [ -z "$degraded" ]; echo $?)" "${timin
 # Route, expected status, one word the real (non-fallback) page must contain.
 while read -r route want marker; do
   body=$(curl -s --max-time 30 -w '\n%{http_code}' "$WEB$route")
-  got=$(printf '%s' "$body" | tail -n1)
+  got=$(tail -n1 <<<"$body")
   ok=1
-  if [ "$got" = "$want" ] && printf '%s' "$body" | grep -q "$marker" \
-    && ! printf '%s' "$body" | grep -qiE 'degrades instead of breaking|API unreachable'; then ok=0; fi
+  # Here-strings, not pipes: under pipefail, grep -q exiting early SIGPIPEs printf on big pages.
+  if [ "$got" = "$want" ] && grep -q "$marker" <<<"$body" \
+    && ! grep -qiE 'The API didn|API unreachable' <<<"$body"; then ok=0; fi
   check "web $route" "$ok" "($got)"
 done <<EOF
 / 200 distinct
+/problems 200 Popular
 /problems/$DEMO_PROBLEM 200 ranks
 /search?q=kubernetes 200 hood
-/search?q=vllm 200 stories
-/search?q=rust%20adoption 200 stories
-/feed 200 deduplicated
+/search?q=vllm 200 results
+/search?q=rust%20adoption 200 results
+/feed 200 week
 /how-it-works 200 nDCG@10
 /nope 404 404
 EOF
 
 if command -v node >/dev/null 2>&1; then
-  PAGES="/ /problems/$DEMO_PROBLEM /search?q=kubernetes /search?q=rust%20adoption /feed /how-it-works" \
+  PAGES="/ /problems /problems/$DEMO_PROBLEM /search?q=kubernetes /search?q=rust%20adoption /feed /how-it-works" \
     node scripts/mobile_check.mjs "$WEB" .data/shots_preflight >/dev/null 2>&1
   check "phone width (390 px)" $? "(scripts/mobile_check.mjs)"
 fi
