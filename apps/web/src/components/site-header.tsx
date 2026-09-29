@@ -24,7 +24,8 @@ export async function SiteHeader() {
   const live = stats.data?.last_indexed_at ?? null;
   return (
     <header className="sticky top-0 z-30 border-b hairline bg-field-950/85 backdrop-blur-md">
-      <div className="mx-auto flex h-15 max-w-6xl items-center justify-between gap-6 px-5 py-3">
+      {/* Below md the nav wraps to its own full-width row; four links don't fit beside the wordmark at 390 px. */}
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-5 py-3 md:h-15 md:flex-nowrap">
         <Link href="/" aria-label="XploreMore home">
           <Wordmark />
         </Link>

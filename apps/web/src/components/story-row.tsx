@@ -10,7 +10,7 @@ export function StoryRow({ story, rank }: { story: StorySummary; rank: number })
         {String(rank).padStart(2, "0")}
       </span>
       <div className="min-w-0 flex-1">
-        <h3 className="text-pretty text-[16px] leading-snug text-fg-50">
+        <h3 className="text-pretty text-[16px] leading-snug text-fg-50 [overflow-wrap:anywhere]">
           <Link href={`/stories/${story.id}`} className="after:absolute after:inset-0">
             {story.title}
           </Link>

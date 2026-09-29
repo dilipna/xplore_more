@@ -69,7 +69,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
 
       {result && (
         <section className="mx-auto grid max-w-6xl gap-8 px-5 py-10 lg:grid-cols-[1fr_320px]">
-          <div>
+          <div className="min-w-0">
             {!result.data ? (
               <Unavailable what="search results" />
             ) : result.data.results.length === 0 ? (

@@ -27,7 +27,7 @@ export default async function StoryPage({ params }: { params: Promise<{ id: stri
         </div>
       ) : (
         <>
-          <h1 className="mt-6 text-pretty text-2xl leading-snug font-semibold tracking-tight md:text-3xl">
+          <h1 className="mt-6 text-pretty text-2xl leading-snug font-semibold tracking-tight [overflow-wrap:anywhere] md:text-3xl">
             {d.story.title}
           </h1>
           <div className="mt-8 grid grid-cols-3 gap-6">
@@ -50,7 +50,7 @@ export default async function StoryPage({ params }: { params: Promise<{ id: stri
                       href={a.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[15px] text-fg-50 hover:text-signal-300"
+                      className="text-[15px] text-fg-50 [overflow-wrap:anywhere] hover:text-signal-300"
                     >
                       {a.title}
                     </a>

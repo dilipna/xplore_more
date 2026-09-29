@@ -13,14 +13,14 @@ const LINKS = [
 export function NavLinks() {
   const pathname = usePathname();
   return (
-    <nav className="flex items-center gap-1 text-sm">
+    <nav className="-mx-2 flex w-full items-center gap-1 text-sm md:mx-0 md:w-auto">
       {LINKS.map(({ href, label }) => {
         const active = href === "/" ? pathname === "/" || pathname.startsWith("/problems") : pathname.startsWith(href);
         return (
           <Link
             key={href}
             href={href}
-            className={`rounded-lg px-3 py-1.5 transition-colors ${
+            className={`whitespace-nowrap rounded-lg px-2 py-1.5 transition-colors md:px-3 ${
               active ? "bg-field-800 text-fg-50" : "text-fg-400 hover:text-fg-50"
             }`}
           >
