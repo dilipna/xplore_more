@@ -2,7 +2,7 @@ import type { ProblemCategory } from "@/lib/api";
 import { categoryLabel, platformInfo } from "@/lib/format";
 
 export function Eyebrow({ children }: { children: React.ReactNode }) {
-  return <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-signal-400">{children}</p>;
+  return <h2 className="text-[15px] font-semibold text-fg-50">{children}</h2>;
 }
 
 export function PlatformBadge({ platform }: { platform: string }) {
@@ -45,29 +45,18 @@ export function Metric({ value, label }: { value: React.ReactNode; label: string
 export function Unavailable({ what }: { what: string }) {
   return (
     <div className="panel px-6 py-10 text-center">
-      <p className="text-fg-200">The XploreMore API didn&apos;t answer, so {what} can&apos;t be shown right now.</p>
-      <p className="mt-2 font-mono text-xs text-fg-500">
-        This page degrades instead of breaking; reload in a few seconds.
-      </p>
+      <p className="text-fg-200">Couldn&apos;t load {what} right now.</p>
+      <p className="mt-2 text-sm text-fg-500">The API didn&apos;t answer. Try again in a few seconds.</p>
     </div>
   );
 }
 
-export function PageIntro({
-  eyebrow,
-  title,
-  children,
-}: {
-  eyebrow: string;
-  title: React.ReactNode;
-  children?: React.ReactNode;
-}) {
+export function PageIntro({ title, children }: { title: React.ReactNode; children?: React.ReactNode }) {
   return (
     <section className="relative overflow-hidden border-b hairline">
       <div className="grid-field pointer-events-none absolute inset-0" aria-hidden="true" />
-      <div className="relative mx-auto max-w-6xl px-5 pt-14 pb-10">
-        <Eyebrow>{eyebrow}</Eyebrow>
-        <h1 className="mt-4 max-w-3xl text-balance text-4xl font-semibold leading-[1.1] tracking-tight text-fg-50 md:text-5xl">
+      <div className="relative mx-auto max-w-6xl px-5 pt-10 pb-8">
+        <h1 className="max-w-3xl text-balance text-3xl font-semibold leading-tight tracking-tight text-fg-50 md:text-4xl">
           {title}
         </h1>
         {children}

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CategoryBadge, Eyebrow, Metric, PlatformBadge, Unavailable } from "@/components/ui";
 import { getProblem, type DemandFactors } from "@/lib/api";
-import { displayStatement, formatCount, platformInfo, plural, relativeTime, shortDate } from "@/lib/format";
+import { displayStatement, formatCount, platformInfo, relativeTime, shortDate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -32,7 +32,7 @@ const FACTORS: { key: keyof DemandFactors; label: string; formula: string; note:
     key: "recency",
     label: "Recency",
     formula: "0.5 ^ (days since last seen / 30)",
-    note: "30-day half-life from the last sighting: problems people still report stay warm.",
+    note: "Halves every 30 days after the last report.",
   },
   {
     key: "engagement",
@@ -67,8 +67,8 @@ export default async function ProblemPage({ params }: { params: Params }) {
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-10">
-      <Link href="/" className="font-mono text-xs text-fg-500 hover:text-fg-50">
-        ← all problems
+      <Link href="/problems" className="text-sm text-fg-500 hover:text-signal-300">
+        ← Problems
       </Link>
 
       {!p ? (
@@ -104,8 +104,7 @@ export default async function ProblemPage({ params }: { params: Params }) {
             <div className="panel p-6">
               <Eyebrow>Why it ranks here</Eyebrow>
               <p className="mt-3 text-sm leading-relaxed text-fg-400">
-                Demand is an interpretable product of five factors, recomputed at request time — not a black box.
-                Every factor below is what the API actually returned for this problem.
+                The demand score is these five numbers multiplied together, recalculated on every request.
               </p>
               <div className="mt-6 flex flex-col gap-5">
                 {FACTORS.map((f) => (
@@ -129,10 +128,10 @@ export default async function ProblemPage({ params }: { params: Params }) {
             </div>
 
             <div className="min-w-0">
-              <Eyebrow>Evidence — {plural(p.evidence.length, "post")}</Eyebrow>
+              <Eyebrow>Posts ({p.evidence.length})</Eyebrow>
               <p className="mt-3 text-sm leading-relaxed text-fg-400">
-                Public posts clustered into this problem. Authors are stored only as salted hashes; the confidence is
-                the pain-point classifier&apos;s probability that the post reports a problem.
+                Public posts grouped into this problem. Confidence is the classifier&apos;s estimate that a post describes a
+                real problem. Authors are stored only as anonymous hashes.
               </p>
               <ol className="mt-6 flex flex-col gap-3">
                 {p.evidence.map((e) => {

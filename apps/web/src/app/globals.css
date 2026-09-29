@@ -2,9 +2,8 @@
 
 /* ---------------------------------------------------------------------------
    XploreMore design tokens — "neon terminal"
-   A true-black field, one neon green signal for live data, demand and relevance, amber
-   for categories, and monospace for every number so figures line up and read as data.
-   Glow is reserved for things that are live or ranked; everything else stays flat.
+   A true-black field, one neon green accent, amber for categories, monospace for numbers.
+   Glow only on the few things that are live or clickable-primary; everything else stays flat.
 --------------------------------------------------------------------------- */
 
 @theme {
@@ -56,16 +55,6 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* CRT scanlines over the whole page: barely visible, never intercepts clicks. */
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-  pointer-events: none;
-  background: repeating-linear-gradient(to bottom, rgb(57 255 127 / 0.022) 0 1px, transparent 1px 3px);
-}
-
 ::selection {
   background: var(--color-signal-400);
   color: #000;
@@ -89,7 +78,7 @@ body::after {
 }
 
 .panel {
-  background: linear-gradient(180deg, rgb(57 255 127 / 0.025), transparent 40%), var(--color-field-900);
+  background: var(--color-field-900);
   border: 1px solid rgb(57 255 127 / 0.1);
   border-radius: 14px;
 }
@@ -102,11 +91,8 @@ body::after {
     transform 200ms ease;
 }
 .panel-hover:hover {
-  border-color: rgb(57 255 127 / 0.55);
+  border-color: rgb(57 255 127 / 0.4);
   background: var(--color-field-850);
-  box-shadow:
-    0 0 0 1px rgb(57 255 127 / 0.15),
-    0 0 28px -6px rgb(57 255 127 / 0.35);
 }
 
 /* Neon: text and edges that glow. neon-text is a utility so variants (group-hover:) work. */
@@ -158,38 +144,8 @@ body::after {
   mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
 }
 
-@keyframes blink {
-  50% {
-    opacity: 0;
-  }
-}
-.cursor-blink {
-  animation: blink 1.05s step-end infinite;
-}
-
-/* A slow light sweep across the lead story card. */
-@keyframes sweep {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(250%);
-  }
-}
-.sweep::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  width: 40%;
-  pointer-events: none;
-  background: linear-gradient(90deg, transparent, rgb(57 255 127 / 0.09), transparent);
-  animation: sweep 5.5s ease-in-out infinite;
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .live-dot,
-  .cursor-blink,
-  .sweep::before {
+  .live-dot {
     animation: none;
   }
   .ticker-track {

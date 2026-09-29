@@ -375,6 +375,16 @@ The user asked for a real-time, black and neon-green site with top news. Everyth
 - **Home:** live hero with a terminal line and the stat grid, then **Top stories right now** (`components/top-stories.tsx`: a #1 lead card with an outlined rank numeral, a sweep light and a one-sentence description of what the feed heuristic actually weighs, taken from `xm_rank.features.heuristic_importance`; ranks 2–6 beside it), then the existing demand-ranked problems. **Feed:** the same lead treatment for its top 6, ranks 7+ as rows.
 - **Verified:** lint and build clean; preflight passes; 33 pages clean at 390 px. Backup screenshots were regenerated in `.data/shots/`. Both screenshot tools now emulate reduced motion, because the first capture caught the count-up mid-way (it showed "8 sources"), which would have made a misleading backup.
 
+### 4.22 Session 3, final pass: "human-made" simplification (user request; supersedes the layout in §4.21)
+
+The user liked the black/neon theme but said the site looked AI-generated and asked for something simpler and more realistic. Kept: palette, ticker, live dot, silent auto-refresh. Removed: spaced ALL-CAPS section labels (the `Eyebrow` component is now a plain sentence-case heading), long self-describing copy and em dashes, dev readouts (ranker/ms/cache lines) outside the search timing panel, scanlines, the light sweep, the giant "01", the terminal cursor, count-ups and the countdown bar.
+- **New structure:** nav is **News · Problems · Search · About**, with a header search box on large screens.
+  - `/` is a news front page: Top stories (lead + numbered list), with a right column of "Most reported problems" and "By the numbers".
+  - **`/problems`** (new route) holds the problem list: one filter row, "Popular:" topics, category tabs, and "Include one-person reports". Problems are compact rows with the demand score on the right.
+  - Old `/?topic=…` links 307-redirect to `/problems`. `/feed` is "All stories" (Today / 3 days / This week). About (`/how-it-works`) has shorter intro copy and "Results" / "Design choices" headings. The footer reads "built by Dilip Nallamasa".
+- **Pre-flight bug found and fixed:** under `set -o pipefail`, `printf "$body" | grep -q` intermittently failed on the (now larger) home page, because `grep -q` exits early and `printf` gets SIGPIPE. It now uses here-strings. It passed 3 of 3 runs, and the negative test (API dead behind a running web app) still fails every page. Markers were updated for the new copy.
+- **Verified:** lint and build clean; 35 pages clean at 390 px; backups regenerated in `.data/shots/` (`home-*`, `problems-*`, …; screenshot tools now name `/` "home"). The runbook's click path gained Stop 1b (`/problems`).
+
 ## 5. Pro2Pro facts needed for the integration (verified in its code)
 
 - **Discovery:** a LangGraph ReAct **Research Agent** (`p2pagent/src/p2pops/agents/research.py`) calls three tools:

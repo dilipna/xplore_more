@@ -124,7 +124,7 @@ async function main() {
           (v.worst ? `  worst: <${v.worst.tag} class="${v.worst.cls}"> right=${v.worst.right} "${v.worst.text}"` : ""),
       );
       const { data } = await send("Page.captureScreenshot", { format: "png", captureBeyondViewport: true });
-      const name = page.replace(/^\//, "").replace(/%20/g, "_").replace(/[/?=&]/g, "_") || "problems";
+      const name = page.replace(/^\//, "").replace(/%20/g, "_").replace(/[/?=&]/g, "_") || "home";
       writeFileSync(join(OUT, `${name}-mobile.png`), Buffer.from(data, "base64"));
     }
     ws.close();
