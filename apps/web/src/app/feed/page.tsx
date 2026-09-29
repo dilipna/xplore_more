@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { FeedPulse } from "@/components/feed-pulse";
 import { AutoRefresh } from "@/components/live";
-import { StoryRow } from "@/components/story-row";
-import { PageIntro, Unavailable } from "@/components/ui";
+import { RightRail } from "@/components/right-rail";
+import { Shell } from "@/components/shell";
+import { StoryCard } from "@/components/story-card";
+import { Unavailable } from "@/components/ui";
 import { getFeed } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
@@ -21,40 +24,34 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
   const stories = result.data?.results ?? [];
 
   return (
-    <>
+    <Shell rail={<RightRail />}>
       <AutoRefresh seconds={60} />
-      <PageIntro title="All stories">
-        <p className="mt-3 max-w-2xl text-fg-400">
-          43 sources, from AI labs and engineering blogs to Hacker News, arXiv and GitHub releases. When several outlets
-          cover the same thing, it shows up once.
-        </p>
-        <div className="mt-5 flex gap-1 text-sm">
-          {WINDOWS.map((w) => (
-            <Link
-              key={w.hours}
-              href={`/feed?window=${w.hours}`}
-              className={`rounded-full px-3 py-1 ${hours === w.hours ? "bg-signal-400/10 text-signal-400" : "text-fg-400 hover:text-signal-300"}`}
-            >
-              {w.label}
-            </Link>
+      <FeedPulse ids={stories.map((s) => s.id)} />
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <h1 className="mr-2 text-xl font-bold tracking-tight">All stories</h1>
+        {WINDOWS.map((w) => (
+          <Link
+            key={w.hours}
+            href={`/feed?window=${w.hours}`}
+            className={`rounded-full px-3.5 py-1.5 text-sm font-semibold ${
+              hours === w.hours ? "bg-signal-400 text-black" : "text-fg-400 hover:bg-field-850 hover:text-fg-50"
+            }`}
+          >
+            {w.label}
+          </Link>
+        ))}
+      </div>
+      {!result.data ? (
+        <Unavailable what="stories" />
+      ) : stories.length === 0 ? (
+        <p className="text-fg-400">Nothing yet in this window. Try a longer one.</p>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {stories.map((s, i) => (
+            <StoryCard key={s.id} story={s} rank={i + 1} />
           ))}
         </div>
-      </PageIntro>
-      <section className="mx-auto max-w-4xl px-5 pt-2 pb-12">
-        {!result.data ? (
-          <div className="mt-6">
-            <Unavailable what="stories" />
-          </div>
-        ) : stories.length === 0 ? (
-          <p className="mt-6 text-fg-400">Nothing yet in this window. Try a longer one.</p>
-        ) : (
-          <ol>
-            {stories.map((s, i) => (
-              <StoryRow key={s.id} story={s} rank={i + 1} />
-            ))}
-          </ol>
-        )}
-      </section>
-    </>
+      )}
+    </Shell>
   );
 }

@@ -8,7 +8,7 @@ import { relativeTime } from "@/lib/format";
  */
 export async function NewsTicker() {
   const result = await getTopStories();
-  const stories = result.data?.results ?? [];
+  const stories = (result.data?.results ?? []).slice(0, 15);
   if (stories.length === 0) return null;
 
   const items = (hidden: boolean) =>
@@ -34,7 +34,7 @@ export async function NewsTicker() {
 
   return (
     <div className="border-b hairline bg-field-900/60">
-      <div className="mx-auto flex max-w-6xl items-center gap-4 px-5">
+      <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 sm:px-5">
         <span className="flex shrink-0 items-center gap-2 py-2 text-xs font-semibold text-signal-400">
           <span className="live-dot" aria-hidden="true" />
           Trending

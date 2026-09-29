@@ -69,3 +69,8 @@ export function displayStatement(statement: string, excerpts: string[]): string 
 export function plural(count: number, one: string, many = `${one}s`): string {
   return `${formatCount(count)} ${count === 1 ? one : many}`;
 }
+
+/** True when the timestamp is within the last `ms` milliseconds (e.g. a "New" badge). */
+export function isRecent(iso: string | null | undefined, ms: number, now: Date = new Date()): boolean {
+  return !!iso && now.getTime() - new Date(iso).getTime() < ms;
+}

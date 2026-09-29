@@ -39,7 +39,7 @@ Run these in **Git Bash** from the repo root (`C:\Users\Dilip\OneDrive\Pictures\
    5. `http://localhost:3100/how-it-works` (About)
    6. The search eval report, **opened locally**: `docs/reports/search-eval-v1.md` in VS Code, with Markdown preview (`Ctrl+Shift+V`). See the warning below.
 
-> ⚠️ **The "report ↗" links on About, and "GitHub" in the footer, point to `github.com/dilipna/xplore_more`, which does not exist until the repo is pushed.** Until then, don't click them live; show the report from the local tab instead. Pushing is two commands (see CONTINUE_SESSION.md §7). Do it the day before if you want the links live.
+> The "report ↗" links on About and "GitHub" in the footer point to the public repo, `github.com/dilipna/xplore_more` (pushed 2026-09-29), so they work live. Keep the local report tab anyway, in case the venue Wi-Fi is bad.
 
 ### Optional: refresh the corpus the morning of the demo
 This makes the header say "updated minutes ago". The problem ranking may reorder afterwards, so re-run the pre-flight and re-check tabs 2 and 3.
@@ -62,12 +62,16 @@ The numbers below were read from `/v1/stats` on **2026-09-29 02:52 UTC** (evenin
 | Articles → stories | 1,597 articles → 1,578 stories (14 multi-source) |
 | Problems (30-day window) | 709, of which 29 were reported by 2+ people |
 
-### Stop 1: News, `/` (≈1 min)
-- **Show:** the **Trending** ticker under the header and "Live · updated … ago" at the top right (the page quietly re-fetches every minute). Then the **Top stories** list: when several outlets cover one event it's one entry, marked "2 sources". Then the right column, **Most reported problems** and **By the numbers**.
+### Stop 1: Home, `/` (≈1 min)
+- **Show:**
+  - The layout: sections on the left, the feed in the middle, **Trending problems** and **By the numbers** on the right, the **Trending** ticker, and "Live · updated … ago" at the top.
+  - Each post shows the publisher, time and domain. Point at "Hacker News **and 1 more** · **2 sources**" on a story several outlets covered: that's one entry, not duplicates.
+  - Problem posts are mixed into the feed, with the number of people who reported them on the left.
+  - Click **New** to re-sort by time. The page quietly re-fetches every minute, and a "N new stories" toast appears when new ones arrive.
 - **Say:** "This is the tech news from 43 sources, one entry per event, plus the problems engineers keep reporting. Everything here is live data from the API. There's no LLM anywhere in the serving path: it's CPU embeddings, classical IR and small models."
 
 ### Stop 1b: Problems, `/problems` (≈1 min)
-- **Show:** the ranked rows ("4 people · Hacker News · Workflow friction"), the demand score on the right, one category tab, then click **Popular: vllm** to show the topic filter.
+- **Show:** the posts, with the people count in the left column, the platform and category chips, the top post's real points and replies, and the demand score. Then click one category tab, then **Popular: vllm** to show the topic filter.
 - **Say:** "This reads 2,412 real discussions from Hacker News, GitHub issues, Lobsters and Stack Exchange. A classifier decides which posts report a real problem; clustering merges the same problem across different people; the list is ranked by demand."
 - **Honest line, if asked about quality:** "The pain-point classifier is P 0.80 / R 0.76 overall, but that's carried by GitHub issues. On HN and Lobsters it's much weaker (P 0.48), and the labels are AI-made, not yet human-audited."
 - The #1 row today is an HN thread about Claude Code commit signatures (4 people). That's simply what the live data ranks first. The ranking shifts whenever the corpus refreshes.
