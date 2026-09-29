@@ -4,7 +4,7 @@ import { Eyebrow, PageIntro } from "@/components/ui";
 
 export const metadata: Metadata = { title: "About" };
 
-const REPO_URL = process.env.XM_REPO_URL ?? "https://github.com/dilipna/xploremore";
+const REPO_URL = process.env.XM_REPO_URL ?? "https://github.com/dilipna/xplore_more";
 const doc = (path: string) => `${REPO_URL}/blob/main/${path}`;
 
 type Measurement = {

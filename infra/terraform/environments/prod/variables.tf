@@ -63,7 +63,7 @@ variable "web_max_instances" {
 variable "repo_url" {
   description = "Public source repository linked from the website."
   type        = string
-  default     = "https://github.com/dilipna/xploremore"
+  default     = "https://github.com/dilipna/xplore_more"
 }
 
 variable "api_max_instances" {

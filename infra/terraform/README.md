@@ -35,7 +35,7 @@ gcloud auth application-default login
 # 2. Bootstrap with local state.
 cd infra/terraform/bootstrap
 terraform init
-terraform apply -var project_id=YOUR_PROJECT -var github_repository_id=$(gh api repos/dilipna/xploremore --jq .id)
+terraform apply -var project_id=YOUR_PROJECT -var github_repository_id=$(gh api repos/dilipna/xplore_more --jq .id)
 
 # 3. Move bootstrap state into the bucket it created.
 terraform init -migrate-state -backend-config="bucket=YOUR_PROJECT-tfstate" -backend-config="prefix=bootstrap"
