@@ -22,6 +22,24 @@ type Measurement = {
  */
 const MEASUREMENTS: Measurement[] = [
   {
+    area: "Hybrid search",
+    headline: "nDCG@10 0.805 vs 0.682 (FTS)",
+    detail:
+      "62 queries, 3,531 graded judgments from TREC-style pooling. Hybrid RRF beats Postgres FTS by +0.123 [+0.077, +0.173] and dense alone by +0.061 [+0.028, +0.096]; both 95% bootstrap CIs exclude zero.",
+    caveat: "Relevance judgments are AI-made and not yet human-audited; the numbers are provisional.",
+    report: "docs/reports/search-eval-v1.md",
+    reportLabel: "search eval report",
+  },
+  {
+    area: "Learned reranker",
+    headline: "LambdaMART built, shipped off",
+    detail:
+      "A 20-feature LambdaMART reranker, evaluated out-of-fold, gains +0.012 nDCG@10 [−0.005, +0.030] over hybrid. The CI includes zero, so it stays off by default. A CI gate, mutation-tested, fails any search regression or feature drift.",
+    caveat: "Trained and scored on the same 62 AI-judged queries (out-of-fold); a fresh query set is needed.",
+    report: "docs/search.md",
+    reportLabel: "search design",
+  },
+  {
     area: "Pain-point classifier",
     headline: "P 0.80 · R 0.76 · F1 0.78",
     detail:
@@ -32,7 +50,7 @@ const MEASUREMENTS: Measurement[] = [
     reportLabel: "classifier report",
   },
   {
-    area: "Problem clustering",
+    area: "Problem clustering · Sep 13 snapshot",
     headline: "1,553 discussions → 493 problems",
     detail:
       "528 posts admitted as problems, joined across authors under an advisory lock (a race test fails 3/3 with the lock disabled). Merge audit after fixes: 23 of 35 joins correct (65.7%, Wilson CI 49–79%).",

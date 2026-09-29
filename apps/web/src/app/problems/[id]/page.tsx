@@ -128,7 +128,7 @@ export default async function ProblemPage({ params }: { params: Params }) {
               </div>
             </div>
 
-            <div>
+            <div className="min-w-0">
               <Eyebrow>Evidence — {plural(p.evidence.length, "post")}</Eyebrow>
               <p className="mt-3 text-sm leading-relaxed text-fg-400">
                 Public posts clustered into this problem. Authors are stored only as salted hashes; the confidence is
@@ -146,7 +146,8 @@ export default async function ProblemPage({ params }: { params: Params }) {
                         </span>
                         {e.p_problem !== null && <span>problem confidence {e.p_problem.toFixed(2)}</span>}
                       </div>
-                      <p className="mt-2 text-sm leading-relaxed text-fg-200">{e.excerpt}</p>
+                      {/* Excerpts carry long URLs and issue refs; let them break instead of widening the page. */}
+                      <p className="mt-2 text-sm leading-relaxed text-fg-200 [overflow-wrap:anywhere]">{e.excerpt}</p>
                       <div className="mt-3 flex items-center justify-between gap-3 font-mono text-[11px]">
                         <span className="text-fg-600">{engagementText(e.engagement)}</span>
                         <a
