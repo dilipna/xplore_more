@@ -1,0 +1,62 @@
+{"qid": "q01", "type": "entity", "query": "kubernetes 1.37", "narrative": "The Kubernetes v1.37 release: its features, release notes, sneak peeks, release candidates. Other Kubernetes versions are not relevant."}
+{"qid": "q02", "type": "entity", "query": "vllm", "narrative": "The vLLM inference engine: releases, backends, deployments where vLLM is central. A passing mention is marginal."}
+{"qid": "q03", "type": "entity", "query": "llama.cpp release", "narrative": "Releases/builds of llama.cpp (ggml-org). Work that runs llama.cpp formats elsewhere is marginal."}
+{"qid": "q04", "type": "entity", "query": "datasette", "narrative": "Datasette and its plugins: releases, security releases, plugin releases."}
+{"qid": "q05", "type": "entity", "query": "gpt-6 astra", "narrative": "OpenAI's GPT-6 Astra model: launch, safety card, availability, customer stories built on it."}
+{"qid": "q06", "type": "entity", "query": "kimi k3", "narrative": "Moonshot AI's Kimi K3 model. Moonshot company news without K3 is marginal."}
+{"qid": "q07", "type": "entity", "query": "meta muse", "narrative": "Meta's Muse AI app/agent (including Muse Glimmer). Other Meta AI products are not relevant."}
+{"qid": "q08", "type": "entity", "query": "gemini flash", "narrative": "Google Gemini Flash model releases and features (any version: Flash, Flash-Lite, Flash Cyber, Omni Flash)."}
+{"qid": "q09", "type": "entity", "query": "hugging face transformers release", "narrative": "Releases of the huggingface/transformers library. Other Hugging Face news is marginal at most."}
+{"qid": "q10", "type": "entity", "query": "nemotron", "narrative": "NVIDIA Nemotron models: releases, optimizations, systems built on Nemotron."}
+{"qid": "q11", "type": "entity", "query": "shinyhunters", "narrative": "The ShinyHunters hacking group and its attacks."}
+{"qid": "q12", "type": "entity", "query": "cloudflare workers", "narrative": "The Cloudflare Workers platform: runtime, features, security, languages on Workers."}
+{"qid": "q13", "type": "entity", "query": "github copilot app", "narrative": "The GitHub Copilot app: tutorials, features, engineering behind it."}
+{"qid": "q14", "type": "entity", "query": "bedrock agentcore", "narrative": "Amazon Bedrock AgentCore: features and solutions built on it."}
+{"qid": "q15", "type": "entity", "query": "sagemaker hyperpod", "narrative": "Amazon SageMaker HyperPod: training/inference on HyperPod."}
+{"qid": "q16", "type": "entity", "query": "gemma 4", "narrative": "Google's Gemma 4 open models: releases, evaluations, deployments."}
+{"qid": "q17", "type": "entity", "query": "claude opus 5", "narrative": "Anthropic's Claude Opus 5 model specifically (availability, capabilities, comparisons)."}
+{"qid": "q18", "type": "entity", "query": "deepseek", "narrative": "DeepSeek models and the company, including distillation allegations involving DeepSeek."}
+{"qid": "q19", "type": "topical", "query": "llm as a judge", "narrative": "Using LLMs as evaluators/judges: methods, failures, calibration, relevance judges."}
+{"qid": "q20", "type": "topical", "query": "evaluating ai agents", "narrative": "Methods, metrics and benchmarks for evaluating AI agents (task completion, tool calls, reliability, multi-turn)."}
+{"qid": "q21", "type": "topical", "query": "recommender systems with llms", "narrative": "Using LLMs or generative models for recommendation. Classic recsys without LLMs is marginal."}
+{"qid": "q22", "type": "topical", "query": "retrieval augmented generation", "narrative": "RAG systems: architectures, evaluation, variants (agentic RAG, adaptive routing)."}
+{"qid": "q23", "type": "topical", "query": "kv cache", "narrative": "KV cache techniques in LLM inference: eviction, sharing, compression, prefix-aware routing/caching."}
+{"qid": "q24", "type": "topical", "query": "speculative decoding", "narrative": "Speculative decoding and related draft/multi-token prediction methods for faster generation."}
+{"qid": "q25", "type": "topical", "query": "mixture of experts training", "narrative": "Training MoE models (systems and methods). Dense-vs-MoE explainers are relevant; MoE inference only is marginal."}
+{"qid": "q26", "type": "topical", "query": "post-quantum cryptography", "narrative": "Post-quantum cryptography: PQ DNSSEC, PQ handshakes, quantum vulnerability of crypto."}
+{"qid": "q27", "type": "topical", "query": "agent memory", "narrative": "Memory for LLM agents: architectures, how much memory agents need, memory-driven agents."}
+{"qid": "q28", "type": "topical", "query": "coding agents", "narrative": "AI coding agents: building, using, evaluating or deploying them (Codex, Copilot agents, internal platforms)."}
+{"qid": "q29", "type": "topical", "query": "reward hacking", "narrative": "Reward hacking / specification gaming in RL and AI systems."}
+{"qid": "q30", "type": "topical", "query": "knowledge distillation", "narrative": "Knowledge distillation of models (methods, costs, and distillation campaigns between labs)."}
+{"qid": "q31", "type": "topical", "query": "4-bit quantization", "narrative": "Low-bit (especially 4-bit/FP4) quantization of models: methods, quality, inference."}
+{"qid": "q32", "type": "topical", "query": "embedding models", "narrative": "Text/multimodal embedding models: training, multi-vector, efficient embeddings."}
+{"qid": "q33", "type": "topical", "query": "diffusion models", "narrative": "Diffusion models (image, video, text diffusion): methods and inference."}
+{"qid": "q34", "type": "topical", "query": "reinforcement learning for llms", "narrative": "RL for LLM post-training (GRPO, RLHF, RL scaling, on-policy distillation for reasoning)."}
+{"qid": "q35", "type": "topical", "query": "scale to zero autoscaling", "narrative": "Scaling workloads to zero / autoscaling (Kubernetes HPA, GKE, Flink autoscalers)."}
+{"qid": "q36", "type": "topical", "query": "mcp security", "narrative": "Security of the Model Context Protocol: detecting/securing MCP traffic, MCP-related security gaps."}
+{"qid": "q37", "type": "topical", "query": "open weight models", "narrative": "The open-weight model ecosystem: releases, state of open models, open vs closed, policy on open models."}
+{"qid": "q38", "type": "topical", "query": "gpu kernels", "narrative": "Writing or generating GPU kernels (CUDA, Rust, WebGPU kernel libraries, AI-written kernels)."}
+{"qid": "q39", "type": "topical", "query": "weather forecasting ai", "narrative": "AI models for weather/climate/cyclone forecasting."}
+{"qid": "q40", "type": "topical", "query": "ai in healthcare", "narrative": "AI applied to healthcare/clinical care (diagnosis, clinical consultation, EHR, health monitoring)."}
+{"qid": "q41", "type": "topical", "query": "text to sql", "narrative": "Text-to-SQL systems and their evaluation."}
+{"qid": "q42", "type": "topical", "query": "rust adoption", "narrative": "Organizations adopting or migrating to Rust (rewrites in Rust, Rust as a tier-1 language, Rust for GPU)."}
+{"qid": "q43", "type": "topical", "query": "llm inference serving", "narrative": "Infrastructure for serving LLMs: serving systems, routing, disaggregation, cold starts, recovery."}
+{"qid": "q44", "type": "topical", "query": "robot foundation models", "narrative": "Foundation models / policies for robots (Gemini Robotics, Cosmos, LeRobot, robot data)."}
+{"qid": "q45", "type": "question", "query": "how to reduce llm inference cost", "narrative": "Practical ways to cut LLM inference/token cost: caching, routing, model choice, quantization, GPU sizing."}
+{"qid": "q46", "type": "question", "query": "why did openai pause training", "narrative": "OpenAI pausing training of its models and the rogue-agent incidents behind it."}
+{"qid": "q47", "type": "question", "query": "did chinese labs copy american models", "narrative": "Allegations that Chinese AI labs distilled/copied US models."}
+{"qid": "q48", "type": "question", "query": "how many gpus do i need for inference", "narrative": "Sizing GPUs/compute for inference workloads, capacity planning, GPU utilization."}
+{"qid": "q49", "type": "question", "query": "is rag dead", "narrative": "Debate over whether RAG is still needed/obsolete."}
+{"qid": "q50", "type": "question", "query": "what is an agent harness", "narrative": "What agent harnesses are and how they are built/used."}
+{"qid": "q51", "type": "question", "query": "how to detect ai generated text", "narrative": "Detecting or watermarking AI-generated text."}
+{"qid": "q52", "type": "event", "query": "openai rogue agents hacking websites", "narrative": "Reports of OpenAI agents attacking/hacking external websites, databases or services."}
+{"qid": "q53", "type": "event", "query": "anthropic pentagon supply chain risk", "narrative": "The Pentagon designating/blacklisting Anthropic as a supply-chain risk and the court rulings."}
+{"qid": "q54", "type": "event", "query": "hugging face security incident", "narrative": "Hugging Face's 2026 security incident / intrusion and its aftermath."}
+{"qid": "q55", "type": "event", "query": "anthropic ipo", "narrative": "Anthropic preparing for an IPO (founders' voting control etc.)."}
+{"qid": "q56", "type": "event", "query": "iphone 18 pro review", "narrative": "Reviews and hands-on coverage of the iPhone 18 Pro."}
+{"qid": "q57", "type": "event", "query": "dario amodei slow down ai", "narrative": "Dario Amodei / Anthropic's call to pace or slow frontier AI development."}
+{"qid": "q58", "type": "event", "query": "nscale ipo", "narrative": "Nscale's IPO plans, financing and board changes."}
+{"qid": "q59", "type": "tail", "query": "fruit fly brain connectome", "narrative": "Mapping the fruit fly brain (connectomics)."}
+{"qid": "q60", "type": "tail", "query": "geothermal energy", "narrative": "Geothermal power projects."}
+{"qid": "q61", "type": "tail", "query": "prompt caching", "narrative": "Prompt caching for LLM APIs and prefix caching."}
+{"qid": "q62", "type": "tail", "query": "apple foundation models", "narrative": "Apple's own foundation models and Apple training AI models."}

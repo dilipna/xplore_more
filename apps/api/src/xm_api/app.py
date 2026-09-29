@@ -1,7 +1,7 @@
 """XploreMore public read API.
 
 Latency: every search response carries a Server-Timing header (embed, lexical, dense,
-fusion, hydrate), so the latency budget in docs/search.md is observable from any client
+fusion, rerank when enabled, hydrate), so the latency budget in docs/search.md is observable from any client
 and from load tests without extra tooling.
 
 Degradation: if the embedding model fails, search answers lexical-only and says so in
@@ -48,11 +48,13 @@ from xm_core.settings import Settings, get_settings
 from xm_embed.embedder import FastEmbedEmbedder, QueryEmbedder
 from xm_rank.features import FEATURE_VERSION, heuristic_importance, story_features
 from xm_search.query import parse_query
+from xm_search.rerank import TreeEnsemble, gather_signals, rerank
 from xm_search.retrieval import RetrievalTrace, retrieve_stories
 
 log = logging.getLogger("xm_api")
 
 FEED_CANDIDATES = 500
+RERANK_CANDIDATES = 50  # the reranker was trained to reorder the fused top 50
 
 
 @dataclass
@@ -65,6 +67,7 @@ class AppState:
     limiter: RateLimiter
     cache: ResponseCache
     require_key_for_problems: bool
+    reranker: TreeEnsemble | None = None
 
 
 def _state(request: Request) -> AppState:
@@ -148,6 +151,9 @@ def create_app(
                 ttl_s=settings.response_cache_ttl_s,
             ),
             require_key_for_problems=settings.require_api_key_for_problems,
+            reranker=TreeEnsemble.load(settings.search_reranker_file)
+            if settings.search_reranker_file
+            else None,
         )
         try:
             yield
@@ -209,13 +215,23 @@ def create_app(
                 log.exception("query embedding failed; serving lexical-only")
         timings["embed"] = (time.perf_counter() - t0) * 1000
 
+        # The reranker was trained with dense features, so lexical-only (degraded) requests skip it.
+        reranker = st.reranker if embedding is not None else None
         trace = RetrievalTrace()
         async with st.sessionmaker() as session:
-            hits = await retrieve_stories(session, parsed, embedding, limit=limit, trace=trace)
+            depth = RERANK_CANDIDATES if reranker is not None else limit
+            hits = await retrieve_stories(session, parsed, embedding, limit=depth, trace=trace)
+            ids = [h.story_id for h in hits][:limit]
+            scores = {h.story_id: h.score for h in hits}
+            if reranker is not None and embedding is not None and hits:
+                t_rr = time.perf_counter()
+                signals = await gather_signals(session, parsed, embedding, hits, datetime.now(UTC))
+                ranked = rerank(reranker, parsed, signals)[:limit]
+                ids = [c.story_id for c, _ in ranked]
+                scores = {c.story_id: score for c, score in ranked}
+                timings["rerank"] = (time.perf_counter() - t_rr) * 1000
             t1 = time.perf_counter()
-            results = await summaries(
-                session, [h.story_id for h in hits], {h.story_id: h.score for h in hits}
-            )
+            results = await summaries(session, ids, scores)
             timings["hydrate"] = (time.perf_counter() - t1) * 1000
         timings |= {"lexical": trace.lexical_ms, "dense": trace.dense_ms, "fusion": trace.fusion_ms}
 

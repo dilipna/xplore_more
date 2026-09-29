@@ -14,9 +14,10 @@ const STAGE: Record<string, { label: string; what: string }> = {
   lexical: { label: "Lexical", what: "Postgres full-text search, top 200" },
   dense: { label: "Dense", what: "pgvector HNSW over halfvec embeddings, top 200" },
   fusion: { label: "Fusion", what: "Reciprocal Rank Fusion (k=60), collapsed to stories" },
+  rerank: { label: "Rerank", what: "LightGBM LambdaMART over the fused top 50 (when enabled)" },
   hydrate: { label: "Hydrate", what: "Story titles, sources and counts" },
 };
-const ORDER = ["embed", "lexical", "dense", "fusion", "hydrate"];
+const ORDER = ["embed", "lexical", "dense", "fusion", "rerank", "hydrate"];
 
 export default async function SearchPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const { q: raw } = await searchParams;
