@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { SiteFooter } from "@/components/site-footer";
+import { NewsTicker } from "@/components/news-ticker";
 import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
 
@@ -21,6 +22,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en" className={`${inter.variable} ${jetbrains.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
         <SiteHeader />
+        <NewsTicker />
         <main className="flex-1">{children}</main>
         <SiteFooter />
       </body>

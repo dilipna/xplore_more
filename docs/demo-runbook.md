@@ -61,8 +61,12 @@ The numbers below were read from `/v1/stats` on **2026-09-29 02:52 UTC** (evenin
 | Articles → stories | 1,597 articles → 1,578 stories (14 multi-source) |
 | Problems (30-day window) | 709, of which 29 were reported by 2+ people |
 
-### Stop 1: Problems, `/` (≈1.5 min)
-- **Show:** the headline, the stats strip, then scroll the ranked list. Point at a card's "N people · N sources" and the demand bar.
+### Stop 1: Home, `/` (≈1.5 min)
+- **Show:**
+  - The live layer first. Point to the **TOP NEWS ticker** under the header, the **LIVE** badge with its ticking UTC clock and "indexed … ago" counter, and the **refresh countdown** in the hero: the page re-fetches itself every 60 s.
+  - Then the count-up stats strip and **Top stories right now**, with the #1 lead card and ranks 2–6.
+  - Then scroll to **Most-demanded problems**. Point at a card's "N people · N sources" and the demand bar.
+- **Say about the live layer, if asked:** "Everything moving on this page is real. The ticker and top stories are the live ranked feed, duplicate coverage is collapsed into one story, and the counters are the corpus's actual numbers from the stats endpoint."
 - **Say:** "This reads 2,412 real discussions from Hacker News, GitHub issues, Lobsters and Stack Exchange. A classifier decides which posts report a real pain point; clustering merges the same pain across different people; the list is ranked by demand. There's no LLM anywhere in this serving path: it's CPU embeddings, classical IR and a small logistic model."
 - **Honest line, if asked about quality:** "The pain-point classifier is P 0.80 / R 0.76 overall, but that's carried by GitHub issues. On HN and Lobsters it's much weaker (P 0.48), and the labels are AI-made, not yet human-audited."
 - The #1 card today is an HN thread about Claude Code commit signatures (4 people). That's simply what the live data ranks first. The ranking shifts whenever the corpus refreshes.
@@ -104,7 +108,7 @@ The numbers below were read from `/v1/stats` on **2026-09-29 02:52 UTC** (evenin
 | The first search after a restart is slow | Cold embedding model | The pre-flight warms it. After any restart, run one search before presenting. |
 | Laptop or projector failure | n/a | Backup screenshots (below). |
 
-**Backup screenshots** (taken 2026-09-28 from the live stack, gitignored) are in `.data/shots/`: `problems-desktop.png`, `problems_1526-desktop.png`, `search_q_kubernetes-desktop.png`, `search_q_rust_adoption-desktop.png`, `how-it-works-desktop.png`, `feed-desktop.png`, plus `*-mobile.png` phone renders of the first three. The repo is inside OneDrive, so if OneDrive sync is on they should also be reachable from another device. Check that before relying on it. To regenerate them with the stack running: `bash scripts/screenshot.sh` (desktop) and `node scripts/mobile_check.mjs` (phone).
+**Backup screenshots** (taken 2026-09-28 from the live stack after the neon redesign, gitignored) are in `.data/shots/`: `problems-desktop.png` (home), `problems_1526-desktop.png`, `search_q_kubernetes-desktop.png`, `search_q_rust_adoption-desktop.png`, `how-it-works-desktop.png`, `feed-desktop.png`, plus `*-mobile.png` phone renders of home, problem 1526, the rust search and the feed. Both tools emulate reduced motion, so the counters show their final real values, not a mid-animation frame. The repo is inside OneDrive, so if OneDrive sync is on they should also be reachable from another device. Check that before relying on it. To regenerate them with the stack running: `bash scripts/screenshot.sh` (desktop) and `node scripts/mobile_check.mjs` (phone).
 
 ---
 

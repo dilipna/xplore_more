@@ -42,13 +42,13 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
             name="q"
             defaultValue={q}
             placeholder="Search — try vllm, claude, kubernetes…"
-            className="h-12 flex-1 rounded-xl border hairline bg-field-900 px-4 text-[15px] text-fg-50 placeholder:text-fg-600 focus:border-signal-500 focus:outline-none"
+            className="h-12 flex-1 rounded-xl border hairline bg-field-900 px-4 text-[15px] text-fg-50 placeholder:text-fg-600 focus:border-signal-400 focus:shadow-[0_0_0_3px_rgb(57_255_127/0.15),0_0_24px_-6px_rgb(57_255_127/0.6)] focus:outline-none"
             aria-label="Search query"
             autoFocus={!q}
           />
           <button
             type="submit"
-            className="h-12 rounded-xl bg-signal-400 px-6 text-sm font-semibold text-field-950 transition-colors hover:bg-signal-300"
+            className="h-12 rounded-xl bg-signal-400 px-6 text-sm font-semibold text-field-950 shadow-[0_0_24px_-6px_rgb(57_255_127/0.8)] transition-all hover:bg-signal-300 hover:shadow-[0_0_32px_-4px_rgb(57_255_127/0.9)]"
           >
             Search
           </button>
@@ -106,7 +106,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
                     </div>
                     <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-field-700">
                       <div
-                        className="h-full rounded-full bg-signal-500"
+                        className="h-full rounded-full bg-signal-400 shadow-[0_0_10px_rgb(57_255_127/0.7)]"
                         style={{ width: `${Math.max(2, (s.ms / maxStage) * 100)}%` }}
                       />
                     </div>

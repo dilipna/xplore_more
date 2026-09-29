@@ -79,6 +79,8 @@ async function main() {
 
     await send("Page.enable");
     await send("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
+    // Reduced motion: count-ups render their final (real) values, so screenshots never catch them mid-way.
+    await send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value: "reduce" }] });
 
     let failures = 0;
     for (const page of PAGES) {
@@ -122,7 +124,7 @@ async function main() {
           (v.worst ? `  worst: <${v.worst.tag} class="${v.worst.cls}"> right=${v.worst.right} "${v.worst.text}"` : ""),
       );
       const { data } = await send("Page.captureScreenshot", { format: "png", captureBeyondViewport: true });
-      const name = page.replace(/^\//, "").replace(/[/?=&]/g, "_") || "problems";
+      const name = page.replace(/^\//, "").replace(/%20/g, "_").replace(/[/?=&]/g, "_") || "problems";
       writeFileSync(join(OUT, `${name}-mobile.png`), Buffer.from(data, "base64"));
     }
     ws.close();

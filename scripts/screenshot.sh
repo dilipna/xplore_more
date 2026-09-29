@@ -29,7 +29,7 @@ for page in $PAGES; do
     file="$OUT/${name}-${label}.png"
     target="$file"
     if command -v cygpath >/dev/null 2>&1; then target="$(cygpath -w "$(pwd)/$file")"; fi
-    "$CHROME" --headless=new --disable-gpu --hide-scrollbars --virtual-time-budget=8000 \
+    "$CHROME" --headless=new --disable-gpu --hide-scrollbars --force-prefers-reduced-motion --virtual-time-budget=8000 \
       --window-size="${spec#*:}" --screenshot="$target" "$BASE$page" >/dev/null 2>&1
     echo "$file"
   done

@@ -28,7 +28,7 @@ export function Meter({ value, label }: { value: number; label: string }) {
   const pct = Math.max(2, Math.min(100, value * 100));
   return (
     <div className="h-1.5 w-full overflow-hidden rounded-full bg-field-700" role="meter" aria-label={label} aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100}>
-      <div className="h-full rounded-full bg-gradient-to-r from-signal-700 to-signal-400" style={{ width: `${pct}%` }} />
+      <div className="h-full rounded-full bg-gradient-to-r from-signal-700 to-signal-400 shadow-[0_0_10px_rgb(57_255_127/0.55)]" style={{ width: `${pct}%` }} />
     </div>
   );
 }

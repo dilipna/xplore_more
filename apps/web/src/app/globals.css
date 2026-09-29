@@ -1,30 +1,31 @@
 @import "tailwindcss";
 
 /* ---------------------------------------------------------------------------
-   XploreMore design tokens — "instrument panel"
-   A deep blue-black field, one signal teal for demand/relevance, amber for
-   categories, and monospace for every number so figures line up and read as data.
+   XploreMore design tokens — "neon terminal"
+   A true-black field, one neon green signal for live data, demand and relevance, amber
+   for categories, and monospace for every number so figures line up and read as data.
+   Glow is reserved for things that are live or ranked; everything else stays flat.
 --------------------------------------------------------------------------- */
 
 @theme {
-  --color-field-950: #07090d;
-  --color-field-900: #0b0f15;
-  --color-field-850: #10151d;
-  --color-field-800: #151b25;
-  --color-field-700: #1f2733;
-  --color-field-600: #2b3542;
+  --color-field-950: #000000;
+  --color-field-900: #050807;
+  --color-field-850: #08100b;
+  --color-field-800: #0d1711;
+  --color-field-700: #16241b;
+  --color-field-600: #223428;
 
-  --color-fg-50: #eef2f7;
-  --color-fg-200: #c9d3df;
-  --color-fg-400: #93a1b3;
-  --color-fg-500: #6f7d8f;
-  --color-fg-600: #515d6d;
+  --color-fg-50: #effff4;
+  --color-fg-200: #c6dccd;
+  --color-fg-400: #8ea797;
+  --color-fg-500: #6b8574;
+  --color-fg-600: #4d6555;
 
-  --color-signal-300: #8ff5dc;
-  --color-signal-400: #4ee8c4;
-  --color-signal-500: #22c9a3;
-  --color-signal-700: #0f6b58;
-  --color-signal-900: #0a2e27;
+  --color-signal-300: #b3ffcb;
+  --color-signal-400: #39ff7f;
+  --color-signal-500: #14e061;
+  --color-signal-700: #0a7a34;
+  --color-signal-900: #03260f;
 
   --color-amber-300: #fcd38a;
   --color-amber-400: #f5b642;
@@ -33,6 +34,8 @@
   --color-github: #a8b5ff;
   --color-lobsters: #f07575;
   --color-stackexchange: #f7a24a;
+
+  --animate-ticker: ticker 90s linear infinite;
 }
 
 @theme inline {
@@ -53,47 +56,81 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-::selection {
-  background: var(--color-signal-700);
-  color: var(--color-fg-50);
+/* CRT scanlines over the whole page: barely visible, never intercepts clicks. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  background: repeating-linear-gradient(to bottom, rgb(57 255 127 / 0.022) 0 1px, transparent 1px 3px);
 }
 
-/* Faint measurement grid behind the page header — reads as "instrument", not decoration. */
+::selection {
+  background: var(--color-signal-400);
+  color: #000;
+}
+
+/* Measurement grid + a green bloom behind page headers. */
 .grid-field {
   background-image:
-    linear-gradient(to right, rgb(255 255 255 / 0.035) 1px, transparent 1px),
-    linear-gradient(to bottom, rgb(255 255 255 / 0.035) 1px, transparent 1px);
-  background-size: 48px 48px;
-  mask-image: linear-gradient(to bottom, black 0%, transparent 85%);
+    radial-gradient(ellipse 70% 60% at 50% -10%, rgb(57 255 127 / 0.16), transparent 70%),
+    linear-gradient(to right, rgb(57 255 127 / 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(57 255 127 / 0.06) 1px, transparent 1px);
+  background-size:
+    100% 100%,
+    48px 48px,
+    48px 48px;
+  mask-image: linear-gradient(to bottom, black 0%, transparent 90%);
 }
 
 .hairline {
-  border-color: rgb(255 255 255 / 0.08);
+  border-color: rgb(57 255 127 / 0.1);
 }
 
 .panel {
-  background: var(--color-field-900);
-  border: 1px solid rgb(255 255 255 / 0.07);
+  background: linear-gradient(180deg, rgb(57 255 127 / 0.025), transparent 40%), var(--color-field-900);
+  border: 1px solid rgb(57 255 127 / 0.1);
   border-radius: 14px;
 }
 
 .panel-hover {
   transition:
     border-color 160ms ease,
-    background-color 160ms ease;
+    background-color 160ms ease,
+    box-shadow 200ms ease,
+    transform 200ms ease;
 }
 .panel-hover:hover {
-  border-color: rgb(78 232 196 / 0.35);
+  border-color: rgb(57 255 127 / 0.55);
   background: var(--color-field-850);
+  box-shadow:
+    0 0 0 1px rgb(57 255 127 / 0.15),
+    0 0 28px -6px rgb(57 255 127 / 0.35);
+}
+
+/* Neon: text and edges that glow. neon-text is a utility so variants (group-hover:) work. */
+@utility neon-text {
+  color: var(--color-signal-400);
+  text-shadow:
+    0 0 6px rgb(57 255 127 / 0.55),
+    0 0 22px rgb(57 255 127 / 0.35);
+}
+.neon-edge {
+  border-color: rgb(57 255 127 / 0.45);
+  box-shadow:
+    0 0 0 1px rgb(57 255 127 / 0.12),
+    0 0 40px -10px rgb(57 255 127 / 0.45),
+    inset 0 0 40px -20px rgb(57 255 127 / 0.25);
 }
 
 @keyframes pulse-live {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgb(78 232 196 / 0.55);
+    box-shadow: 0 0 0 0 rgb(57 255 127 / 0.7);
   }
   50% {
-    box-shadow: 0 0 0 5px rgb(78 232 196 / 0);
+    box-shadow: 0 0 0 6px rgb(57 255 127 / 0);
   }
 }
 .live-dot {
@@ -101,12 +138,65 @@ body {
   height: 7px;
   border-radius: 9999px;
   background: var(--color-signal-400);
-  animation: pulse-live 2.2s ease-in-out infinite;
+  box-shadow: 0 0 8px var(--color-signal-400);
+  animation: pulse-live 1.8s ease-in-out infinite;
+}
+
+/* Headline ticker: the list is rendered twice, so translating by -50% loops seamlessly. */
+@keyframes ticker {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.ticker-track:hover {
+  animation-play-state: paused;
+}
+.ticker-mask {
+  mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+.cursor-blink {
+  animation: blink 1.05s step-end infinite;
+}
+
+/* A slow light sweep across the lead story card. */
+@keyframes sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+.sweep::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgb(57 255 127 / 0.09), transparent);
+  animation: sweep 5.5s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .live-dot {
+  .live-dot,
+  .cursor-blink,
+  .sweep::before {
     animation: none;
+  }
+  .ticker-track {
+    animation: none;
+  }
+  .ticker-mask {
+    overflow-x: auto;
   }
   html {
     scroll-behavior: auto;
