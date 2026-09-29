@@ -122,7 +122,7 @@ export default async function ProblemPage({ params }: { params: Params }) {
                 ))}
                 <div className="flex items-baseline justify-between border-t hairline pt-4">
                   <span className="text-sm font-semibold text-fg-50">Demand score</span>
-                  <span className="font-mono text-xl text-signal-400 tabular-nums">{p.demand_score.toFixed(3)}</span>
+                  <span className="neon-text font-mono text-2xl tabular-nums">{p.demand_score.toFixed(3)}</span>
                 </div>
                 <p className="font-mono text-[11px] text-fg-600">scorer {p.scorer_version}</p>
               </div>

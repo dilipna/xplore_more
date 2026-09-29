@@ -362,6 +362,19 @@ ec3b332 Handoff: Problem Intelligence phase for Pro2Pro integration
 
 **Still open for the demo:** How-it-works "report ↗" links and the footer "source ↗" link point to `github.com/dilipna/xploremore`, which **doesn't exist until the user pushes**. The runbook says to open the report locally instead. **Not done:** a click-through by a human in a real browser. Every check here was headless (curl, DevTools emulation, screenshots). The user should do one dry run with `docs/demo-runbook.md`.
 
+### 4.21 Session 3, last pass: "neon terminal" redesign with a live layer (user request)
+
+The user asked for a real-time, black and neon-green site with top news. Everything that moves is real data; no numbers were invented.
+- **Theme** (`globals.css` tokens, so every page and the architecture diagram re-themed at once): true-black field, neon green `#39ff7f` signal. Glow is reserved for live or ranked elements (`neon-text` is a Tailwind `@utility` so `group-hover:` works; `neon-edge`, `panel-hover` glow). Faint CRT scanlines and a green bloom behind page headers. All motion respects `prefers-reduced-motion`; the ticker becomes hand-scrollable.
+- **Live layer** (`components/live.tsx`, `components/news-ticker.tsx`):
+  - A TOP NEWS marquee under the header, built from the ranked `/v1/feed` (24 h, widened to 3 days if fewer than 6 stories; `getTopStories`, deduplicated per request with the home page).
+  - A LIVE badge with a ticking UTC clock and a live "indexed Xm Ys ago" counter.
+  - `AutoRefresh` (`router.refresh()` every 60 s, only while the tab is visible, with a countdown bar).
+  - `CountUp` on the real `/v1/stats` values.
+  - Time-based text renders only after mount, so there are no hydration mismatches.
+- **Home:** live hero with a terminal line and the stat grid, then **Top stories right now** (`components/top-stories.tsx`: a #1 lead card with an outlined rank numeral, a sweep light and a one-sentence description of what the feed heuristic actually weighs, taken from `xm_rank.features.heuristic_importance`; ranks 2–6 beside it), then the existing demand-ranked problems. **Feed:** the same lead treatment for its top 6, ranks 7+ as rows.
+- **Verified:** lint and build clean; preflight passes; 33 pages clean at 390 px. Backup screenshots were regenerated in `.data/shots/`. Both screenshot tools now emulate reduced motion, because the first capture caught the count-up mid-way (it showed "8 sources"), which would have made a misleading backup.
+
 ## 5. Pro2Pro facts needed for the integration (verified in its code)
 
 - **Discovery:** a LangGraph ReAct **Research Agent** (`p2pagent/src/p2pops/agents/research.py`) calls three tools:

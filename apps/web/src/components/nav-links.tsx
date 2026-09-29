@@ -21,7 +21,9 @@ export function NavLinks() {
             key={href}
             href={href}
             className={`whitespace-nowrap rounded-lg px-2 py-1.5 transition-colors md:px-3 ${
-              active ? "bg-field-800 text-fg-50" : "text-fg-400 hover:text-fg-50"
+              active
+                ? "bg-signal-400/10 text-signal-400 shadow-[inset_0_0_0_1px_rgb(57_255_127/0.35),0_0_18px_-4px_rgb(57_255_127/0.5)]"
+                : "text-fg-400 hover:text-signal-300"
             }`}
           >
             {label}
