@@ -1,14 +1,16 @@
 # XploreMore — Continue Session Handoff
 
-> Last updated: 2026-09-28 (a `apps/web` Next.js site was built end-to-end against the real API this session — **all of it currently UNCOMMITTED**; XploreMore HEAD is still `e66fd57`, Pro2Pro HEAD is still `e39a338` pushed/CI-green from the prior session). Read this whole file before doing anything; it is the single source of truth for resuming work.
+> **Session 3 (2026-09-28, evening): the local demo is ready. Read §4.20 first, then `docs/demo-runbook.md`.** Commits this session, each through a green `scripts/check.sh` with the §0.9 env vars (139 passed / 0 skipped): `e585d14` Q3, `c6076b2` `docs/search.md`, `7e3417a` phone-width fixes + search-eval cards + demo scripts, and the runbook commit after it. Corpus refreshed and re-measured (§4.20). **GCP is still not started.** STEP 3 of the session prompt needs the user's §7 account steps, which were not done. Where older sections disagree with §4.20, §4.20 wins.
 
-> **🚨 DEMO IN 2 DAYS, DECIDED THIS SESSION: the user is presenting this whole project to top AI companies (OpenAI named explicitly). Every priority below is superseded by demo-readiness.** The previous "finish Q3/Phase R" hard constraint is **suspended** — Q3 (search LTR) is now a nice-to-have if time remains, not the priority. See §4.18 for exactly what changed this session and §11 for the next-session plan. The single biggest open risk: **nothing has ever been deployed to GCP**, and the user chose a public GCP URL as the demo's centerpiece (over a local-only demo) in this session. That is a real, unproven path with 2 days of runway — treat "does the local demo work end-to-end, guaranteed" as the non-negotiable floor, and "public URL live" as the stretch goal attempted with enough time left to fall back if it breaks.
+> Last updated: 2026-09-28, second session of the day. XploreMore HEAD is **`79c120b`** (the `apps/web` site, `/v1/stats`, Terraform `web` module and rewritten `deploy.yml` — committed through a green `scripts/check.sh`, 127 tests passed / 0 skipped). **On top of that, Phase Q3 (search eval + LambdaMART reranker) is finished but UNCOMMITTED** — see §4.19. Pro2Pro HEAD is still `e39a338`. Read this whole file before doing anything; it is the single source of truth for resuming work.
+
+> **🚨 DEMO ON 2026-09-30 (hiring seminar, top AI companies, OpenAI named).** Demo readiness beats everything else. Status at handoff: **the local demo is verified working end to end** (§4.19); **GCP has not been started at all** — the user deferred every GCP account step ("I will do it later"), so the public URL is still a stretch goal that depends entirely on the user actions in §7. Treat the local demo (`localhost:3100` against the API on `:8765`) as the guaranteed plan and GCP as a bonus only if it is solid with a day of margin. The user explicitly chose to do the **full Q3** this session even after being shown that the doc had downgraded it — that work is done and is now a strong demo talking point (§4.19).
 
 ---
 
 ## 0. TL;DR for the next session
 
-1. **State:** last committed HEAD is `e66fd57` (Phase P code-complete, Q1/Q2 done, all gates green there). **This session added a full `apps/web` Next.js site plus API/Terraform/CI changes — all uncommitted.** First action next session: run `scripts/check.sh` (now includes web lint/typecheck/build, see §4.18) and commit through the gate before anything else, exactly like every other session.
+1. **State:** HEAD `79c120b` = web site + stats + deploy work, gate-green. **Uncommitted on top: all of Q3** (§4.19 has the exact file list). Ruff, format, pyright (0 errors) and the non-DB tests are green on it; the DB integration tests for the reranker passed earlier in the session, but the **full `scripts/check.sh` has not been re-run since the final lint/format fixes** because Docker Desktop's daemon started answering every call with HTTP 500. First action next session: get Docker healthy (the user may need to restart Docker Desktop), run the gate with the right env vars (§0 point 9), commit. **Do not commit `apps/web/next-env.d.ts`** — it is `pnpm dev` churn (`.next/types` → `.next/dev/types`); restore it with `git checkout -- apps/web/next-env.d.ts` before staging.
 2. **What runs live on the laptop:**
    - 43 tech sources + **5 discussion sources** → Go poller → Pub/Sub emulator → Go ingestor → Python indexer.
    - The indexer embeds, clusters stories, **classifies pain points** and **clusters problems** into Postgres.
@@ -18,11 +20,21 @@
 3. **Direction (decided by the user):** XploreMore is the **problem-discovery backbone for Pro2Pro** (`protopro.vercel.app`), AND (decided this session) a **public-facing demo site** for a hiring seminar in 2 days. Phase P (§6) is code-complete — P1 through P7. **Demo readiness now overrides the Phase Q/R roadmap** — see the banner above and §11.
 4. **Phase P — fully done at code level (§4.8–4.16), still nothing deployed to GCP.** Q1 and Q2 done and measured (§4.13–4.14).
 5. **Pro2Pro (previous session):** two live regressions found and fixed, both pushed to `e39a338`, GitHub CI green (§4.17). **Still not confirmed:** whether Render actually redeployed, and the web frontend's provenance UI needs a manual `vercel deploy --prod` to go live (§7) — low priority for the XploreMore demo itself, but worth 5 minutes if there's slack.
-6. **Dev data is real but stale for a demo.** This session ran a full tech-registry poll (237 new stories) and a wide discussion-corpus poll (1,371 discussion items published) **but the indexing/backfill for the discussion half did not finish before the session ended** (see §4.18 — the background refresh was cut off mid-run). **Do not trust `problems` counts until you re-run `uv run xm-indexer run` to drain the queue and check `/v1/stats` yourself.** DB `xploremore` had ~840 articles / ~1,550 discussions / 493 problems as of 2026-09-18; it's larger now but the exact post-refresh numbers are unverified.
+6. **Verified today via `/v1/stats` (2026-09-28 ~18:00 UTC):** 48 sources, 1,315 articles, 1,553 discussions, 1,388 voices, 1,301 stories (11 multi-source), 493 problems (19 multi-voice), last indexed 2026-09-28T07:28Z. The discussion count is unchanged from before, which confirms the earlier discussion refresh never reached the indexer (below). **Dev data is real but stale for a demo.** This session ran a full tech-registry poll (237 new stories) and a wide discussion-corpus poll (1,371 discussion items published) **but the indexing/backfill for the discussion half did not finish before the session ended** (see §4.18 — the background refresh was cut off mid-run). **Do not trust `problems` counts until you re-run `uv run xm-indexer run` to drain the queue and check `/v1/stats` yourself.** DB `xploremore` had ~840 articles / ~1,550 discussions / 493 problems as of 2026-09-18; it's larger now but the exact post-refresh numbers are unverified.
 7. **Local ports:** port 8000 and the default Postgres port 5432 are both taken by **other, unrelated projects'** Docker containers on this machine (do not stop them). This session made both overridable: `XM_PG_PORT=5433 docker compose ... up -d` for Postgres, and `PORT=8765` for the XploreMore API (unchanged). The web app's dev server runs on port **3100** (`apps/web/package.json`). Source `apps/web`'s env from `XM_API_URL=http://127.0.0.1:8765`.
 8. **Gate discipline reminder:** commit with `if scripts/check.sh > log 2>&1; then git commit ...; fi`. Never test `$?` after an `echo`.
+9. **Test-DB gotcha found this session (important):** with Postgres on 5433, `scripts/check.sh` still prints "all checks passed" while **45 integration tests silently SKIP**, because `conftest.py` reads `XM_TEST_DATABASE_URL` (default port 5432), not `XM_DATABASE_URL`. Always run the gate as:
+   `export XM_PG_PORT=5433 XM_TEST_DATABASE_URL=postgresql+psycopg://xm:xm@localhost:5433/xploremore_test XM_DATABASE_URL=postgresql+psycopg://xm:xm@localhost:5433/xploremore && bash scripts/check.sh`
+   and confirm the pytest line says `0 skipped` (it was `127 passed` before Q3; expect ~140+ with the new tests).
+10. **Docker Desktop path on this machine:** `%LOCALAPPDATA%\Programs\DockerDesktop\Docker Desktop.exe` (not `Program Files`).
 
 ---
+
+## 0.1 Session 3 summary (2026-09-28 evening), supersedes §0 points 1 and 6
+
+1. **All of Q3 is committed** (`e585d14`), plus `docs/search.md` (`c6076b2`). Nothing from Q3 is left uncommitted.
+2. **Today's corpus** (`/v1/stats`, 2026-09-29 02:52 UTC): 48 sources, 1,597 articles, 2,412 discussions, 2,089 voices, 1,578 stories (14 multi-source), 709 problems in the 30-day window (29 multi-voice, 0 cross-platform), last indexed 02:38 UTC. Details in §4.20.
+3. **Demo = local.** Start-up, click path, talking points, failure playbook and prepared Q&A are in `docs/demo-runbook.md`. `bash scripts/demo_preflight.sh` must print `PREFLIGHT PASSED` before presenting.
 
 ## 1. What this project is
 
@@ -297,6 +309,59 @@ ec3b332 Handoff: Problem Intelligence phase for Pro2Pro integration
 
 **Screenshot tooling (informal, not committed):** headless Chrome (`chrome.exe --headless=new --window-size=1440,2200 --screenshot=...`) was used ad hoc from bash to visually review pages, since this machine has no MCP browser tool wired up. Worth formalizing as a tiny `scripts/screenshot.sh` next session if backup demo screenshots are needed (recommended — see §11).
 
+### 4.19 Session 2026-09-28 (second): web work committed, local demo verified, Q3 done — **Q3 UNCOMMITTED**
+
+**Committed (`79c120b`):** everything from §4.18, after `scripts/check.sh` went fully green with real integration tests (fixed one ruff E501 in `schemas.py` on the way). The commit message records the test counts.
+
+**Local demo verified end to end (the guaranteed fallback):** Postgres/Redis/Pub-Sub via compose on 5433, `PORT=8765 uv run xm-api`, `cd apps/web && XM_API_URL=http://127.0.0.1:8765 pnpm dev` (port 3100). Every page returned 200 with **real content, not the "unavailable" fallback** — `/` 343 ms, `/feed` 336 ms, `/search?q=kubernetes` 585 ms (all five Server-Timing stages rendered), `/how-it-works` 318 ms, `/problems/1526` 255 ms (real statement). Checked by curl + HTML inspection only; **not yet clicked through in a browser or screenshotted**.
+
+**Q3 — search eval + LambdaMART reranker: done, uncommitted.** The user chose the full scope explicitly.
+- **Judged set:** 62 queries (`evals/search/queries_v1.jsonl`: 18 entity, 26 topical, 7 natural-language questions, 7 news events, 4 tail), each with a TREC-style narrative. The pool is TREC-style (hybrid top 50 + FTS/dense/BM25 top 20), shown blind to system. That gave **3,531 graded (0–3) judgments, 445 relevant, 56 manual additions**, all assistant-judged, `human_audited: false`. Guidelines and biases are in `evals/search/GUIDELINES.md`; raw judgments are in `assistant_judgments_v1.txt`.
+- **Frozen snapshot** `evals/search/snapshot_v1.json.gz` (315 KB) captures each query's serving-path FTS/dense top-200 lists plus the reranker signals. Everything downstream runs without a DB, in about 6 s.
+- **Results** (`docs/reports/search-eval-v1.md`, `evals/search/results_v1.json`), nDCG@10 with 95% bootstrap CIs:
+  - FTS 0.682 · BM25 0.769 · dense 0.744 · **hybrid (serving) 0.805** · RRF(BM25, dense) 0.768 · **hybrid + LambdaMART (out-of-fold) 0.817**.
+  - Hybrid − FTS: **+0.123 [+0.077, +0.173]**. Hybrid − dense: +0.061 [+0.028, +0.096]. BM25 − Postgres FTS: +0.087 [+0.019, +0.154].
+  - RRF(BM25, dense) − hybrid: −0.037 [−0.080, +0.001].
+  - **LambdaMART − hybrid: +0.012 [−0.005, +0.030]. Not significant, so the reranker is OFF by default.** MRR moves 0.933 → 0.963.
+  - Root cause of FTS's weakness, measured: `websearch_to_tsquery` requires every query term, so the median FTS result is 5 articles. FTS returns fewer than 10 hits for 45 of 62 queries, and those queries account for 91% of hybrid's gain.
+- **Reranker:**
+  - Code is `packages/xm_search/src/xm_search/rerank.py`. It holds the 20 features, with one definition shared by training, the gate and serving; `gather_signals` (4 small SQL queries); and a **pure-Python LightGBM tree evaluator**, so the API image needs no LightGBM/OpenMP. The evaluator matches LightGBM exactly (0.0 difference).
+  - Model: `config/search_reranker.v1.json` (226 KB). Training is grouped 5-fold × 5-repeat CV, with hyperparameters fixed a priori.
+  - Serving: opt-in via `XM_SEARCH_RERANKER_FILE=config/search_reranker.v1.json`. When enabled, it adds a `rerank` Server-Timing stage and the web search page shows it. It is skipped when search is degraded (no embedding).
+  - The API Dockerfile copies the model in; the image build was verified.
+- **CI gate:** `evals/search/test_gate.py` (added `evals/search` to pytest `testpaths`, plus a `conftest.py` because of `--import-mode=importlib`). It fails if hybrid metrics or the shipped reranker's in-sample nDCG drop more than 0.01 below `baseline_v1.json`, or if the **feature fingerprint** changes (features drifted from the trained model). **Mutation-tested:** breaking fusion fails the gate (0.805 → 0.682), and zeroing a feature fails the fingerprint check (the metric check alone missed it, which is why the fingerprint exists).
+- **Other changes:**
+  - `fuse_to_stories()` was factored out of `retrieve_stories` (pure, behaviour-identical) so the gate runs the serving fusion.
+  - `xm-search` now depends on `xm-rank`; `lightgbm` was added to the dev group.
+  - New tests: `packages/xm_search/tests/test_rerank.py` (6) and 3 reranker tests in `apps/api/tests/test_api_integration.py` (on/off/degraded).
+  - `pyproject.toml`: per-file E501 ignore for `evals/search/evaluate.py`, following the `evals/problems` precedent.
+- **Uncommitted files:** `apps/api/{Dockerfile, src/xm_api/app.py, tests/test_api_integration.py}`, `apps/web/src/app/search/page.tsx`, `packages/xm_core/src/xm_core/settings.py`, `packages/xm_search/{pyproject.toml, src/xm_search/retrieval.py, src/xm_search/rerank.py, tests/}`, `pyproject.toml`, `uv.lock`, `config/search_reranker.v1.json`, `docs/reports/search-eval-v1.md`, and `evals/search/` (everything). **Exclude `apps/web/next-env.d.ts`.**
+- **Still to write:** `docs/search.md`. It is referenced by `app.py`'s docstring and `retrieval.py`, but it has never existed; about 20 minutes, summarising the architecture and linking the eval report.
+
+**Demo talking point (true and measured):** "We don't trust vibes. We built a 3.5k-judgment eval and showed hybrid beats either retriever by a significant margin. We trained a LambdaMART reranker, and *didn't ship it on by default* because its gain wasn't significant. A CI gate, mutation-tested, stops anyone regressing search." Always say the labels are AI-judged and provisional.
+
+### 4.20 Session 3 (2026-09-28 evening): Q3 landed, corpus refreshed, local demo hardened
+
+**Landed:** the user restarted Docker (daemon healthy, engine 29.6.1). The gate with the §0.9 env vars gave 139 passed / 0 skipped. Committed Q3 (`e585d14`, exact §4.19 file list, `next-env.d.ts` restored first) and `docs/search.md` (`c6076b2`): pipeline, FTS/dense/RRF/collapse, optional LambdaMART, the gate, Server-Timing stages, degradation, and eval results with CIs and the AI-judged caveat. It deliberately quotes **no latency numbers** (no load test exists).
+
+**Corpus refresh: why last session's refresh was lost.** The Pub/Sub emulator keeps messages in memory, so restarting Docker dropped last session's undrained queue (discussions in the DB were still last discovered 2026-09-13). Poller state lives on the container's tmpfs (`XM_STATE_FILE=/tmp/...`), so re-polling republishes everything in each window and the indexer's idempotency skips what's stored.
+- Discussions (`E2E_SOURCES=problem_sources.corpus.yaml E2E_MAX_BATCHES=400 E2E_WAIT_SECONDS=60`): 1,367 published → **864 applied + 503 duplicates, 0 invalid, 0 failed**. 237 admitted as problems (216 new, 16 joined).
+- Tech (`E2E_SOURCES=sources.yaml E2E_MAX_BATCHES=200 E2E_WAIT_SECONDS=150`): 1,023 found (2 sources failed) → ingestor 863 finished deliveries (819 extracted, 44 "no content" rejects) → **325 applied + 494 duplicates, 0 failed**, 277 new stories. About 160 throttled (503) deliveries were never redelivered by the emulator after 02:38 UTC. The next poll republishes them. Two follow-up drain passes found an empty queue.
+- `/v1/stats` after: see §0.1. (`problems` is windowed to 30 days on `last_seen_at`, matching the home page label, verified in `stats.py`.)
+
+**Found and fixed (commit `7e3417a`):**
+- **Phone width was broken on every page.** The header nav was 458 px wide in a 390 px viewport, so everything scrolled sideways. Plain headless `--window-size=390` can't show this correctly (Chrome clamps windows to about 500 px, so a "390 px" shot is really a crop), so `scripts/mobile_check.mjs` emulates a phone over the DevTools protocol and reports the overflowing element. The nav now wraps below `md`. That check then exposed two more: long URLs in problem evidence, and a 40-char commit hash in a vLLM release title (fixed with `min-w-0` + `overflow-wrap:anywhere`). **36 pages pass at 390 px**: all top-20 problems, stories, suggested searches and the 404 page.
+- **How it works:** added the two Q3 cards (hybrid vs FTS with CIs; LambdaMART "built, shipped off"), and labelled the clustering card "Sep 13 snapshot" so its 1,553/493 figures aren't mistaken for live counts.
+- **Rate-limit risk for the live demo:** the website calls the API server-side from one IP, so all visitors shared the anonymous 30/min bucket. Locally the web app now runs with its own key (`xm-api keys create --name web-local-demo --rate 1200`, stored in gitignored `.data/web_api_key`), mirroring the planned GCP `web-api-key`. A 40-load burst stayed at 200 with no fallback panels.
+- **`scripts/demo_preflight.sh`:** API ready, search not degraded, every demo route renders real data rather than the fallback panel, phone width clean. **Verified to fail** with the API down, the web down, and the API down behind a running web app. The last case first *passed*, because the marker text was wrong; that's fixed. It also exposed that Git Bash rewrites `PAGES="/ /feed"` into Windows paths for node (`MSYS_NO_PATHCONV=1` is now set in the script).
+- `scripts/screenshot.sh`: desktop backup screenshots, now in `.data/shots/` (gitignored).
+
+**Investigated, NOT changed (a prepared answer in the runbook):** the search sidebar shows `fusion` at about 45–50 ms while lexical/dense take 3–7 ms. RRF itself takes under 1 ms; the time is the article→story lookup. Postgres executes it in ~1.3 ms (EXPLAIN ANALYZE); from Python it takes ~1–2 ms up to 80 ids and a flat ~47 ms at 250 ids, with the same plan. That's **consistent with** a TCP delayed-ACK/Nagle stall on multi-packet requests through Docker Desktop's Windows port proxy, but not proven. The gated serving path was left alone two days before the demo. Possible fixes later: fold the lookup into the retrieval SQL, or measure on real infrastructure first.
+
+**Web app run mode for the demo:** `pnpm build && pnpm start` (production). `next start` warns about `output: standalone`, but it serves all pages and assets correctly (verified). The standalone `server.js` lands nested under `.next/standalone/OneDrive/...` locally, because Next infers the tracing root from `C:\Users\Dilip\package-lock.json`. That's irrelevant in Docker, where `/app` is the root.
+
+**Still open for the demo:** How-it-works "report ↗" links and the footer "source ↗" link point to `github.com/dilipna/xploremore`, which **doesn't exist until the user pushes**. The runbook says to open the report locally instead. **Not done:** a click-through by a human in a real browser. Every check here was headless (curl, DevTools emulation, screenshots). The user should do one dry run with `docs/demo-runbook.md`.
+
 ## 5. Pro2Pro facts needed for the integration (verified in its code)
 
 - **Discovery:** a LangGraph ReAct **Research Agent** (`p2pagent/src/p2pops/agents/research.py`) calls three tools:
@@ -395,7 +460,7 @@ ec3b332 Handoff: Problem Intelligence phase for Pro2Pro integration
 ### PHASE Q — Carry-over engineering (interleave where it unblocks P)
 1. **Ingestor rate-limit fix:** ✅ done, code + re-measured on a full e2e run (§4.14).
 2. **Redis:** API-key rate limiting ✅ (P4); feed and problem response caches with single-flight ✅ (§4.13). A load test measuring the benefit is still open (needs a live target, see below — do a local `k6`/`hey` load test against `PORT=8765 uv run xm-api` if you don't want to wait on GCP).
-3. **Search eval + LTR — ⏭ NEXT, buildable now, no GCP needed:** judged query set (assistant-labeled against the real dev DB, `human_audited: false`, disclosed like every other label set in this project), BM25/FTS-only vs the current hybrid retrieval, Recall@10/50, nDCG@10, MRR with bootstrap CIs, a report in `docs/reports/search-eval-v1.md`. Then a LightGBM LambdaMART reranker fit on that judged set, evaluated the same way, plus a CI gate that fails on a regression past a documented threshold. **This is the hard-constraint target — finish it, don't just start it.**
+3. **Search eval + LTR — ✅ DONE 2026-09-28 (§4.19), uncommitted at handoff.** Original spec kept for reference: judged query set (assistant-labeled against the real dev DB, `human_audited: false`, disclosed like every other label set in this project), BM25/FTS-only vs the current hybrid retrieval, Recall@10/50, nDCG@10, MRR with bootstrap CIs, a report in `docs/reports/search-eval-v1.md`. Then a LightGBM LambdaMART reranker fit on that judged set, evaluated the same way, plus a CI gate that fails on a regression past a documented threshold. **This is the hard-constraint target — finish it, don't just start it.**
 4. **Importance LTR for the feed:** T+1h features vs T+24h realized coverage, time split. **Genuinely blocked** — it needs days of continuous ingestion, which is wall-clock time, not effort. Do not attempt to fake this with a short window; say plainly it's blocked and move on.
 
 ### PHASE R — Personalization, reliability, stretch (after P)
@@ -412,6 +477,13 @@ ec3b332 Handoff: Problem Intelligence phase for Pro2Pro integration
 
 ## 7. User actions still needed
 
+**🚨 Blocking the next session from even committing (do this first, takes 1 minute):**
+- [x] ~~Restart Docker Desktop~~ Done 2026-09-28 (session 3); the daemon is healthy.
+- [ ] **Do one dry run of `docs/demo-runbook.md` yourself, in a real browser, before 2026-09-30.** Every check so far has been headless.
+- [ ] **Optional but recommended:** push the repo (first item below) so the How-it-works "report ↗" links stop 404ing.
+
+**Status at handoff (2026-09-28):** the user deferred all of the GCP items below ("I will do it later"). None are started. The seminar is on 2026-09-30, so they must be done by the morning of 2026-09-29 at the latest for GCP to be a realistic option. Otherwise the demo is local (§4.19).
+
 **🚨 Blocking the public-URL demo (do these TODAY if the GCP path is still wanted for the seminar):**
 - [ ] Create GitHub repo `dilipna/xploremore` and push (`git remote add origin https://github.com/dilipna/xploremore.git && git push -u origin main`) — `deploy.yml` triggers off `ci` on `main`, so this has to exist before any automated deploy can run at all.
 - [ ] New GCP project + billing ($300 credit), then run `infra/terraform/bootstrap` (needs your `gcloud auth login` — the next session can talk you through the exact commands from `infra/terraform/README.md`, but the account/billing/`gcloud` login itself is not something an agent can do for you).
@@ -420,6 +492,7 @@ ec3b332 Handoff: Problem Intelligence phase for Pro2Pro integration
 - [ ] If any of the above can't realistically happen today: **say so explicitly next session** rather than let it become a silent blocker discovered hours before the demo — the fallback (a rock-solid local demo, `pnpm dev` + the API on this laptop) needs its own dry run and is the safer bet on a compressed timeline.
 
 - [ ] Optional: a GitHub personal access token (public read-only) as `GITHUB_TOKEN`, for higher issue-API limits.
+- [ ] **New, optional:** spot-audit the search judgments in `evals/search/qrels_v1.jsonl` (start with the grade-1/grade-2 boundary). Until a human has, every search number is "AI-judged, provisional", which is fine to say on stage.
 - [ ] Audit clustering labels: `uv run python evals/clustering/audit.py`.
 - [ ] Audit pain-point labels (low/medium confidence first, 183 items): `uv run python evals/problems/audit.py`, then re-run `evaluate.py`.
 - [ ] Judge top-50 problem usefulness: fill `human_useful` in `evals/problems/top50_v1.jsonl`.
@@ -499,12 +572,15 @@ packages/xm_embed/    embedder (embed, embed_query, warm)
 packages/xm_search/   query, fusion (RRF), retrieval
 packages/xm_rank/     story features (point-in-time) + heuristic importance
 evals/clustering/     sample_pairs, apply_labels, audit, evaluate, pairs_v1*, results_v1.json
+evals/search/         queries_v1, snapshot_v1.json.gz, pool, assistant_judgments_v1.txt, qrels_v1, metrics,
+                      evaluate (CV + model export + report), test_gate.py (CI gate), baseline_v1.json, GUIDELINES.md
 evals/problems/       GUIDELINES.md, sample, apply_labels, audit, evaluate, merge_audit, cluster_report,
                       labels_v1*.jsonl, assistant_labels_v1/, merge_audits.jsonl, top50_v1.jsonl, results_v1.json
 infra/terraform/      bootstrap, modules (pubsub_pipeline, cloud_run_service, scheduled_job), environments/prod
 deploy/compose/       postgres(pgvector) redis pubsub-emulator ingestor
-scripts/              check.sh, go.sh, tf.sh, e2e_local.sh, pubsub_local_setup.py, mutation_check_cluster_lock.py
-docs/                 clustering.md, problems.md, reports/{clustering-pairs-v1, problem-classifier-v1, problem-clustering-v1}.md
+scripts/              check.sh, go.sh, tf.sh, e2e_local.sh, pubsub_local_setup.py, mutation_check_cluster_lock.py,
+                      demo_preflight.sh, mobile_check.mjs (390 px DevTools emulation), screenshot.sh
+docs/                 clustering.md, problems.md, search.md, demo-runbook.md, reports/{clustering-pairs-v1, problem-classifier-v1, problem-clustering-v1, search-eval-v1}.md
 .github/workflows/    ci.yml ; renovate.json ; conftest.py (shared fixtures)
 ```
 
@@ -519,57 +595,29 @@ docs/                 clustering.md, problems.md, reports/{clustering-pairs-v1, 
   - Merge audit 2 (65.7%) ran on the same corpus its fixes came from.
   - Merge recall and top-50 usefulness are unmeasured.
   - Everything comes from a one-day corpus snapshot, not a continuous stream.
-- **No results exist yet** for search LTR, personalization, load tests, SLOs or cache benefit. Don't write numbers for them anywhere.
+- **Search eval / LTR results exist (§4.19) but rest on assistant-judged qrels** (62 queries, `human_audited: false`); quote them with that caveat and always with CIs. The reranker gain is **not** significant — never present it as an improvement.
+- **No results exist yet** for personalization, load tests, SLOs or cache benefit. Don't write numbers for them anywhere.
 - The P5 end-to-end result and the P6 A/B are the only Pro2Pro-integration measurements that exist; both are honestly caveated in their own sections (§4.12, §4.15) — don't strengthen their conclusions when citing them elsewhere.
 - XploreMore **complements** Hacker News and Techmeme. It doesn't claim to compete with them.
 
 ## 11. Prompt to start the next session
 
 ```text
-You are continuing XploreMore, my hiring-focused portfolio project. I am demoing this whole
-project to top AI companies (OpenAI among them) in 2 days. Everything you do this session is in
-service of that demo landing well — read CONTINUE_SESSION.md's banner at the very top and §4.18
-in full before anything else. Work fast and continuously; do not stop for permission on choices
-you can make yourself from patterns already in this codebase.
+You are continuing XploreMore, my hiring-focused portfolio project. I demo it to top AI companies
+(OpenAI among them) on 2026-09-30. Read CONTINUE_SESSION.md first: the banner, §0.1, §4.20 and §7,
+then docs/demo-runbook.md. The local demo is the plan; it was verified headless on 2026-09-28.
 
-STEP 1 — Land what's already built (do not skip, do not re-build any of this):
-- Read CONTINUE_SESSION.md completely, especially §4.18 (a full apps/web Next.js site was built
-  last session and is sitting uncommitted) and §0 point 6 (the data refresh didn't finish).
-- Bring Docker back up: XM_PG_PORT=5433 docker compose -f deploy/compose/docker-compose.yml up -d
-  postgres redis pubsub   (adjust the port if 5432 is actually free for you).
-- Run scripts/check.sh (now includes apps/web lint/typecheck/build). If it's green, commit
-  everything with the gate discipline in §0.8. If it's red, fix what's broken before anything
-  else — this is last session's work, not yours to redesign.
-- Drain the indexer so /v1/stats reflects the real, fresh corpus: uv run xm-indexer run
-  --max-batches 100 (repeat until "applied": 0), then uv run xm-indexer backfill-problems if the
-  discussion counts still look stale. Check /v1/stats yourself; do not reuse any number from
-  earlier in this file without re-verifying it today.
+STEP 1 - Bring the demo stack up exactly as docs/demo-runbook.md §1 says (Docker, compose on 5433,
+API on :8765, web production build on :3100 with the .data/web_api_key key) and run
+`bash scripts/demo_preflight.sh`. If anything is red, fix it; if Docker hangs, tell me to restart it.
+STEP 2 - Only if I ask: refresh the corpus (runbook §1 "Optional"), re-run the preflight, and update
+the numbers in the runbook §2 table and CONTINUE_SESSION.md from /v1/stats (today's numbers only).
+STEP 3 - GCP only if I've finished the §7 account steps; ask me first, and abandon it if it isn't
+solid with a day of margin. Pushing the repo is my action; ask before doing anything with GitHub.
 
-STEP 2 — Prove the local demo works end to end, before touching GCP:
-  PORT=8765 uv run xm-api  (in one terminal)
-  cd apps/web && XM_API_URL=http://127.0.0.1:8765 pnpm dev  (in another; site on :3100)
-Click through Problems -> a problem detail -> Search -> Feed -> How it works yourself. This is
-the non-negotiable fallback if GCP deployment doesn't land in time — it must work perfectly.
-
-STEP 3 — Public GCP URL (the user's chosen demo centerpiece), gated on the user actions in §7:
-If the GCP project/Neon/Upstash/repo-variables aren't done yet, say so plainly and immediately —
-don't discover it's missing hours before the demo. If they are done: push main, watch ci.yml go
-green, trigger deploy.yml (workflow_dispatch if you don't want to wait for the ci->deploy chain),
-and verify the live URL the same way you verified it locally in Step 2. Budget real time for this
-to go wrong on a first-ever deploy; if it's not solid with a day of margin left, fall back to
-Step 2's local demo and say so rather than risk an unproven deploy live in front of the audience.
-
-STEP 4 — If time remains after Steps 1-3 are rock solid:
-- A short docs/demo-runbook.md: the exact click-path/script for the 5-10 min slot, plus 3-4
-  backup screenshots (headless Chrome, see §4.18) in case live internet/demo fails.
-- Q3 (search eval + LTR) is a strong technical story for this audience specifically but is now
-  optional, time-permitting — a judged query set + Recall/nDCG/MRR with CIs, written up, beats a
-  half-finished LightGBM ranker. Don't start it unless Steps 1-3 are genuinely done.
-- Mobile-width check on apps/web (never verified below 1440px per §4.18).
-
-RULES: as in §2 of CONTINUE_SESSION.md (no fabricated metrics — this especially matters live in
-front of an audience; commit only when scripts/check.sh exits 0, checked directly; no LLM agents
-in XploreMore's serving path; write code with Write/Edit tools on Windows; Co-Authored-By
-trailer; update CONTINUE_SESSION.md after each milestone; short plain-English update after each
-milestone). Never claim something works live until you've actually clicked through it yourself.
+RULES: as in §2 (no fabricated metrics, quote search numbers with CIs and the AI-judged caveat;
+commit only on a green gate checked directly, with the §0.9 env vars and 0 skipped; no LLM in the
+serving path; Write/Edit tools on Windows; Co-Authored-By trailer; update CONTINUE_SESSION.md after
+each milestone; short plain-English update after each milestone). Don't change the search serving
+path before the demo. Never claim something works live until you've checked it yourself.
 ```
