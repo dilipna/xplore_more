@@ -28,6 +28,12 @@ jobs:
         ports: ["5432:5432"]
         options: >-
           --health-cmd "pg_isready -U xm" --health-interval 2s --health-timeout 3s --health-retries 30
+      # apps/api/tests/test_response_cache.py runs against a real Redis at localhost:6379.
+      redis:
+        image: redis:7.4-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 2s --health-timeout 3s --health-retries 30
     env:
       XM_TEST_DATABASE_URL: postgresql+psycopg://xm:xm@localhost:5432/xploremore_test
     steps:
