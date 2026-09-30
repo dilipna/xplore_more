@@ -11,7 +11,20 @@ type Params = Promise<{ id: string }>;
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { id } = await params;
-  return { title: `Problem ${id}` };
+  const problemId = Number(id);
+  const p = Number.isInteger(problemId) && problemId > 0 ? (await getProblem(problemId)).data : null;
+  if (!p) return { title: `Problem ${id}` };
+  const statement = p.statement.trim();
+  const title = statement.length > 90 ? `${statement.slice(0, 89).trimEnd()}…` : statement;
+  const description = `${p.voice_count} ${p.voice_count === 1 ? "person" : "people"} on ${p.platforms
+    .map((x) => platformInfo(x).label)
+    .join(", ")}. Last reported ${shortDate(p.last_seen)}.`;
+  return {
+    title,
+    description,
+    openGraph: { title, description, type: "article" },
+    twitter: { card: "summary", title, description },
+  };
 }
 
 /** Each factor of demand v0, in the order the formula multiplies them (xm_problems/demand.py). */

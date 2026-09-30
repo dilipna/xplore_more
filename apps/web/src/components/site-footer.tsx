@@ -4,7 +4,7 @@ const REPO_URL = process.env.XM_REPO_URL ?? "https://github.com/dilipna/xplore_m
 
 export function SiteFooter() {
   return (
-    <footer className="border-t hairline">
+    <footer className="border-t hairline print:hidden">
       <div className="mx-auto flex max-w-6xl flex-col gap-3 px-5 py-6 text-sm text-fg-500 md:flex-row md:items-center md:justify-between">
         <p>
           <span className="text-fg-200">XploreMore</span> · built by Dilip Nallamasa

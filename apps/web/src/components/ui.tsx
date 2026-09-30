@@ -83,3 +83,24 @@ export function SourceBadge({ id }: { id: string }) {
     </span>
   );
 }
+
+/** Placeholder cards while a page's data loads (route-level loading.tsx). */
+export function SkeletonList({ rows = 5 }: { rows?: number }) {
+  return (
+    <div className="mx-auto max-w-3xl px-5 py-10" aria-busy="true" aria-label="Loading">
+      <div className="h-7 w-48 animate-pulse rounded bg-field-800 motion-reduce:animate-none" />
+      <div className="mt-6 flex flex-col gap-3">
+        {Array.from({ length: rows }, (_, i) => (
+          <div key={i} className="panel p-5">
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 animate-pulse rounded-full bg-field-800 motion-reduce:animate-none" />
+              <div className="h-3 w-40 animate-pulse rounded bg-field-800 motion-reduce:animate-none" />
+            </div>
+            <div className="mt-4 h-4 w-11/12 animate-pulse rounded bg-field-800 motion-reduce:animate-none" />
+            <div className="mt-2 h-4 w-2/3 animate-pulse rounded bg-field-800 motion-reduce:animate-none" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

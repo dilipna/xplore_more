@@ -24,7 +24,7 @@ export async function SiteHeader() {
   const stats = await getStats();
   const live = stats.data?.last_indexed_at ?? null;
   return (
-    <header className="sticky top-0 z-30 border-b hairline bg-field-950/90 backdrop-blur-md">
+    <header className="sticky top-0 z-30 border-b hairline bg-field-950/90 backdrop-blur-md print:hidden">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5 sm:px-5 lg:h-15 lg:flex-nowrap">
         <Link href="/" aria-label="XploreMore home" className="shrink-0">
           <Wordmark />

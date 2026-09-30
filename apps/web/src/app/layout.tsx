@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
+import { KeyboardShortcuts } from "@/components/keyboard-shortcuts";
 import { SiteFooter } from "@/components/site-footer";
 import { NewsTicker } from "@/components/news-ticker";
 import { SiteHeader } from "@/components/site-header";
@@ -15,6 +16,18 @@ export const metadata: Metadata = {
   },
   description:
     "Top tech stories from 43 sources, one story per event, plus the problems engineers keep reporting on Hacker News, GitHub, Lobsters and Stack Exchange.",
+  applicationName: "XploreMore",
+  alternates: {
+    types: {
+      "application/rss+xml": [
+        { url: "/rss.xml", title: "XploreMore: top stories" },
+        { url: "/problems.xml", title: "XploreMore: most reported problems" },
+      ],
+      "application/feed+json": [{ url: "/feed.json", title: "XploreMore: top stories (JSON Feed)" }],
+    },
+  },
+  openGraph: { siteName: "XploreMore", type: "website" },
+  twitter: { card: "summary" },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -25,6 +38,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <NewsTicker />
         <main className="flex-1">{children}</main>
         <SiteFooter />
+        <KeyboardShortcuts />
       </body>
     </html>
   );
