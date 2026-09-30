@@ -40,7 +40,10 @@ env:
 
 jobs:
   build-and-push:
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    # Skipped (not failed) until the GCP repository variables exist; every later job needs this one.
+    if: >-
+      vars.GCP_WORKLOAD_IDENTITY_PROVIDER != '' &&
+      (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-24.04
     environment: prod
     # No job outputs on purpose: a matrix job's outputs come from whichever leg finishes last,
