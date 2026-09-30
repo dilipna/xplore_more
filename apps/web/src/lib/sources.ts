@@ -50,6 +50,70 @@ const NAMES: Record<string, string> = {
   "wired-ai": "WIRED AI",
 };
 
+export type SourceCategory = "primary" | "press" | "independent" | "community";
+
+/**
+ * Who a source is, mirrored from `category` in config/sources.yaml (a test fails if the two drift):
+ * primary = the lab, company, project or paper behind the news; press; independent writers;
+ * community aggregators. Discussion sources are not listed: they never lead a story.
+ */
+const CATEGORY: Record<string, SourceCategory> = {
+  "ars-technica": "press",
+  "arxiv-cs-cl": "primary",
+  "arxiv-cs-ir": "primary",
+  "arxiv-cs-lg": "primary",
+  "aws-ml-blog": "primary",
+  "aws-news": "primary",
+  "chip-huyen": "independent",
+  "cloudflare-blog": "primary",
+  "dropbox-tech": "primary",
+  "eugene-yan": "independent",
+  "gh-kubernetes": "primary",
+  "gh-llama-cpp": "primary",
+  "gh-ollama": "primary",
+  "gh-pytorch": "primary",
+  "gh-transformers": "primary",
+  "gh-vllm": "primary",
+  "github-blog": "primary",
+  "google-cloud-blog": "primary",
+  "google-deepmind": "primary",
+  "google-research": "primary",
+  "hacker-news": "community",
+  "huggingface-blog": "primary",
+  "import-ai": "independent",
+  infoq: "press",
+  interconnects: "independent",
+  "kubernetes-blog": "primary",
+  "lilian-weng": "independent",
+  lobsters: "community",
+  "meta-engineering": "primary",
+  "microsoft-research": "primary",
+  "mit-tech-review": "press",
+  "netflix-techblog": "primary",
+  "nvidia-developer": "primary",
+  "openai-news": "primary",
+  "sebastian-raschka": "independent",
+  "simon-willison": "independent",
+  "slack-engineering": "primary",
+  "stripe-blog": "primary",
+  "techcrunch-ai": "press",
+  "the-register": "press",
+  "the-verge": "press",
+  "venturebeat-ai": "press",
+  "wired-ai": "press",
+};
+
+export const CATEGORY_LABEL: Record<SourceCategory, string> = {
+  primary: "Primary source",
+  press: "Press",
+  independent: "Independent",
+  community: "Community",
+};
+
+export function sourceCategory(id: string): SourceCategory | null {
+  return CATEGORY[id] ?? null;
+}
+
 export function sourceName(id: string): string {
   return NAMES[id] ?? id.replace(/[-_]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }

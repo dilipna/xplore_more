@@ -1,5 +1,6 @@
 import type { ProblemCategory } from "@/lib/api";
 import { categoryLabel, platformInfo } from "@/lib/format";
+import { CATEGORY_LABEL, type SourceCategory, sourceCategory } from "@/lib/sources";
 
 export function Eyebrow({ children }: { children: React.ReactNode }) {
   return <h2 className="text-[15px] font-semibold text-fg-50">{children}</h2>;
@@ -62,5 +63,23 @@ export function PageIntro({ title, children }: { title: React.ReactNode; childre
         {children}
       </div>
     </section>
+  );
+}
+
+const SOURCE_BADGE: Record<SourceCategory, string> = {
+  primary: "border-signal-400/40 bg-signal-400/10 text-signal-400",
+  press: "border-sky-400/30 bg-sky-400/10 text-sky-300",
+  independent: "border-violet-400/30 bg-violet-400/10 text-violet-300",
+  community: "border-field-600 bg-field-850 text-fg-400",
+};
+
+/** Who published it: the primary source (lab, company, project, paper), press, independent or community. */
+export function SourceBadge({ id }: { id: string }) {
+  const cat = sourceCategory(id);
+  if (!cat) return null;
+  return (
+    <span className={`inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10.5px] font-medium ${SOURCE_BADGE[cat]}`}>
+      {CATEGORY_LABEL[cat]}
+    </span>
   );
 }
