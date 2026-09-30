@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import UTC, datetime
 
-from xm_rank.features import StoryFeatures, heuristic_importance
+from xm_rank.features import HeuristicWeights, StoryFeatures, heuristic_importance, heuristic_terms
 
 BASE = StoryFeatures(
     story_id=1,
@@ -42,3 +42,15 @@ def test_half_life() -> None:
 
 def test_feature_vector_matches_names() -> None:
     assert len(BASE.vector()) == len(StoryFeatures.names())
+
+
+def test_terms_add_up_to_the_score() -> None:
+    f = replace(BASE, source_count=3, hn_points_max=250, hours_since_published=7.0)
+    t = heuristic_terms(f)
+    assert abs(t.score - heuristic_importance(f)) < 1e-12
+    assert abs((t.coverage + t.authority + t.community) * t.freshness - t.score) < 1e-12
+
+
+def test_zero_weight_removes_a_term() -> None:
+    t = heuristic_terms(replace(BASE, hn_points_max=400), HeuristicWeights(hn_points=0.0, sources=0.0))
+    assert t.community == 0.0 and t.coverage == 0.0 and t.authority > 0.0

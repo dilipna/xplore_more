@@ -8,6 +8,7 @@
  */
 
 import { cache } from "react";
+import { type Weights, weightParams } from "./ranking";
 
 export type ProblemCategory =
   | "bug_or_reliability"
@@ -78,6 +79,17 @@ export interface StorySummary {
   first_seen_at: string;
   published_at: string | null;
   score: number | null;
+  /** Feed only: the heuristic's parts, score = (coverage + authority + community) * freshness. */
+  signals?: RankSignals | null;
+}
+
+export interface RankSignals {
+  coverage: number;
+  authority: number;
+  community: number;
+  freshness: number;
+  hn_points: number;
+  hours_since_published: number;
 }
 
 export interface SearchResponse {
@@ -88,6 +100,7 @@ export interface SearchResponse {
 
 export interface FeedResponse {
   ranker: string;
+  weights?: Weights | null;
   results: StorySummary[];
 }
 
@@ -196,8 +209,8 @@ export function search(q: string, limit = 15) {
   return apiGet<SearchResponse>("/v1/search", { q, limit });
 }
 
-export function getFeed(windowHours: number, limit = 25) {
-  return apiGet<FeedResponse>("/v1/feed", { window_hours: windowHours, limit });
+export function getFeed(windowHours: number, limit = 25, weights: Weights | null = null) {
+  return apiGet<FeedResponse>("/v1/feed", { window_hours: windowHours, limit, ...weightParams(weights) });
 }
 
 /** The feed's top stories for the ticker and the home page: last 24 h, widened to 3 days when a

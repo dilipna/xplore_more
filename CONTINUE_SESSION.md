@@ -1,5 +1,7 @@
 # XploreMore — Continue Session Handoff
 
+> **Session 4 (night of 2026-09-29/30), in progress: see §4.24 first.** Phase A done (CI green on `main`, all 11 jobs), C0 done (feed source cap, measured), F1 done (tunable ranking). Phase B still waits on the user's GCP/Neon/Upstash account steps; `deploy` now skips cleanly until the GCP variables exist.
+
 > **Last updated 2026-09-29 (end of session 3). START WITH the "READ FIRST: master plan" section below**: it lays out the whole next session (fix CI, GCP go-live via GitHub Actions, then the differentiating features F1 to F10). `main` = `5170615`, pushed to https://github.com/dilipna/xplore_more, gate green locally, **CI red on GitHub (cause unknown, Phase A)**, **nothing deployed to GCP yet**. Older sections describe earlier states; where they disagree with the master plan or §4.20 to §4.23, those win.
 
 > Last updated: 2026-09-28, second session of the day. XploreMore HEAD is **`79c120b`** (the `apps/web` site, `/v1/stats`, Terraform `web` module and rewritten `deploy.yml` — committed through a green `scripts/check.sh`, 127 tests passed / 0 skipped). **On top of that, Phase Q3 (search eval + LambdaMART reranker) is finished but UNCOMMITTED** — see §4.19. Pro2Pro HEAD is still `e39a338`. Read this whole file before doing anything; it is the single source of truth for resuming work.
@@ -466,6 +468,17 @@ The user liked the black/neon theme but said the site looked AI-generated and as
   - Search keeps the timing panel in the rail and repeats it above the results below xl.
   - Source display names come from the `sources` table (`lib/sources.ts`). Everything shown is real data; no invented likes.
 - Verified: lint and build clean; preflight passes; 37 pages clean at 390 px; backups regenerated.
+
+### 4.24 Session 4 (2026-09-29 late evening, US Eastern): CI green, C0, F1
+
+- **Phase A, causes reproduced before fixing (the user wasn't available to paste logs):**
+  - `python`: all 8 tests in `test_response_cache.py` need Redis on 6379, and CI only started Postgres. Reproduced in a clean clone with Docker down: 8 failed, 83 passed. Fix: a `redis:7.4-alpine` service in `ci.yml` (`654b9ff`).
+  - `security`: Trivy v0.70.0 (the version the pinned action uses) found 10 HIGH/CRITICAL, all in `apps/web/pnpm-lock.yaml`: next 16.2.10 (2 critical RCEs), plus postcss 8.4.31 and sharp 0.34.5 pulled in by next. Fixed by next 16.3.7, after which the lockfile scans clean (`654b9ff`).
+  - `images` then ran for the first time and failed. Scanning the base images from `mirror.gcr.io` showed the cause: pip's vendored msgpack and pkg_resources in `python:3.13-slim`, and npm's own deps in `node:24-alpine`. pip is now uninstalled from the api, indexer and mcp runtime stages, and npm, corepack and yarn are removed from the web runtime stage (`25b8c0d`). **CI is fully green since `25b8c0d`.**
+  - A local Trivy binary lives in the session scratchpad only. Re-download v0.70.0 if needed; `--image-src remote mirror.gcr.io/library/<img>` works on this network where Docker Hub doesn't.
+- **deploy.yml:** `build-and-push` is guarded on `vars.GCP_WORKLOAD_IDENTITY_PROVIDER != ''`, so it shows "skipped" rather than failing auth until Phase B is done (`4df2685`, verified skipped).
+- **C0 (`4df2685`):** `xm_rank.features.diversify`: at most 2 per lead source in the top 10 and 3 in the top 20; greedy, only moves stories down. Top 20 went from **19/20 Hacker News (2 sources) to 3/20 max (11 sources)** at a fixed as_of of 2026-09-29T02:33:41Z; the 24 h, 72 h and 7 d windows are identical. With the HN-points weight at 0 and no cap, HN still has 65%, so the skew is volume and the weights were left alone. Also fixed: the candidate pool was an unordered `LIMIT 500` (574 stories in 7 days), and `sources[0]` was alphabetical (now the representative's source). Report: `docs/reports/feed-diversity-v1.md`; script: `evals/feed/diversity.py`. The ranker label is `heuristic/story-features-v1+source-cap-v1`.
+- **F1 (tune your own ranking):** `/v1/feed` takes `w_sources` [0,3], `w_authority` [0,3], `w_points` [0,1.5] and `half_life_hours` [2,168]. The defaults give the standard feed (tested), the weights are part of the cache key, and the response echoes `weights`. Each result carries `signals` (coverage, authority, community, freshness), which add up to `score` (tested; one function, `heuristic_terms`, computes both). The web `/feed` page has a Ranking panel with sliders; they update the URL and the server re-ranks, so the key stays server-side. Cards show "Why here: ..." and ▲/▼/new against the default order. Home has a "Tune the ranking" link, and the preflight checks a tuned URL. Verified live locally: preflight passed (14 checks, phone width included).
 
 ## 5. Pro2Pro facts needed for the integration (verified in its code)
 
