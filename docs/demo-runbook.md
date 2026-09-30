@@ -2,7 +2,7 @@
 
 The demo runs on this laptop: the API on `:8765` and the website on `:3100`, against the local Postgres/Redis/Pub-Sub containers. Nothing here needs the internet except the "open original" links on evidence posts.
 
-Last full dry run: **2026-09-28 (evening, US time)**. Every page was checked with real data, at desktop width and at 390 px phone width.
+Last full dry run: **2026-09-30 (afternoon, US time)**, `scripts/demo_preflight.sh` passed, including a real-browser flow check (`scripts/flow_check.mjs`: follow a topic, the ranking sliders, keyboard shortcuts). Every page was checked with real data, at desktop width and at 390 px phone width.
 
 ---
 
@@ -37,6 +37,7 @@ Run these in **Git Bash** from the repo root (`C:\Users\Dilip\OneDrive\Pictures\
    3. `http://localhost:3100/problems/1526`
    4. `http://localhost:3100/search?q=kubernetes`
    5. `http://localhost:3100/how-it-works` (About)
+   5b. `http://localhost:3100/feed` and `http://localhost:3100/stories/2141` (Stops 1c and 1d)
    6. The search eval report, **opened locally**: `docs/reports/search-eval-v1.md` in VS Code, with Markdown preview (`Ctrl+Shift+V`). See the warning below.
 
 > The "report ↗" links on About and "GitHub" in the footer point to the public repo, `github.com/dilipna/xplore_more` (pushed 2026-09-29), so they work live. Keep the local report tab anyway, in case the venue Wi-Fi is bad.
@@ -53,14 +54,14 @@ On 2026-09-28 each refresh took about 5–7 minutes. Skip the refresh if time is
 
 ## 2. The click path (about 8 minutes)
 
-The numbers below were read from `/v1/stats` on **2026-09-29 02:52 UTC** (evening of 2026-09-28, US time). If you refresh the corpus, read the numbers off the page instead of from here.
+The numbers below were read from `/v1/stats` on **2026-09-30 19:33 UTC** (last indexed 04:26 UTC that day). If you refresh the corpus, read the numbers off the page instead of from here.
 
 | Stat | Value |
 |---|---|
 | Sources polled | 48 (43 tech feeds + 5 discussion APIs) |
-| Discussions read | 2,412, by 2,089 distinct people (salted hashes) |
-| Articles → stories | 1,597 articles → 1,578 stories (14 multi-source) |
-| Problems (30-day window) | 709, of which 29 were reported by 2+ people |
+| Discussions read | 2,442, by 2,116 distinct people (salted hashes) |
+| Articles → stories | 1,910 articles → 1,885 stories (18 multi-source) |
+| Problems (30-day window) | 718, of which 29 were reported by 2+ people |
 
 ### Stop 1: Home, `/` (≈1 min)
 - **Show:**
@@ -72,9 +73,18 @@ The numbers below were read from `/v1/stats` on **2026-09-29 02:52 UTC** (evenin
 
 ### Stop 1b: Problems, `/problems` (≈1 min)
 - **Show:** the posts, with the people count in the left column, the platform and category chips, the top post's real points and replies, and the demand score. Then click one category tab, then **Popular: vllm** to show the topic filter.
-- **Say:** "This reads 2,412 real discussions from Hacker News, GitHub issues, Lobsters and Stack Exchange. A classifier decides which posts report a real problem; clustering merges the same problem across different people; the list is ranked by demand."
+- **Say:** "This reads 2,442 real discussions from Hacker News, GitHub issues, Lobsters and Stack Exchange. A classifier decides which posts report a real problem; clustering merges the same problem across different people; the list is ranked by demand."
 - **Honest line, if asked about quality:** "The pain-point classifier is P 0.80 / R 0.76 overall, but that's carried by GitHub issues. On HN and Lobsters it's much weaker (P 0.48), and the labels are AI-made, not yet human-audited."
 - The #1 row today is an HN thread about Claude Code commit signatures (4 people). That's simply what the live data ranks first. The ranking shifts whenever the corpus refreshes.
+
+### Stop 1c: Tune the ranking, `/feed` (≈1.5 min, **the differentiator**)
+- **Show:** every card's **Why here:** line (coverage + authority + community × freshness, the real terms from the API). Drag **Community points** to 0 and **Coverage** to 3: the page re-ranks on the server, the URL changes (shareable), and cards show ▲/▼/new against the default order. **Reset to default** brings it back. Then click **Primary sources only**.
+- **Say:** "You can see and change the ranking function. Each score is the sum of named terms, and the explanation is computed by the same function as the score, which a test enforces."
+- **The fix behind it (measured):** the top 20 used to be **19 of 20 Hacker News**. A source cap (at most 2 per source in the top 10, 3 in the top 20) brought the largest single source down to **3 of 20** from 11 sources, measured at a fixed point in time (`docs/reports/feed-diversity-v1.md`). Turning HN points to zero alone still left 65% HN, so the skew was volume, not the points term.
+
+### Stop 1d: Race to report, `/stories/2141`, then `/briefing` (≈1 min)
+- **Show:** the story page orders coverage by publish time: "Simon Willison reported first", then Hacker News **1.1 h later**, each with a *Primary / Press / Independent / Community* badge. Then `/briefing`: the top 5 and top 3 problems with who reported first and why each ranks. It's print-ready, with no generated text.
+- **Also there, if asked:** `My topics` (follow a search; stored only in this browser, no account), RSS at `/rss.xml` and `/problems.xml`, JSON Feed at `/feed.json`, and keyboard shortcuts (press `?`).
 
 ### Stop 2: Problem detail, `/problems/1526`, "Why it ranks here" (≈2 min, **linger here**)
 - **Show:** the five factors in the left panel, then the three GitHub issues on the right with their classifier confidences (0.85 / 0.83 / 0.69).
@@ -113,7 +123,7 @@ The numbers below were read from `/v1/stats` on **2026-09-29 02:52 UTC** (evenin
 | The first search after a restart is slow | Cold embedding model | The pre-flight warms it. After any restart, run one search before presenting. |
 | Laptop or projector failure | n/a | Backup screenshots (below). |
 
-**Backup screenshots** (taken 2026-09-28 from the live stack, final design, gitignored) are in `.data/shots/`: `home-desktop.png`, `problems-desktop.png`, `problems_1526-desktop.png`, `search_q_kubernetes-desktop.png`, `search_q_rust_adoption-desktop.png`, `how-it-works-desktop.png`, `feed-desktop.png`, plus `*-mobile.png` phone renders of home, problems, problem 1526 and the rust search. Both tools emulate reduced motion, so the counters show their final real values, not a mid-animation frame. The repo is inside OneDrive, so if OneDrive sync is on they should also be reachable from another device. Check that before relying on it. To regenerate them with the stack running: `bash scripts/screenshot.sh` (desktop) and `node scripts/mobile_check.mjs` (phone).
+**Backup screenshots** (regenerated 2026-09-30 from the live stack, gitignored; phone renders now also cover `/feed`, the tuned feed, `/stories/2141`, `/briefing` and `/topics`) are in `.data/shots/`: `home-desktop.png`, `problems-desktop.png`, `problems_1526-desktop.png`, `search_q_kubernetes-desktop.png`, `search_q_rust_adoption-desktop.png`, `how-it-works-desktop.png`, `feed-desktop.png`, plus `*-mobile.png` phone renders of home, problems, problem 1526 and the rust search. Both tools emulate reduced motion, so the counters show their final real values, not a mid-animation frame. The repo is inside OneDrive, so if OneDrive sync is on they should also be reachable from another device. Check that before relying on it. To regenerate them with the stack running: `bash scripts/screenshot.sh` (desktop) and `node scripts/mobile_check.mjs` (phone).
 
 ---
 
@@ -125,6 +135,8 @@ The numbers below were read from `/v1/stats` on **2026-09-29 02:52 UTC** (evenin
 - **"Is it deployed?"** Not yet. The GCP Terraform (keyless OIDC deploys, Cloud Run, Pub/Sub, a canary deploy workflow) is written and passes `terraform validate`, but it isn't applied. Today's demo runs locally.
 - **"Why no LLM?"** The serving path is latency- and cost-bound, and classical IR plus small models is measurable. LLM agents live in Pro2Pro, which consumes this API through a versioned contract and MCP.
 - **"Do problems cluster across platforms?"** Not yet. 0 of today's 29 multi-voice problems span two platforms, and GitHub maintainer roadmaps still get admitted as "problems" (a documented known issue). Both are on the v2 list: better labels for HN/Lobsters and a labelled pair set to measure merge recall.
+- **"Why don't stories link to the problems people report about them?"** We built and measured that (embedding nearest neighbour, 48 judged pairs) and **didn't ship it**: precision was 25% even at the strictest threshold (3/12, 95% CI 9–53%), against a 70% bar. The labels are AI-judged. Report: `docs/reports/news-problem-links-v1.md`.
+- **"Is the feed just Hacker News?"** It was: 19 of the top 20. The source cap fixed that, measured before and after on the same snapshot.
 - **"Scale / latency SLOs?"** None measured. There's no load test yet, so no latency or throughput numbers are claimed.
 
 ---
