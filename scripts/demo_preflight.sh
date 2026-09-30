@@ -43,14 +43,17 @@ done <<EOF
 /feed?w_points=0&w_sources=3 200 Custom weights
 /feed?primary=1 200 Primary sources only
 /stories/2141 200 Race to report
+/topics?t=vllm 200 My topics
 /how-it-works 200 nDCG@10
 /nope 404 404
 EOF
 
 if command -v node >/dev/null 2>&1; then
-  PAGES="/ /problems /problems/$DEMO_PROBLEM /search?q=kubernetes /search?q=rust%20adoption /feed /feed?w_points=0&w_sources=3 /feed?primary=1 /stories/2141 /how-it-works" \
+  PAGES="/ /problems /problems/$DEMO_PROBLEM /search?q=kubernetes /search?q=rust%20adoption /feed /feed?w_points=0&w_sources=3 /feed?primary=1 /stories/2141 /topics?t=vllm /how-it-works" \
     node scripts/mobile_check.mjs "$WEB" .data/shots_preflight >/dev/null 2>&1
   check "phone width (390 px)" $? "(scripts/mobile_check.mjs)"
+  node scripts/flow_check.mjs "$WEB" >/dev/null 2>&1
+  check "browser flows: follow a topic, ranking sliders" $? "(scripts/flow_check.mjs)"
 fi
 
 [ "$fail" -eq 0 ] && echo "PREFLIGHT PASSED" || echo "PREFLIGHT FAILED"

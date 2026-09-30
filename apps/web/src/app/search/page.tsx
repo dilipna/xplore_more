@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { FollowButton } from "@/components/follow";
 import { RightRail } from "@/components/right-rail";
 import { Shell } from "@/components/shell";
 import { StoryCard } from "@/components/story-card";
@@ -110,10 +111,15 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
             <p className="text-fg-400">No stories match &ldquo;{q}&rdquo;.</p>
           ) : (
             <>
-              <p className="mb-3 text-sm text-fg-400">
-                {result.data.results.length} results for &ldquo;{q}&rdquo;
-                {result.data.degraded.length > 0 && <span className="text-amber-300"> (keyword matches only right now)</span>}
-              </p>
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                <p className="text-sm text-fg-400">
+                  {result.data.results.length} results for &ldquo;{q}&rdquo;
+                  {result.data.degraded.length > 0 && (
+                    <span className="text-amber-300"> (keyword matches only right now)</span>
+                  )}
+                </p>
+                <FollowButton topic={q} />
+              </div>
               <div className="flex flex-col gap-3">
                 {result.data.results.map((story, i) => (
                   <StoryCard key={story.id} story={story} rank={i + 1} />
