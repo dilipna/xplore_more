@@ -116,3 +116,58 @@ def heuristic_importance(f: StoryFeatures, w: HeuristicWeights = DEFAULT_WEIGHTS
     engagement = w.hn_points * math.log1p(f.hn_points_max)
     freshness = 0.5 ** (f.hours_since_published / w.half_life_hours)
     return (coverage + engagement) * freshness
+
+
+_LEAD_SQL = text(
+    """
+    SELECT s.id, rep.source_id
+    FROM stories s JOIN articles rep ON rep.id = s.representative_article_id
+    WHERE s.id = ANY(:ids)
+    """
+)
+
+
+async def lead_sources(session: AsyncSession, story_ids: list[int]) -> dict[int, str]:
+    """The source of each story's representative article: the one a story card shows first."""
+    if not story_ids:
+        return {}
+    rows = await session.execute(_LEAD_SQL, {"ids": story_ids})
+    return {r[0]: r[1] for r in rows}
+
+
+@dataclass(frozen=True)
+class DiversityRule:
+    """Caps as (slots, per_source): at most `per_source` stories from one lead source in the
+    first `slots` positions. The default allows 2 per source in the top 10 and 3 in the top 20."""
+
+    caps: tuple[tuple[int, int], ...] = ((10, 2), (20, 3))
+
+
+DEFAULT_DIVERSITY = DiversityRule()
+
+
+def diversify(ranked: list[int], lead: dict[int, str], rule: DiversityRule = DEFAULT_DIVERSITY) -> list[int]:
+    """Re-order a ranked list so no single source fills the top of the feed.
+
+    Greedy and deterministic: each position up to the largest cap takes the highest-ranked
+    remaining story whose lead source is still under every cap that covers that position.
+    If no remaining story qualifies (too few distinct sources), the rule relaxes and takes the
+    highest-ranked one, so stories are only moved down, never dropped. Past the last cap the
+    ranking continues unchanged.
+    """
+    horizon = max((slots for slots, _ in rule.caps), default=0)
+    remaining = list(ranked)
+    head: list[int] = []
+    counts: dict[str, int] = {}
+    while remaining and len(head) < horizon:
+        pos = len(head)
+        limits = [per for slots, per in rule.caps if pos < slots]
+        pick = next(
+            (s for s in remaining if all(counts.get(lead.get(s, ""), 0) < n for n in limits)),
+            remaining[0],
+        )
+        remaining.remove(pick)
+        head.append(pick)
+        src = lead.get(pick, "")
+        counts[src] = counts.get(src, 0) + 1
+    return head + remaining

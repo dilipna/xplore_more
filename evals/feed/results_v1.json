@@ -1,0 +1,267 @@
+{
+  "as_of": "2026-09-29T02:33:41.326906+00:00",
+  "top": 20,
+  "rule": {
+    "caps": [
+      [
+        10,
+        2
+      ],
+      [
+        20,
+        3
+      ]
+    ]
+  },
+  "windows": {
+    "24h": {
+      "candidates": 332,
+      "candidate_lead_sources": {
+        "hacker-news": 131,
+        "arxiv-cs-cl": 30,
+        "arxiv-cs-lg": 24,
+        "the-register": 19,
+        "lobsters": 18,
+        "techcrunch-ai": 16,
+        "ars-technica": 14,
+        "arxiv-cs-ir": 14
+      },
+      "before": {
+        "n": 20,
+        "distinct_lead_sources": 2,
+        "max_lead_source": "hacker-news",
+        "max_lead_share": 0.95,
+        "lead_counts": {
+          "hacker-news": 19,
+          "simon-willison": 1
+        },
+        "share_containing_hacker_news": 1.0
+      },
+      "after": {
+        "n": 20,
+        "distinct_lead_sources": 11,
+        "max_lead_source": "hacker-news",
+        "max_lead_share": 0.15,
+        "lead_counts": {
+          "hacker-news": 3,
+          "gh-pytorch": 3,
+          "techcrunch-ai": 3,
+          "ars-technica": 3,
+          "simon-willison": 2,
+          "the-verge": 1,
+          "openai-news": 1,
+          "gh-ollama": 1,
+          "microsoft-research": 1,
+          "aws-ml-blog": 1,
+          "gh-llama-cpp": 1
+        },
+        "share_containing_hacker_news": 0.2
+      },
+      "diagnostic_no_hn_points_no_rule": {
+        "n": 20,
+        "distinct_lead_sources": 6,
+        "max_lead_source": "hacker-news",
+        "max_lead_share": 0.65,
+        "lead_counts": {
+          "hacker-news": 13,
+          "gh-pytorch": 3,
+          "simon-willison": 1,
+          "the-verge": 1,
+          "openai-news": 1,
+          "techcrunch-ai": 1
+        },
+        "share_containing_hacker_news": 0.7
+      },
+      "top10_before": [
+        "hacker-news | Tank Body Problem",
+        "hacker-news | I thought I was building a C replacement. I was wrong",
+        "simon-willison | Claude Sonnet 5.5",
+        "hacker-news | AI and the revenge of the non-techies",
+        "hacker-news | The Transparent Society - Wikipedia",
+        "hacker-news | GitHub - Calnode/calnode: Lean, self-hostable Calendly & Cal.com alternative — a single Go binary + SQLite, API-first and MCP-native. Apache-2.0.",
+        "hacker-news | Buoy data from the Bering Sea to Samoa | Bluegraph",
+        "hacker-news | HUMANOS | Your life, in full view",
+        "hacker-news | GitHub - rohanprichard/talktome: Voice calls with the coding agent you already use. A macOS menu-bar app.",
+        "hacker-news | Meta’s AI agent Muse gives out user’s home address without permission, sending buyer to his house"
+      ],
+      "top10_after": [
+        "hacker-news | Tank Body Problem",
+        "hacker-news | I thought I was building a C replacement. I was wrong",
+        "simon-willison | Claude Sonnet 5.5",
+        "the-verge | AMD is acquiring AI company World Labs in a deal worth more than $8 billion",
+        "openai-news | How we will do better for Australia",
+        "gh-pytorch | Release trunk/4b2a1145f850903058739df5c9e15f06d74fb9b5: cmake: Use dedicated functions for defining macros (#198957) · pytorch/pytorch",
+        "gh-pytorch | Release trunk/d0e8a89086bf45ce7810ba5087a6d318ddfaf0ae: Remove `_base_vt` (#193679) · pytorch/pytorch",
+        "techcrunch-ai | Peak XV ups Surge seed investment ceiling to $5M, unveils 18-startup cohort | TechCrunch",
+        "techcrunch-ai | OpenAI reportedly ditches model over safety concerns | TechCrunch",
+        "gh-ollama | v0.35.0"
+      ]
+    },
+    "72h": {
+      "candidates": 385,
+      "candidate_lead_sources": {
+        "hacker-news": 140,
+        "arxiv-cs-cl": 30,
+        "the-register": 24,
+        "arxiv-cs-lg": 24,
+        "techcrunch-ai": 22,
+        "lobsters": 22,
+        "the-verge": 20,
+        "ars-technica": 16
+      },
+      "before": {
+        "n": 20,
+        "distinct_lead_sources": 2,
+        "max_lead_source": "hacker-news",
+        "max_lead_share": 0.95,
+        "lead_counts": {
+          "hacker-news": 19,
+          "simon-willison": 1
+        },
+        "share_containing_hacker_news": 1.0
+      },
+      "after": {
+        "n": 20,
+        "distinct_lead_sources": 11,
+        "max_lead_source": "hacker-news",
+        "max_lead_share": 0.15,
+        "lead_counts": {
+          "hacker-news": 3,
+          "gh-pytorch": 3,
+          "techcrunch-ai": 3,
+          "ars-technica": 3,
+          "simon-willison": 2,
+          "the-verge": 1,
+          "openai-news": 1,
+          "gh-ollama": 1,
+          "microsoft-research": 1,
+          "aws-ml-blog": 1,
+          "gh-llama-cpp": 1
+        },
+        "share_containing_hacker_news": 0.2
+      },
+      "diagnostic_no_hn_points_no_rule": {
+        "n": 20,
+        "distinct_lead_sources": 6,
+        "max_lead_source": "hacker-news",
+        "max_lead_share": 0.65,
+        "lead_counts": {
+          "hacker-news": 13,
+          "gh-pytorch": 3,
+          "simon-willison": 1,
+          "the-verge": 1,
+          "openai-news": 1,
+          "techcrunch-ai": 1
+        },
+        "share_containing_hacker_news": 0.7
+      },
+      "top10_before": [
+        "hacker-news | Tank Body Problem",
+        "hacker-news | I thought I was building a C replacement. I was wrong",
+        "simon-willison | Claude Sonnet 5.5",
+        "hacker-news | AI and the revenge of the non-techies",
+        "hacker-news | The Transparent Society - Wikipedia",
+        "hacker-news | GitHub - Calnode/calnode: Lean, self-hostable Calendly & Cal.com alternative — a single Go binary + SQLite, API-first and MCP-native. Apache-2.0.",
+        "hacker-news | Buoy data from the Bering Sea to Samoa | Bluegraph",
+        "hacker-news | HUMANOS | Your life, in full view",
+        "hacker-news | GitHub - rohanprichard/talktome: Voice calls with the coding agent you already use. A macOS menu-bar app.",
+        "hacker-news | Meta’s AI agent Muse gives out user’s home address without permission, sending buyer to his house"
+      ],
+      "top10_after": [
+        "hacker-news | Tank Body Problem",
+        "hacker-news | I thought I was building a C replacement. I was wrong",
+        "simon-willison | Claude Sonnet 5.5",
+        "the-verge | AMD is acquiring AI company World Labs in a deal worth more than $8 billion",
+        "openai-news | How we will do better for Australia",
+        "gh-pytorch | Release trunk/4b2a1145f850903058739df5c9e15f06d74fb9b5: cmake: Use dedicated functions for defining macros (#198957) · pytorch/pytorch",
+        "gh-pytorch | Release trunk/d0e8a89086bf45ce7810ba5087a6d318ddfaf0ae: Remove `_base_vt` (#193679) · pytorch/pytorch",
+        "techcrunch-ai | Peak XV ups Surge seed investment ceiling to $5M, unveils 18-startup cohort | TechCrunch",
+        "techcrunch-ai | OpenAI reportedly ditches model over safety concerns | TechCrunch",
+        "gh-ollama | v0.35.0"
+      ]
+    },
+    "168h": {
+      "candidates": 500,
+      "candidate_lead_sources": {
+        "hacker-news": 140,
+        "the-register": 57,
+        "techcrunch-ai": 35,
+        "ars-technica": 33,
+        "arxiv-cs-cl": 30,
+        "arxiv-cs-lg": 24,
+        "infoq": 22,
+        "lobsters": 22
+      },
+      "before": {
+        "n": 20,
+        "distinct_lead_sources": 2,
+        "max_lead_source": "hacker-news",
+        "max_lead_share": 0.95,
+        "lead_counts": {
+          "hacker-news": 19,
+          "simon-willison": 1
+        },
+        "share_containing_hacker_news": 1.0
+      },
+      "after": {
+        "n": 20,
+        "distinct_lead_sources": 11,
+        "max_lead_source": "hacker-news",
+        "max_lead_share": 0.15,
+        "lead_counts": {
+          "hacker-news": 3,
+          "gh-pytorch": 3,
+          "techcrunch-ai": 3,
+          "ars-technica": 3,
+          "simon-willison": 2,
+          "the-verge": 1,
+          "openai-news": 1,
+          "gh-ollama": 1,
+          "microsoft-research": 1,
+          "aws-ml-blog": 1,
+          "gh-llama-cpp": 1
+        },
+        "share_containing_hacker_news": 0.2
+      },
+      "diagnostic_no_hn_points_no_rule": {
+        "n": 20,
+        "distinct_lead_sources": 6,
+        "max_lead_source": "hacker-news",
+        "max_lead_share": 0.65,
+        "lead_counts": {
+          "hacker-news": 13,
+          "gh-pytorch": 3,
+          "simon-willison": 1,
+          "the-verge": 1,
+          "openai-news": 1,
+          "techcrunch-ai": 1
+        },
+        "share_containing_hacker_news": 0.7
+      },
+      "top10_before": [
+        "hacker-news | Tank Body Problem",
+        "hacker-news | I thought I was building a C replacement. I was wrong",
+        "simon-willison | Claude Sonnet 5.5",
+        "hacker-news | AI and the revenge of the non-techies",
+        "hacker-news | The Transparent Society - Wikipedia",
+        "hacker-news | GitHub - Calnode/calnode: Lean, self-hostable Calendly & Cal.com alternative — a single Go binary + SQLite, API-first and MCP-native. Apache-2.0.",
+        "hacker-news | Buoy data from the Bering Sea to Samoa | Bluegraph",
+        "hacker-news | HUMANOS | Your life, in full view",
+        "hacker-news | GitHub - rohanprichard/talktome: Voice calls with the coding agent you already use. A macOS menu-bar app.",
+        "hacker-news | Meta’s AI agent Muse gives out user’s home address without permission, sending buyer to his house"
+      ],
+      "top10_after": [
+        "hacker-news | Tank Body Problem",
+        "hacker-news | I thought I was building a C replacement. I was wrong",
+        "simon-willison | Claude Sonnet 5.5",
+        "the-verge | AMD is acquiring AI company World Labs in a deal worth more than $8 billion",
+        "openai-news | How we will do better for Australia",
+        "gh-pytorch | Release trunk/4b2a1145f850903058739df5c9e15f06d74fb9b5: cmake: Use dedicated functions for defining macros (#198957) · pytorch/pytorch",
+        "gh-pytorch | Release trunk/d0e8a89086bf45ce7810ba5087a6d318ddfaf0ae: Remove `_base_vt` (#193679) · pytorch/pytorch",
+        "techcrunch-ai | Peak XV ups Surge seed investment ceiling to $5M, unveils 18-startup cohort | TechCrunch",
+        "techcrunch-ai | OpenAI reportedly ditches model over safety concerns | TechCrunch",
+        "gh-ollama | v0.35.0"
+      ]
+    }
+  }
+}

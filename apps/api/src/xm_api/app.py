@@ -46,7 +46,13 @@ from xm_cluster.entities import Gazetteer
 from xm_core.db.session import make_engine, make_sessionmaker
 from xm_core.settings import Settings, get_settings
 from xm_embed.embedder import FastEmbedEmbedder, QueryEmbedder
-from xm_rank.features import FEATURE_VERSION, heuristic_importance, story_features
+from xm_rank.features import (
+    FEATURE_VERSION,
+    diversify,
+    heuristic_importance,
+    lead_sources,
+    story_features,
+)
 from xm_search.query import parse_query
 from xm_search.rerank import TreeEnsemble, gather_signals, rerank
 from xm_search.retrieval import RetrievalTrace, retrieve_stories
@@ -54,6 +60,7 @@ from xm_search.retrieval import RetrievalTrace, retrieve_stories
 log = logging.getLogger("xm_api")
 
 FEED_CANDIDATES = 500
+FEED_RANKER = f"heuristic/{FEATURE_VERSION}+source-cap-v1"
 RERANK_CANDIDATES = 50  # the reranker was trained to reorder the fused top 50
 
 
@@ -256,9 +263,11 @@ def create_app(
                 )
                 features = await story_features(session, candidates, now)
                 scores = {sid: heuristic_importance(f) for sid, f in features.items()}
-                ranked = sorted(scores, key=lambda sid: (-scores[sid], sid))[:limit]
+                ranked = sorted(scores, key=lambda sid: (-scores[sid], sid))
+                # No single source may fill the top of the feed (docs/reports/feed-diversity-v1.md).
+                ranked = diversify(ranked, await lead_sources(session, ranked))[:limit]
                 results = await summaries(session, ranked, scores)
-            return FeedResponse(ranker=f"heuristic/{FEATURE_VERSION}", results=results), True
+            return FeedResponse(ranker=FEED_RANKER, results=results), True
 
         body, status = await st.cache.get_or_compute(
             "feed", {"limit": limit, "window_hours": window_hours}, FeedResponse, compute

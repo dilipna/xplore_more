@@ -196,7 +196,22 @@ def test_feed_prefers_fresh_multi_source_news_over_old_backlog(seeded, migrated_
     # Published 120 days ago but discovered today: outside the window by publication time.
     assert "Database indexing retrospective" not in titles
     assert body["ranker"].startswith("heuristic/")
+    assert body["ranker"].endswith("+source-cap-v1")
     assert response.headers["Cache-Control"] == "public, max-age=60"
+
+
+async def test_story_sources_list_the_representative_source_first(
+    seeded, sessionmaker, migrated_database, embedder
+) -> None:
+    from xm_rank.features import lead_sources
+
+    with client_for(migrated_database, embedder) as client:
+        results = client.get("/v1/feed", params={"window_hours": 24 * 14}).json()["results"]
+    launch = next(r for r in results if r["title"] == "OpenAI releases GPT-5.1")
+    async with sessionmaker() as session:
+        lead = (await lead_sources(session, [launch["id"]]))[launch["id"]]
+    assert launch["sources"][0] == lead
+    assert sorted(launch["sources"]) == ["anthropic-news", "hacker-news"]
 
 
 def test_story_detail_and_not_found(seeded, migrated_database, embedder) -> None:
