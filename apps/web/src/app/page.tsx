@@ -59,6 +59,9 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
         <span className="ml-auto text-xs text-fg-500">
           {stories.length} stories · last {top.windowHours === 72 ? "3 days" : "24 hours"}
         </span>
+        <Link href="/feed" className="text-xs font-semibold text-signal-400 hover:text-signal-300 hover:underline">
+          Tune the ranking
+        </Link>
       </div>
 
       {!top.data ? (

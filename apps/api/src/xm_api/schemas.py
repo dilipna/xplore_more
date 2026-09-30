@@ -21,6 +21,17 @@ class ArticleOut(_Out):
     content_origin: str
 
 
+class RankSignals(_Out):
+    """Why a feed story ranks where it does: score = (coverage + authority + community) * freshness."""
+
+    coverage: float = Field(description="Sources weight x log(1 + independent sources).")
+    authority: float = Field(description="Authority weight x the best source's authority prior (0-1).")
+    community: float = Field(description="Community weight x log(1 + Hacker News points).")
+    freshness: float = Field(description="0.5 ** (hours since publication / half-life); multiplies the sum.")
+    hn_points: int
+    hours_since_published: float
+
+
 class StorySummary(_Out):
     id: int
     title: str
@@ -31,6 +42,7 @@ class StorySummary(_Out):
     first_seen_at: datetime
     published_at: datetime | None
     score: float | None = None
+    signals: RankSignals | None = None  # feed only
 
 
 class SearchResponse(_Out):
@@ -39,8 +51,16 @@ class SearchResponse(_Out):
     degraded: list[str]
 
 
+class FeedWeights(_Out):
+    sources: float
+    authority: float
+    hn_points: float
+    half_life_hours: float
+
+
 class FeedResponse(_Out):
     ranker: str
+    weights: FeedWeights | None = None
     results: list[StorySummary]
 
 

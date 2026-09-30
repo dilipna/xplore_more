@@ -15,7 +15,7 @@ import logging
 import time
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Annotated
@@ -33,9 +33,11 @@ from xm_api.problems import RANKER, find_problems, get_problem
 from xm_api.ratelimit import RateLimiter
 from xm_api.schemas import (
     FeedResponse,
+    FeedWeights,
     ProblemCategory,
     ProblemDetail,
     ProblemsResponse,
+    RankSignals,
     SearchResponse,
     StatsResponse,
     StoryDetail,
@@ -47,9 +49,13 @@ from xm_core.db.session import make_engine, make_sessionmaker
 from xm_core.settings import Settings, get_settings
 from xm_embed.embedder import FastEmbedEmbedder, QueryEmbedder
 from xm_rank.features import (
+    DEFAULT_WEIGHTS,
     FEATURE_VERSION,
+    HeuristicTerms,
+    HeuristicWeights,
+    StoryFeatures,
     diversify,
-    heuristic_importance,
+    heuristic_terms,
     lead_sources,
     story_features,
 )
@@ -79,6 +85,17 @@ class AppState:
 
 def _state(request: Request) -> AppState:
     return request.app.state.xm
+
+
+def _signals(t: HeuristicTerms, f: StoryFeatures) -> RankSignals:
+    return RankSignals(
+        coverage=round(t.coverage, 4),
+        authority=round(t.authority, 4),
+        community=round(t.community, 4),
+        freshness=round(t.freshness, 4),
+        hn_points=f.hn_points_max,
+        hours_since_published=round(f.hours_since_published, 2),
+    )
 
 
 def _mark_degraded(response: Response, reason: str) -> None:
@@ -254,7 +271,19 @@ def create_app(
         response: Response,
         limit: Annotated[int, Query(ge=1, le=50)] = 30,
         window_hours: Annotated[int, Query(ge=1, le=24 * 14)] = 72,
+        # Reader-tunable heuristic weights, bounded; the defaults give the standard feed.
+        w_sources: Annotated[float, Query(ge=0.0, le=3.0)] = DEFAULT_WEIGHTS.sources,
+        w_authority: Annotated[float, Query(ge=0.0, le=3.0)] = DEFAULT_WEIGHTS.authority,
+        w_points: Annotated[float, Query(ge=0.0, le=1.5)] = DEFAULT_WEIGHTS.hn_points,
+        half_life_hours: Annotated[float, Query(ge=2.0, le=168.0)] = DEFAULT_WEIGHTS.half_life_hours,
     ) -> FeedResponse:
+        weights = HeuristicWeights(
+            sources=round(w_sources, 2),
+            authority=round(w_authority, 2),
+            hn_points=round(w_points, 2),
+            half_life_hours=round(half_life_hours, 1),
+        )
+
         async def compute() -> tuple[FeedResponse, bool]:
             now = datetime.now(UTC)
             async with st.sessionmaker() as session:
@@ -262,16 +291,20 @@ def create_app(
                     session, now - timedelta(hours=window_hours), FEED_CANDIDATES
                 )
                 features = await story_features(session, candidates, now)
-                scores = {sid: heuristic_importance(f) for sid, f in features.items()}
+                terms = {sid: heuristic_terms(f, weights) for sid, f in features.items()}
+                scores = {sid: t.score for sid, t in terms.items()}
                 ranked = sorted(scores, key=lambda sid: (-scores[sid], sid))
                 # No single source may fill the top of the feed (docs/reports/feed-diversity-v1.md).
                 ranked = diversify(ranked, await lead_sources(session, ranked))[:limit]
-                results = await summaries(session, ranked, scores)
-            return FeedResponse(ranker=FEED_RANKER, results=results), True
+                results = [
+                    s.model_copy(update={"signals": _signals(terms[s.id], features[s.id])})
+                    for s in await summaries(session, ranked, scores)
+                ]
+            body = FeedResponse(ranker=FEED_RANKER, weights=FeedWeights(**asdict(weights)), results=results)
+            return body, True
 
-        body, status = await st.cache.get_or_compute(
-            "feed", {"limit": limit, "window_hours": window_hours}, FeedResponse, compute
-        )
+        key = {"limit": limit, "window_hours": window_hours, **asdict(weights)}
+        body, status = await st.cache.get_or_compute("feed", key, FeedResponse, compute)
         response.headers["X-XM-Cache"] = status
         response.headers["Cache-Control"] = "public, max-age=60"
         return body

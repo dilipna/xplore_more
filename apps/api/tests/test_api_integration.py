@@ -200,6 +200,48 @@ def test_feed_prefers_fresh_multi_source_news_over_old_backlog(seeded, migrated_
     assert response.headers["Cache-Control"] == "public, max-age=60"
 
 
+FEED = {"window_hours": 24 * 14}
+
+
+def test_feed_default_weights_equal_the_standard_feed(seeded, migrated_database, embedder) -> None:
+    explicit = {"w_sources": 1.2, "w_authority": 1.0, "w_points": 0.35, "half_life_hours": 18}
+    with client_for(migrated_database, embedder) as client:
+        plain = client.get("/v1/feed", params=FEED).json()
+        tuned = client.get("/v1/feed", params={**FEED, **explicit}).json()
+        again = client.get("/v1/feed", params={**FEED, **explicit}).json()
+    ids = [r["id"] for r in plain["results"]]
+    assert ids == [r["id"] for r in tuned["results"]] == [r["id"] for r in again["results"]]
+    assert plain["weights"] == {"sources": 1.2, "authority": 1.0, "hn_points": 0.35, "half_life_hours": 18.0}
+
+
+@pytest.mark.parametrize(
+    "bad",
+    [
+        {"w_sources": -0.1},
+        {"w_sources": 3.1},
+        {"w_authority": 3.5},
+        {"w_points": 1.6},
+        {"half_life_hours": 1},
+        {"half_life_hours": 169},
+        {"w_points": "lots"},
+    ],
+)
+def test_feed_weights_are_bounded(seeded, migrated_database, embedder, bad) -> None:
+    with client_for(migrated_database, embedder) as client:
+        assert client.get("/v1/feed", params={**FEED, **bad}).status_code == 422
+
+
+def test_feed_weights_change_the_scores_and_explain_them(seeded, migrated_database, embedder) -> None:
+    with client_for(migrated_database, embedder) as client:
+        body = client.get("/v1/feed", params={**FEED, "w_sources": 0, "w_points": 0}).json()
+    assert body["weights"]["sources"] == 0.0
+    for r in body["results"]:
+        s = r["signals"]
+        assert s["coverage"] == 0.0 and s["community"] == 0.0
+        # The explanation adds up to the score it explains (both are rounded for transport).
+        assert abs((s["coverage"] + s["authority"] + s["community"]) * s["freshness"] - r["score"]) < 1e-3
+
+
 async def test_story_sources_list_the_representative_source_first(
     seeded, sessionmaker, migrated_database, embedder
 ) -> None:

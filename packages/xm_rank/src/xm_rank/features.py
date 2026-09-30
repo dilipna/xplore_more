@@ -111,11 +111,31 @@ class HeuristicWeights:
 DEFAULT_WEIGHTS = HeuristicWeights()
 
 
+@dataclass(frozen=True)
+class HeuristicTerms:
+    """The heuristic's parts for one story: score = (coverage + authority + community) * freshness."""
+
+    coverage: float  # w.sources * log1p(independent sources)
+    authority: float  # w.authority * best source's authority prior
+    community: float  # w.hn_points * log1p(Hacker News points)
+    freshness: float  # 0.5 ** (hours since publication / half-life)
+
+    @property
+    def score(self) -> float:
+        return (self.coverage + self.authority + self.community) * self.freshness
+
+
+def heuristic_terms(f: StoryFeatures, w: HeuristicWeights = DEFAULT_WEIGHTS) -> HeuristicTerms:
+    return HeuristicTerms(
+        coverage=w.sources * math.log1p(f.source_count),
+        authority=w.authority * f.max_authority,
+        community=w.hn_points * math.log1p(f.hn_points_max),
+        freshness=0.5 ** (f.hours_since_published / w.half_life_hours),
+    )
+
+
 def heuristic_importance(f: StoryFeatures, w: HeuristicWeights = DEFAULT_WEIGHTS) -> float:
-    coverage = w.sources * math.log1p(f.source_count) + w.authority * f.max_authority
-    engagement = w.hn_points * math.log1p(f.hn_points_max)
-    freshness = 0.5 ** (f.hours_since_published / w.half_life_hours)
-    return (coverage + engagement) * freshness
+    return heuristic_terms(f, w).score
 
 
 _LEAD_SQL = text(
