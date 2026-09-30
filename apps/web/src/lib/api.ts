@@ -201,9 +201,8 @@ export function getProblems(params: {
   return apiGet<ProblemsResponse>("/v1/problems", { ...params, evidence: 2, since_days: 30 });
 }
 
-export function getProblem(id: number) {
-  return apiGet<ProblemDetail>(`/v1/problems/${id}`, { evidence: 10 });
-}
+/** Deduplicated per request: the page and its share-card metadata both need it. */
+export const getProblem = cache((id: number) => apiGet<ProblemDetail>(`/v1/problems/${id}`, { evidence: 10 }));
 
 export function search(q: string, limit = 15) {
   return apiGet<SearchResponse>("/v1/search", { q, limit });
@@ -221,9 +220,8 @@ export const getTopStories = cache(async () => {
   return { ...(await getFeed(72, 30)), windowHours: 72 };
 });
 
-export function getStory(id: number) {
-  return apiGet<StoryDetail>(`/v1/stories/${id}`);
-}
+/** Deduplicated per request: the page and its share-card metadata both need it. */
+export const getStory = cache((id: number) => apiGet<StoryDetail>(`/v1/stories/${id}`));
 
 /** Parse a Server-Timing header ("embed;dur=12.3, lexical;dur=4.1") into ordered stages. */
 export function parseServerTiming(header: string | null): { name: string; ms: number }[] {

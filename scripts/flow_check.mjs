@@ -3,6 +3,7 @@
 //   node scripts/flow_check.mjs [base_url]        default: http://localhost:3100
 // 1. Follow a topic from search, see it on My topics, unfollow it (localStorage only).
 // 2. Move a ranking slider on /feed and see the URL and the page re-rank.
+// 3. Keyboard shortcuts (j, ?, Escape).
 // Exit code 1 on the first failed step. Needs Node >= 22 and Chrome or Edge.
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
@@ -111,6 +112,18 @@ async function main() {
     step("slider move updates the URL", moved && (await until(`location.search.includes("w_sources=3")`)));
     step("re-ranked page shows rank changes", await until(`document.body.innerText.includes("Custom weights") && /[▲▼]/.test(document.body.innerText)`));
     step("Reset returns to the default URL", (await clickText("Reset to default")) && (await until(`!location.search.includes("w_sources")`)));
+    // 3. Keyboard shortcuts: j selects the first card, ? opens the help, Escape closes it.
+    const key = async (k) => {
+      await send("Input.dispatchKeyEvent", { type: "keyDown", key: k, text: k.length === 1 ? k : undefined });
+      await send("Input.dispatchKeyEvent", { type: "keyUp", key: k });
+    };
+    await go("/");
+    await key("j");
+    step("j selects a card", await until(`!!document.querySelector("main article[data-kb-selected]")`));
+    await key("?");
+    step("? opens the shortcut help", await until(`document.body.innerText.includes("Keyboard shortcuts")`));
+    await key("Escape");
+    step("Escape closes it", await until(`!document.querySelector('[role=dialog]')`));
     ws.close();
   } finally {
     chrome.kill();

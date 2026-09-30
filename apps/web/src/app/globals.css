@@ -162,3 +162,22 @@ body {
 input[type="search"]::-webkit-search-cancel-button {
   filter: invert(0.7);
 }
+
+/* Printing (the daily briefing): black text on white paper, no glow or panels. */
+@media print {
+  *,
+  *::before,
+  *::after {
+    color: #000 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    border-color: #ccc !important;
+  }
+}
+
+/* Keyboard shortcuts (j/k): the selected card. */
+main article[data-kb-selected] {
+  outline: 2px solid var(--color-signal-400);
+  outline-offset: 2px;
+}

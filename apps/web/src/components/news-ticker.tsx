@@ -33,7 +33,7 @@ export async function NewsTicker() {
     ));
 
   return (
-    <div className="border-b hairline bg-field-900/60">
+    <div className="border-b hairline bg-field-900/60 print:hidden">
       <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 sm:px-5">
         <span className="flex shrink-0 items-center gap-2 py-2 text-xs font-semibold text-signal-400">
           <span className="live-dot" aria-hidden="true" />

@@ -19,7 +19,21 @@ function gap(ms: number): string {
 }
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Story" };
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const storyId = Number((await params).id);
+  const d = Number.isInteger(storyId) && storyId > 0 ? (await getStory(storyId)).data : null;
+  if (!d) return { title: "Story" };
+  const first = d.articles[0];
+  const description = `${d.story.source_count} ${d.story.source_count === 1 ? "source" : "sources"}${
+    first ? `, including ${first.source_name}` : ""
+  }. First seen ${shortDate(d.story.first_seen_at)}.`;
+  return {
+    title: d.story.title,
+    description,
+    openGraph: { title: d.story.title, description, type: "article", publishedTime: d.story.published_at ?? undefined },
+    twitter: { card: "summary", title: d.story.title, description },
+  };
+}
 
 export default async function StoryPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

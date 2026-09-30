@@ -62,6 +62,9 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
         <Link href="/feed" className="text-xs font-semibold text-signal-400 hover:text-signal-300 hover:underline">
           Tune the ranking
         </Link>
+        <Link href="/briefing" className="text-xs font-semibold text-signal-400 hover:text-signal-300 hover:underline">
+          Daily briefing
+        </Link>
       </div>
 
       {!top.data ? (
