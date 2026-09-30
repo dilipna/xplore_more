@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getStats } from "@/lib/api";
 import { SearchIcon } from "./icons";
 import { SinceTicker } from "./live";
+import { PaletteButton } from "./command-palette";
 import { NavLinks } from "./nav-links";
 
 export function Wordmark() {
@@ -41,7 +42,10 @@ export async function SiteHeader() {
           />
         </form>
 
-        <div className="ml-auto flex shrink-0 items-center gap-2 rounded-full border hairline px-3 py-1.5 text-xs md:ml-0">
+        <div className="ml-auto md:ml-0">
+          <PaletteButton />
+        </div>
+        <div className="flex shrink-0 items-center gap-2 rounded-full border hairline px-3 py-1.5 text-xs">
           {stats.data ? (
             <>
               <span className="live-dot" aria-hidden="true" />

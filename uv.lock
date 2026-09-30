@@ -1743,11 +1743,15 @@ name = "xm-rank"
 version = "0.1.0"
 source = { editable = "packages/xm_rank" }
 dependencies = [
+    { name = "numpy" },
     { name = "xm-core" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "xm-core", editable = "packages/xm_core" }]
+requires-dist = [
+    { name = "numpy", specifier = ">=2" },
+    { name = "xm-core", editable = "packages/xm_core" },
+]
 
 [[package]]
 name = "xm-search"

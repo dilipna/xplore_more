@@ -112,6 +112,42 @@ async function main() {
     step("slider move updates the URL", moved && (await until(`location.search.includes("w_sources=3")`)));
     step("re-ranked page shows rank changes", await until(`document.body.innerText.includes("Custom weights") && /[▲▼]/.test(document.body.innerText)`));
     step("Reset returns to the default URL", (await clickText("Reset to default")) && (await until(`!location.search.includes("w_sources")`)));
+    // 4. The signal map draws real dots, on /map (server data) and in the home hero (client fetch).
+    const lit = `(() => { const c = document.querySelector("[data-signal-map] canvas"); if (!c || !c.width) return 0;
+      const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data; let n = 0;
+      for (let i = 1; i < d.length; i += 16) if (d[i] > 90) n++; return n; })()`;
+    await go("/map");
+    step("map page draws dots", await until(`${lit} > 200`));
+    // Hover a known dot (its screen position follows the component's projection), then click it.
+    await js(`document.querySelector("[data-signal-map]").scrollIntoView({ block: "center" }); true`);
+    await sleep(300);
+    // The highest-weighted dot that is on screen (not under the controls panel).
+    const target = await js(`fetch("/api/map").then(r => r.json()).then(m => {
+      const c = document.querySelector("[data-signal-map] canvas").getBoundingClientRect();
+      const R = Math.min(c.width, c.height) * 0.46;
+      const at = (p) => ({ title: p.title, kind: p.kind, x: c.left + c.width / 2 + p.x * R, y: c.top + c.height / 2 - p.y * R });
+      return [...m.points].sort((a, b) => b.weight - a.weight).map(at)
+        .find((t) => t.x > c.left + 20 && t.x < Math.min(innerWidth, c.right) - 20 && t.y > Math.max(0, c.top) + 70 && t.y < Math.min(innerHeight, c.bottom) - 30);
+    })`);
+    await sleep(1600); // let the intro animation settle
+    await send("Input.dispatchMouseEvent", { type: "mouseMoved", x: target.x, y: target.y });
+    step("hovering a dot shows its title", await until(`document.body.innerText.includes(${JSON.stringify(target.title.slice(0, 40))})`));
+    await send("Input.dispatchMouseEvent", { type: "mousePressed", x: target.x, y: target.y, button: "left", clickCount: 1 });
+    await send("Input.dispatchMouseEvent", { type: "mouseReleased", x: target.x, y: target.y, button: "left", clickCount: 1 });
+    step("clicking a dot opens it", await until(`location.pathname.startsWith(${JSON.stringify(target.kind === "story" ? "/stories/" : "/problems/")})`));
+    await go("/");
+    step("home hero draws the map", await until(`${lit} > 200`));
+    // 5. Command palette: Ctrl+K opens it and typing searches stories.
+    await send("Input.dispatchKeyEvent", { type: "keyDown", key: "k", modifiers: 2, windowsVirtualKeyCode: 75 });
+    await send("Input.dispatchKeyEvent", { type: "keyUp", key: "k", modifiers: 2, windowsVirtualKeyCode: 75 });
+    step("Ctrl+K opens the command palette", await until(`!!document.querySelector('[aria-label="Command palette"]')`));
+    await until(`document.activeElement?.getAttribute("aria-label") === "Search stories or jump to a page"`);
+    await send("Input.insertText", { text: "vllm" });
+    step("typing searches stories", await until(`[...document.querySelectorAll('[role=option]')].filter(o => o.textContent.startsWith("story")).length > 0`));
+    await send("Input.dispatchKeyEvent", { type: "keyDown", key: "Escape" });
+    await send("Input.dispatchKeyEvent", { type: "keyUp", key: "Escape" });
+    step("Escape closes the palette", await until(`!document.querySelector('[aria-label="Command palette"]')`));
+
     // 3. Keyboard shortcuts: j selects the first card, ? opens the help, Escape closes it.
     const key = async (k) => {
       await send("Input.dispatchKeyEvent", { type: "keyDown", key: k, text: k.length === 1 ? k : undefined });

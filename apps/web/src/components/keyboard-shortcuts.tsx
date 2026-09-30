@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 const KEYS: [string, string][] = [
+  ["⌘K / Ctrl+K", "Jump anywhere, search as you type"],
   ["/", "Search"],
   ["j / k", "Next / previous story or problem"],
   ["o or Enter", "Open the selected one"],

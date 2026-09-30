@@ -45,6 +45,7 @@ done <<EOF
 /stories/2141 200 Race to report
 /topics?t=vllm 200 My topics
 /briefing 200 Most reported problems
+/map 200 Signal
 /rss.xml 200 <rss
 /problems.xml 200 <rss
 /how-it-works 200 nDCG@10
@@ -52,11 +53,11 @@ done <<EOF
 EOF
 
 if command -v node >/dev/null 2>&1; then
-  PAGES="/ /problems /problems/$DEMO_PROBLEM /search?q=kubernetes /search?q=rust%20adoption /feed /feed?w_points=0&w_sources=3 /feed?primary=1 /stories/2141 /topics?t=vllm /briefing /how-it-works" \
+  PAGES="/ /problems /problems/$DEMO_PROBLEM /search?q=kubernetes /search?q=rust%20adoption /feed /feed?w_points=0&w_sources=3 /feed?primary=1 /stories/2141 /topics?t=vllm /briefing /map /how-it-works" \
     node scripts/mobile_check.mjs "$WEB" .data/shots_preflight >/dev/null 2>&1
   check "phone width (390 px)" $? "(scripts/mobile_check.mjs)"
   node scripts/flow_check.mjs "$WEB" >/dev/null 2>&1
-  check "browser flows: follow, sliders, keyboard" $? "(scripts/flow_check.mjs)"
+  check "browser flows: map, palette, follow, sliders, keyboard" $? "(scripts/flow_check.mjs)"
 fi
 
 [ "$fail" -eq 0 ] && echo "PREFLIGHT PASSED" || echo "PREFLIGHT FAILED"

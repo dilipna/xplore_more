@@ -8,6 +8,8 @@
 
 These are descriptions of what each feature does, not claims about other sites.
 
+- **The week, mapped by meaning (`/map`).** Every story and active problem is a dot on a radar-style canvas, placed by a t-SNE layout of its embedding (numpy, deterministic, cached). Islands are labelled with their most distinctive title words (class-based TF-IDF), so no label is generated. Hover a dot to see its nearest neighbours in meaning; click it to open it. The home page opens with it, next to a live chart of items per hour.
+- **⌘K anywhere:** a command palette that jumps to any page or searches stories as you type (hybrid search through a same-origin proxy, so the API key stays on the server).
 - **You can see and change the ranking.** Every feed story shows why it ranks where it does: coverage, authority, community points and freshness, computed by the same function as the score. Sliders on `/feed` re-rank the feed, with rank-change arrows and a shareable URL. The weights are bounded and part of the cache key; the defaults equal the standard feed (tested).
 - **No single source takes over the top.** At most 2 stories per lead source in the top 10 and 3 in the top 20. Before the cap, the top 20 was 19/20 Hacker News; after it, the largest single source had 3/20, from 11 sources ([report](docs/reports/feed-diversity-v1.md)).
 - **Who reported first.** Multi-source stories show a race-to-report timeline and a badge per source (primary / press / independent / community). A "Primary sources only" filter keeps stories that a lab, company, project or paper published.

@@ -275,3 +275,25 @@ def test_security_headers(seeded, migrated_database, embedder) -> None:
     assert headers["X-Content-Type-Options"] == "nosniff"
     assert headers["X-Frame-Options"] == "DENY"
     assert headers["Referrer-Policy"] == "no-referrer"
+
+
+def test_map_places_every_story_and_is_cached_deterministically(seeded, migrated_database, embedder) -> None:
+    with client_for(migrated_database, embedder) as client:
+        first = client.get("/v1/map", params={"window_hours": 24 * 14}).json()
+        again = client.get("/v1/map", params={"window_hours": 24 * 14}).json()
+        bad = client.get("/v1/map", params={"window_hours": 1})
+    stories = [p for p in first["points"] if p["kind"] == "story"]
+    assert {p["title"] for p in stories} >= {"OpenAI releases GPT-5.1", "Kubernetes 1.40 released"}
+    assert all(
+        -1.0 <= p["x"] <= 1.0 and -1.0 <= p["y"] <= 1.0 and 0.0 <= p["weight"] <= 1.0 for p in first["points"]
+    )
+    assert [(p["x"], p["y"]) for p in first["points"]] == [(p["x"], p["y"]) for p in again["points"]]
+    assert bad.status_code == 422
+
+
+def test_pulse_counts_items_per_hour(seeded, migrated_database, embedder) -> None:
+    with client_for(migrated_database, embedder) as client:
+        body = client.get("/v1/pulse", params={"hours": 6}).json()
+    assert len(body["buckets"]) == 6
+    # Seeded articles were published 1-3 hours ago (the 120-day-old one is outside the window).
+    assert sum(b["articles"] for b in body["buckets"]) == 3

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 
 const LINKS = [
   { href: "/", label: "News" },
+  { href: "/map", label: "Map" },
   { href: "/problems", label: "Problems" },
   { href: "/search", label: "Search" },
   { href: "/topics", label: "My topics" },
@@ -14,7 +15,7 @@ const LINKS = [
 export function NavLinks() {
   const pathname = usePathname();
   return (
-    <nav className="-mx-2 flex w-full items-center gap-1 text-sm md:mx-0 md:w-auto">
+    <nav className="-mx-2 flex w-full flex-wrap items-center gap-x-0.5 gap-y-1 text-sm md:mx-0 md:w-auto">
       {LINKS.map(({ href, label }) => {
         const active =
           href === "/" ? pathname === "/" || pathname.startsWith("/feed") || pathname.startsWith("/stories") : pathname.startsWith(href);

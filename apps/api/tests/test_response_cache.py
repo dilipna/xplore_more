@@ -178,3 +178,11 @@ def test_api_serves_problems_and_feed_from_cache(migrated_database, embedder, pr
 
         feed = [c.get("/v1/feed", params={"limit": 3}) for _ in range(2)]
         assert [r.headers["X-XM-Cache"] for r in feed] == ["miss", "hit"]
+
+
+async def test_costly_entries_can_outlive_the_default_ttl(redis, prefix) -> None:
+    cache, compute = make_cache(redis, prefix), Counter()
+    await cache.get_or_compute("map", {"w": 168}, Body, compute, ttl_s=1800)
+    await cache.get_or_compute("feed", {"w": 168}, Body, compute)
+    assert 60 < await redis.ttl(cache.key("map", {"w": 168})) <= 1800
+    assert await redis.ttl(cache.key("feed", {"w": 168})) <= 60

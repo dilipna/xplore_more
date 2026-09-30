@@ -146,3 +146,44 @@ class ProblemDetail(ProblemSummary):
     effective_voices: float
     demand_factors: DemandFactors
     scorer_version: str
+
+
+class MapPoint(_Out):
+    kind: Literal["story", "problem"]
+    id: int
+    x: float = Field(
+        description="Layout coordinate in [-1, 1] (t-SNE over embeddings; only nearness means anything)."
+    )
+    y: float
+    weight: float = Field(
+        description="Feed score (stories) or demand (problems), relative to the maximum, 0-1."
+    )
+    title: str
+    meta: str = Field(description="Lead source id (stories) or problem category.")
+    island: int
+
+
+class MapIsland(_Out):
+    id: int
+    label: str = Field(description="The island's most distinctive title words (class-based TF-IDF).")
+    x: float
+    y: float
+    size: int
+
+
+class MapResponse(_Out):
+    as_of: datetime
+    window_hours: int
+    points: list[MapPoint]
+    islands: list[MapIsland]
+
+
+class PulseBucket(_Out):
+    hour: datetime
+    articles: int
+    discussions: int
+
+
+class PulseResponse(_Out):
+    as_of: datetime
+    buckets: list[PulseBucket]

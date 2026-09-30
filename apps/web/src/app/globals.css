@@ -181,3 +181,34 @@ main article[data-kb-selected] {
   outline: 2px solid var(--color-signal-400);
   outline-offset: 2px;
 }
+
+/* Placeholder radar while the map loads: rings and a rotating sweep (static with reduced motion). */
+.radar-idle {
+  width: 190px;
+  height: 190px;
+  border-radius: 9999px;
+  background:
+    radial-gradient(circle, transparent 32%, rgb(57 255 127 / 0.1) 33%, transparent 34%, transparent 65%, rgb(57 255 127 / 0.1) 66%, transparent 67%),
+    conic-gradient(from 0deg, rgb(57 255 127 / 0.28), transparent 18%);
+  box-shadow: inset 0 0 0 1px rgb(57 255 127 / 0.15);
+  animation: radar-spin 2.4s linear infinite;
+}
+@keyframes radar-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .radar-idle {
+    animation: none;
+  }
+}
+
+/* The home hero's backdrop: a faint grid fading into black. */
+.hero-grid {
+  background-image:
+    linear-gradient(rgb(57 255 127 / 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(57 255 127 / 0.05) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(ellipse at 30% 20%, black 30%, transparent 80%);
+}

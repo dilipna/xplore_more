@@ -235,3 +235,40 @@ export function parseServerTiming(header: string | null): { name: string; ms: nu
     })
     .filter((stage) => stage.name && Number.isFinite(stage.ms));
 }
+
+export interface MapPoint {
+  kind: "story" | "problem";
+  id: number;
+  x: number;
+  y: number;
+  weight: number;
+  title: string;
+  meta: string;
+  island: number;
+}
+
+export interface MapIsland {
+  id: number;
+  label: string;
+  x: number;
+  y: number;
+  size: number;
+}
+
+export interface MapResponse {
+  as_of: string;
+  window_hours: number;
+  points: MapPoint[];
+  islands: MapIsland[];
+}
+
+export interface PulseResponse {
+  as_of: string;
+  buckets: { hour: string; articles: number; discussions: number }[];
+}
+
+export function getMap(windowHours = 168) {
+  return apiGet<MapResponse>("/v1/map", { window_hours: windowHours });
+}
+
+export const getPulse = cache((hours = 72) => apiGet<PulseResponse>("/v1/pulse", { hours }));

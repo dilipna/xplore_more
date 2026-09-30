@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
+import { CommandPalette } from "@/components/command-palette";
 import { KeyboardShortcuts } from "@/components/keyboard-shortcuts";
 import { SiteFooter } from "@/components/site-footer";
 import { NewsTicker } from "@/components/news-ticker";
@@ -39,6 +40,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <main className="flex-1">{children}</main>
         <SiteFooter />
         <KeyboardShortcuts />
+        <CommandPalette />
       </body>
     </html>
   );
