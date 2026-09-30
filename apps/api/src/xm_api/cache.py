@@ -82,8 +82,10 @@ class ResponseCache:
         params: dict[str, Any],
         model: type[M],
         compute: Callable[[], Awaitable[tuple[M, bool]]],
+        ttl_s: int | None = None,
     ) -> tuple[M, CacheStatus]:
-        """`compute` returns (response, cacheable)."""
+        """`compute` returns (response, cacheable). `ttl_s` overrides the default TTL for costly entries;
+        a generation bump (a committed indexer batch) still invalidates them."""
         if self._ttl_s <= 0:
             value, _ = await compute()
             return value, "off"
@@ -106,7 +108,7 @@ class ResponseCache:
         future: asyncio.Future[BaseModel] = asyncio.get_running_loop().create_future()
         self._inflight[key] = future
         try:
-            value, status = await self._fill(key, generation, model, compute)
+            value, status = await self._fill(key, generation, model, compute, ttl_s or self._ttl_s)
             future.set_result(value)
             return value, status
         except asyncio.CancelledError:
@@ -135,7 +137,12 @@ class ResponseCache:
             return generation, None  # unreadable entry: recompute and overwrite
 
     async def _fill[M: BaseModel](
-        self, key: str, generation: str, model: type[M], compute: Callable[[], Awaitable[tuple[M, bool]]]
+        self,
+        key: str,
+        generation: str,
+        model: type[M],
+        compute: Callable[[], Awaitable[tuple[M, bool]]],
+        ttl_s: int,
     ) -> tuple[M, CacheStatus]:
         lock_key, token = f"{key}:lock", secrets.token_hex(8)
         try:
@@ -157,7 +164,7 @@ class ResponseCache:
             if cacheable:
                 body = json.dumps({"gen": generation, "body": value.model_dump_json()})
                 try:
-                    await self._redis.set(key, body, ex=self._ttl_s)
+                    await self._redis.set(key, body, ex=ttl_s)
                 except (RedisError, OSError) as exc:
                     log.warning("response cache write failed: %s", exc)
             return value, "miss"

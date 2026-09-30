@@ -34,14 +34,17 @@ from xm_api.ratelimit import RateLimiter
 from xm_api.schemas import (
     FeedResponse,
     FeedWeights,
+    MapResponse,
     ProblemCategory,
     ProblemDetail,
     ProblemsResponse,
+    PulseResponse,
     RankSignals,
     SearchResponse,
     StatsResponse,
     StoryDetail,
 )
+from xm_api.semantic import pulse, semantic_map
 from xm_api.stats import corpus_stats
 from xm_api.stories import recent_story_ids, story_articles, summaries
 from xm_cluster.entities import Gazetteer
@@ -66,6 +69,7 @@ from xm_search.retrieval import RetrievalTrace, retrieve_stories
 log = logging.getLogger("xm_api")
 
 FEED_CANDIDATES = 500
+MAP_CACHE_TTL_S = 1800
 FEED_RANKER = f"heuristic/{FEATURE_VERSION}+source-cap-v1"
 RERANK_CANDIDATES = 50  # the reranker was trained to reorder the fused top 50
 
@@ -316,6 +320,41 @@ def create_app(
                 return await corpus_stats(session, datetime.now(UTC)), True
 
         body, status = await st.cache.get_or_compute("stats", {}, StatsResponse, compute)
+        response.headers["X-XM-Cache"] = status
+        response.headers["Cache-Control"] = "public, max-age=60"
+        return body
+
+    @app.get("/v1/map", response_model=MapResponse)
+    async def story_map(
+        st: StateDep,
+        _: ProtectedDep,
+        response: Response,
+        window_hours: Annotated[int, Query(ge=24, le=24 * 14)] = 168,
+    ) -> MapResponse:
+        async def compute() -> tuple[MapResponse, bool]:
+            async with st.sessionmaker() as session:
+                return await semantic_map(session, datetime.now(UTC), window_hours), True
+
+        # The layout takes seconds: keep it until the next indexed batch bumps the generation, or 30 min.
+        body, status = await st.cache.get_or_compute(
+            "map", {"window_hours": window_hours}, MapResponse, compute, ttl_s=MAP_CACHE_TTL_S
+        )
+        response.headers["X-XM-Cache"] = status
+        response.headers["Cache-Control"] = "public, max-age=300"
+        return body
+
+    @app.get("/v1/pulse", response_model=PulseResponse)
+    async def activity_pulse(
+        st: StateDep,
+        _: ProtectedDep,
+        response: Response,
+        hours: Annotated[int, Query(ge=6, le=24 * 7)] = 72,
+    ) -> PulseResponse:
+        async def compute() -> tuple[PulseResponse, bool]:
+            async with st.sessionmaker() as session:
+                return await pulse(session, datetime.now(UTC), hours), True
+
+        body, status = await st.cache.get_or_compute("pulse", {"hours": hours}, PulseResponse, compute)
         response.headers["X-XM-Cache"] = status
         response.headers["Cache-Control"] = "public, max-age=60"
         return body

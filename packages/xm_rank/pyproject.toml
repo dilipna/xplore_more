@@ -5,6 +5,7 @@ description = "Story features and ranking: heuristic baseline now, learning-to-r
 requires-python = ">=3.13,<3.14"
 dependencies = [
     "xm-core",
+    "numpy>=2",
 ]
 
 [tool.uv.sources]

@@ -63,6 +63,12 @@ The numbers below were read from `/v1/stats` on **2026-09-30 19:33 UTC** (last i
 | Articles → stories | 1,910 articles → 1,885 stories (18 multi-source) |
 | Problems (30-day window) | 718, of which 29 were reported by 2+ people |
 
+### Stop 0: The opener, the home hero and `/map` (≈1.5 min, **start here**)
+- **Show:** the home hero: the radar of this week's news and the 72-hour pulse chart. Click **Explore the map**. On `/map`, hover a dot (lines go to its nearest neighbours in meaning), type `openai` into **Highlight**, toggle **Problems**, scroll to zoom into an island, and click a dot to open the story. Then press **⌘K / Ctrl+K**, type `vllm`, and pick a story.
+- **Say:** "This is the week's news and the problems engineers report, laid out by meaning. Each story's embedding goes through a t-SNE layout I implemented in numpy, deterministic and cached on the server; islands come from k-means, and their labels are the most distinctive words in their titles. Nothing on screen is generated text."
+- **If asked why the amber problems sit apart from the news:** "That's real. It matches what we measured when we tried to link news to problems: embedding nearness alone gave 25% precision, so we didn't ship those links."
+- The first map computation after an indexer batch takes about 5 s (cached for 30 min after that). The pre-flight warms it.
+
 ### Stop 1: Home, `/` (≈1 min)
 - **Show:**
   - The layout: sections on the left, the feed in the middle, **Trending problems** and **By the numbers** on the right, the **Trending** ticker, and "Live · updated … ago" at the top.
