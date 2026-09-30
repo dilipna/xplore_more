@@ -1,0 +1,81 @@
+{
+  "human_audited": false,
+  "judge": "assistant",
+  "pairs": 48,
+  "as_of": "2026-09-29T02:33:41.326906+00:00",
+  "per_bin": {
+    "0.70-0.74": {
+      "relevant": 0,
+      "judged": 12,
+      "ci95": [
+        0.0,
+        0.243
+      ]
+    },
+    "0.74-0.77": {
+      "relevant": 2,
+      "judged": 12,
+      "ci95": [
+        0.047,
+        0.448
+      ]
+    },
+    "0.77-0.80": {
+      "relevant": 2,
+      "judged": 12,
+      "ci95": [
+        0.047,
+        0.448
+      ]
+    },
+    "0.80-1.00": {
+      "relevant": 3,
+      "judged": 12,
+      "ci95": [
+        0.089,
+        0.532
+      ]
+    }
+  },
+  "per_floor": {
+    "0.70": {
+      "relevant": 7,
+      "judged": 48,
+      "precision": 0.146,
+      "ci95": [
+        0.072,
+        0.272
+      ]
+    },
+    "0.74": {
+      "relevant": 7,
+      "judged": 36,
+      "precision": 0.194,
+      "ci95": [
+        0.098,
+        0.35
+      ]
+    },
+    "0.77": {
+      "relevant": 5,
+      "judged": 24,
+      "precision": 0.208,
+      "ci95": [
+        0.092,
+        0.405
+      ]
+    },
+    "0.80": {
+      "relevant": 3,
+      "judged": 12,
+      "precision": 0.25,
+      "ci95": [
+        0.089,
+        0.532
+      ]
+    }
+  },
+  "ship_bar": 0.7,
+  "ship": false,
+  "note": "Floors: cumulative over the stratified sample; bins are equal-sized, not traffic-weighted"
+}

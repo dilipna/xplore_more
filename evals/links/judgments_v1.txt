@@ -1,0 +1,52 @@
+# News <-> problem link judgments, v1. Judge: the assistant (Claude), NOT human-audited.
+# Question per pair: would a reader of this story find this reported problem about the same
+# technology AND the same concern? 1 = yes, 0 = no (same broad area, a shared word, or a
+# different product/issue is 0). Format: pair<TAB>label<TAB>note
+1	1	vLLM release adds DeepSeek-V4.1-Flash; problem is about that model's size/cost
+2	0	generic "ML tool feedback" post
+3	1	llama.cpp adds multimodal input to server; problem requests audio input for multimodal models
+4	1	agent reports in typed blocks instead of prose; problem asks how to make agent output readable
+5	0	agent profile layer vs agent output readability
+6	0	RSI essay vs "red line for an AI provider"
+7	0	RAG routing paper vs SGLang simulator roadmap
+8	0	Nvidia agent guardrails vs a complaint about OpenAI's security
+9	0	C-to-Rust rewrite vs SGLang simulator roadmap
+10	0	AI-written video scripts vs prose-style rules in AGENTS.md; tangential
+11	0	OpenAI misalignment reports vs an OpenAI billing complaint
+12	0	VLM speculative decoding vs SGLang simulator roadmap
+13	0	streaming-video eval paper vs a dataflow-model post
+14	1	PyTorch MPS comparison ops for unsigned ints vs MPS operator coverage tracking issue
+15	0	RL tier routing paper vs SGLang simulator roadmap
+16	0	storage benchmark vs agent-memory persistence guardrails
+17	0	pixel-art view of Claude Code sessions vs cross-agent memory
+18	0	llama.cpp Qwen3.5-MoE tensor fix vs a request to support a different Qwen model
+19	0	inference benchmarking tool vs SGLang simulator roadmap; different need
+20	0	Claude Code talk vs Azure AI Foundry support request
+21	1	OpenAI agents hammering a UN site vs a complaint about OpenAI's security
+22	0	AlloyDB architecture vs an OceanBase vector-search CPU issue
+23	0	Meta Muse market story vs a complaint about Astra's writing
+24	0	agent evaluation guide vs how people run agents 24/7
+25	0	llm CLI release vs prefill-decode disaggregation roadmap
+26	0	model benchmark site vs an OpenAI billing complaint
+27	0	GPT-6 Astra security finding vs suspected model routing to GPT-4o
+28	1	NVIDIA runtime controls for agents vs how to gate a coding agent's shell access
+29	0	web-agent benchmark vs a browser-automation feature request for Unsloth
+30	0	multi-agent research framework vs a dataflow-model post
+31	1	voice calls with a coding agent vs people asking about dictation with coding agents
+32	0	assignment-problem solver vs SGLang simulator roadmap
+33	0	llama.cpp OpenVINO update vs T-Head PPU support request
+34	0	vLLM FlashInfer autotuning fix vs DeepSeek V4 perf tracking; not the same issue
+35	0	RAG retriever selection paper vs an OceanBase query-plan issue
+36	0	Gruber on Muse vs "is there space for a desktop AI assistant"
+37	0	ragged tensors paper vs MoE data-parallelism feature
+38	0	recommender talk vs code review in the AI era
+39	0	systematic-review screening benchmark vs "ML tool feedback"
+40	0	Meta Muse adoption vs desktop assistant question
+41	0	CMS release vs 1Password retirement notice
+42	0	NVIDIA Earth-2 weather vs a weather SQL dataset announcement
+43	0	Copilot canvases vs "add Copilot as a model provider"
+44	0	Postgres CDC engine vs SGLang simulator roadmap
+45	0	Grab/OpenAI skilling programme vs agent "skills" feature; word collision
+46	0	Artifactory vulnerabilities vs an OpenAI billing complaint
+47	0	essay on non-technical AI users vs code review in the AI era
+48	0	slide-generation paper vs agent output readability
