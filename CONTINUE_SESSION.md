@@ -1,10 +1,80 @@
 # XploreMore — Continue Session Handoff
 
-> **Session 3 (2026-09-28, evening): the local demo is ready. Read §4.20 first, then `docs/demo-runbook.md`.** Commits this session, each through a green `scripts/check.sh` with the §0.9 env vars (139 passed / 0 skipped): `e585d14` Q3, `c6076b2` `docs/search.md`, `7e3417a` phone-width fixes + search-eval cards + demo scripts, and the runbook commit after it. Corpus refreshed and re-measured (§4.20). **GCP is still not started.** STEP 3 of the session prompt needs the user's §7 account steps, which were not done. Where older sections disagree with §4.20, §4.20 wins.
+> **Last updated 2026-09-29 (end of session 3). START WITH the "READ FIRST: master plan" section below**: it lays out the whole next session (fix CI, GCP go-live via GitHub Actions, then the differentiating features F1 to F10). `main` = `5170615`, pushed to https://github.com/dilipna/xplore_more, gate green locally, **CI red on GitHub (cause unknown, Phase A)**, **nothing deployed to GCP yet**. Older sections describe earlier states; where they disagree with the master plan or §4.20 to §4.23, those win.
 
 > Last updated: 2026-09-28, second session of the day. XploreMore HEAD is **`79c120b`** (the `apps/web` site, `/v1/stats`, Terraform `web` module and rewritten `deploy.yml` — committed through a green `scripts/check.sh`, 127 tests passed / 0 skipped). **On top of that, Phase Q3 (search eval + LambdaMART reranker) is finished but UNCOMMITTED** — see §4.19. Pro2Pro HEAD is still `e39a338`. Read this whole file before doing anything; it is the single source of truth for resuming work.
 
 > **🚨 DEMO ON 2026-09-30 (hiring seminar, top AI companies, OpenAI named).** Demo readiness beats everything else. Status at handoff: **the local demo is verified working end to end** (§4.19); **GCP has not been started at all** — the user deferred every GCP account step ("I will do it later"), so the public URL is still a stretch goal that depends entirely on the user actions in §7. Treat the local demo (`localhost:3100` against the API on `:8765`) as the guaranteed plan and GCP as a bonus only if it is solid with a day of margin. The user explicitly chose to do the **full Q3** this session even after being shown that the doc had downgraded it — that work is done and is now a strong demo talking point (§4.19).
+
+---
+
+## READ FIRST: master plan for the next session (written 2026-09-29)
+
+**Goal of the next session, in the user's words:** finish the project completely: deploy it to GCP with GitHub Actions, and make the site a realistic news platform with a few features nobody else has, so people would choose it. Do it in this order, because each step de-risks the next one. Everything below is written so the session can start without asking questions.
+
+**Honest framing (keep it in all copy and talk):** XploreMore cannot out-cover general news sites: it reads 48 sources, focused on AI and infrastructure. What it can win is a niche: *the news feed for people who build AI systems*, where every ranking is explainable and adjustable, and where news is connected to the problems practitioners are actually reporting. Do not claim "first of its kind" or "beats X" in public text unless it has been checked; say what the feature does instead. "Real time" honestly means "sources polled every 15 minutes, the page refreshes every minute". Never invent user counts, likes or engagement.
+
+### State at the end of session 3 (verified 2026-09-29)
+- `main` = `origin/main` = `5170615`, working tree clean. GitHub repo: **https://github.com/dilipna/xplore_more** (public). Gate: `scripts/check.sh` green locally, 139 passed / 0 skipped.
+- **CI on GitHub is RED** (`ci` failed on both pushed commits). Failing jobs on the first run: `python` (step "Tests (contracts, guarantees, schema drift)") and `security` (step "Dependency and IaC scan (fs)"). Logs need a GitHub login (the API returns 403 for them), so the cause is **not yet known**. One verified fact and one hypothesis:
+  - Verified: `.github/workflows/ci.yml` starts Postgres but **no Redis**, while `apps/api/tests/test_response_cache.py` uses a real Redis at `localhost:6379`.
+  - Hypothesis (unchecked): that is why `python` fails. The Trivy failure is unexplained (candidates: a HIGH/CRITICAL advisory in `apps/web/pnpm-lock.yaml`, a Terraform misconfig, or a secret pattern).
+  - `deploy.yml` only auto-runs when `ci` is green, so it was **skipped**. Running it by hand still works: it has `workflow_dispatch`, and its jobs run when `event_name == 'workflow_dispatch'`.
+- Local demo stack works (`docs/demo-runbook.md`, `scripts/demo_preflight.sh`). Local corpus: 48 sources, 1,597 articles, 2,412 discussions, 2,089 voices, 1,578 stories, 709 problems (29 multi-voice, 0 cross-platform).
+- Web app: social-feed UI (three columns, story and problem post cards, Trending ticker, Top/New tabs, "N new stories" toast, search with timing panel). **No GCP resource exists yet.** The user has not created the GCP project, Neon or Upstash.
+- Machine quirks: Docker Hub pulls fail on this network (TLS is intercepted; the certificate is for `*.e-dte.com`), so only locally cached images work. `gcloud`, `gh` and `terraform` are not installed locally: use Cloud Shell for GCP, and the pinned Docker images already present (`scripts/tf.sh`, `scripts/go.sh`) where possible. Git Bash rewrites `/tmp/...` paths passed to `docker exec` (use `MSYS_NO_PATHCONV=1`).
+
+### Phase A: fix CI (about 30 min, do first; a green pipeline is the base for everything)
+1. Ask the user to open the failed run (Actions tab, `ci`, the red job) and paste the last ~40 lines of the `python` and `security` job logs. Do not guess.
+2. If `python` fails on Redis: add a `redis:7.4-alpine` service (port 6379, health check `redis-cli ping`) to the `python` job in `ci.yml`. Then check whether the job also needs `XM_DATABASE_URL`. **Do not stop the local Redis or Postgres containers to reproduce it without asking**; the user interrupted that once.
+3. If `security` fails: fix the finding (upgrade the dependency, or add a documented `.trivyignore` entry with the reason, matching how checkov skips are documented).
+4. Push to `main`, watch the run via the GitHub API until every job is green. Only then continue. Commit through the local gate as always.
+
+### Phase B: GCP go-live with GitHub Actions (about 60 to 90 min, mostly the user's account steps)
+The tooling is already committed: `scripts/gcp_setup.sh` (Cloud Shell), `scripts/seed_neon.sh`, `.github/workflows/deploy.yml`, `infra/terraform/*`. **The user does the account steps; the assistant cannot log into GCP, Neon or Upstash.** Never ask the user to paste passwords or connection strings into the chat.
+1. **User:** create a GCP project (note the *Project ID*, which is not the display name) and link billing (the $300 trial credit is fine; everything scales to zero).
+2. **User:** create a Neon project (Postgres 17, AWS us-east-2 Ohio). Copy the **pooled** string (host contains `-pooler`) for Cloud Shell, and the **direct** string into `.data/neon_direct_url.txt` (gitignored).
+3. **User:** create an Upstash Redis (Google Cloud us-central1 if offered). Copy the `rediss://` URL.
+4. **Assistant:** run `bash scripts/seed_neon.sh` (local Docker Postgres to Neon; rehearsed into a scratch DB: restore rc 0, 4,009 documents, 709 problems, alembic 0006). **This must happen before the first deploy**, because the canary smoke-checks `/v1/problems?limit=1` and needs the schema. Confirm the row counts it prints.
+5. **User, in Cloud Shell:** `git clone https://github.com/dilipna/xplore_more.git && cd xplore_more && bash scripts/gcp_setup.sh YOUR_PROJECT_ID`. It applies bootstrap, moves state into the bucket, creates the four secrets and prompts (hidden input) for: Neon **pooled** URL, Upstash URL, the contents of `.data/author_salt`, the contents of `.data/web_api_key`. It prints the 7 GitHub variables. (The salt and key are reused on purpose: the seeded `api_keys` table already holds the web key's hash, and the salt keeps the seeded author hashes consistent.)
+6. **User:** GitHub repo, Settings, Secrets and variables, Actions, **Variables** tab: add `GCP_PROJECT_ID`, `GCP_REGION`, `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_DEPLOYER_SA`, `GCP_PLANNER_SA`, `GCP_STATE_BUCKET`, `GCP_ARTIFACT_REGISTRY`. (The `prod` environment that the jobs name is created by GitHub on first use.)
+7. **Assistant or user:** Actions, `deploy`, Run workflow, branch `main`. Expect 15 to 25 minutes (5 images built and Trivy-scanned, Terraform apply, rollout, API canary, web last). Follow it through the GitHub API.
+8. **Verify live, yourself, before saying it works:** get `web_uri` and `api_uri` (Terraform outputs, or `gcloud run services list` in Cloud Shell), then run the same checks as `scripts/demo_preflight.sh` against them (`XM_WEB_URL=... XM_API_URL=... bash scripts/demo_preflight.sh`), and check the site at phone width. Check the response header `X-XM-Cache`, and that the scheduled jobs ran (Cloud Scheduler triggers every 15/30 min; look at Cloud Run job executions and that `/v1/stats` `last_indexed_at` moves).
+9. **Known gaps to handle or document (found by reading, never run):**
+   - **No migration step in `deploy.yml`.** The seeded Neon database is at schema 0006, so the first deploy works. Any future migration (0007+, needed for F7) needs a step: run `xm-indexer migrate` as a one-off Cloud Run job execution before the API rollout. Add it before adding migration 0007.
+   - The scheduled indexer runs `run --max-batches 25` every 20 minutes; the pollers every 15 minutes (tech) and 30 minutes (discussions). Check the free-tier arithmetic before leaving `min_instances` above 0: set `api_min_instances=1` and `web_min_instances=1` for the demo window only (about $0.50 to $1 per day), then back to 0.
+   - `github-token` is unwired (GitHub issue API at the unauthenticated 60/hour). If the discussions poller reports quota `warning`s in the job logs, add a token secret.
+   - The API's cold start loads the embedding model (about 10 to 20 s). `TIMEOUT_MS` in `apps/web/src/lib/api.ts` is 12 s. If the first request after idle shows the "couldn't load" panel, raise `api_min_instances` to 1.
+   - Rollback: `gcloud run services update-traffic xm-api --to-revisions=PREVIOUS=100`. Full teardown: `terraform destroy` from Cloud Shell in `environments/prod`, then bootstrap.
+10. **Abort rule:** if the public site is not solid one day before the demo, present the local one. Do not start Phase B if less than 3 hours remain.
+
+### Phase C: make the site outstanding (the rest of the session; build in this order)
+Constraints: no LLM in the serving path; every number real; gate green before each commit; each feature ships with a test, and any relevance claim comes with a measured, disclosed (AI-judged, provisional) check.
+
+**C0. Fix the feed's biggest weakness first: it is dominated by one source.** The top 50 stories of the last 7 days were **48 Hacker News, 1 Simon Willison, 1 The Register, 1 The Verge, 1 OpenAI News** (measured 2026-09-29; the lists overlap because stories can have several sources). The lead story that day was a random HN link ("Tank Body Problem"). A news product cannot look like that. Add a source-diversity rule to the feed (for example at most 3 stories per source in the top 20, then relax), review how `hn_points` enters `heuristic_importance` (log-scaling or a cap), and show the effect on the same window. Measure it (share of the top 20 from one source, before and after; leave search untouched). Keep the heuristic interpretable and update the docs.
+
+**Unique features, ranked by (user value x feasibility with existing data). Build F1 to F5; F6 and F7 are table stakes; F8 to F10 are stretch.**
+- **F1. Tune your own ranking (flagship).** Every story shows *why it ranks here* (coverage, authority, engagement, freshness). The home page gets a "Ranking" panel with sliders (freshness half-life, weight of source count, authority, community points) that **re-rank live**, with rank-change arrows and a reset button. Backend: `/v1/feed` accepts validated, bounded weight parameters (`HeuristicWeights` already exists in `xm_rank/features.py`); cache keys must include them; tests for bounds, determinism, and default equals today's order. Selling point: "you can see and change the ranking function". Don't claim uniqueness in public text without checking.
+- **F2. News to problems and back (flagship).** On a story: "Problems people report about this" (a vLLM release links to open vLLM issues). On a problem: "News about this". Deterministic: story representative-article embedding vs `problems.centroid` (halfvec HNSW), and the reverse. Endpoints `/v1/stories/{id}/problems` and `/v1/problems/{id}/stories`, a similarity floor, top 3. **Measure precision** on about 40 judged pairs (AI-judged, disclosed, `human_audited: false`), store the set under `evals/`, and only ship if the result is good enough to show; otherwise raise the floor. This connects the two halves of the product, which is its real differentiator.
+- **F3. Race to report + primary-source badge.** On multi-source stories show a timeline: who reported first and how long before the others (real `published_at` / `discovered_at` per article), plus a badge: *Primary source* (lab or company blog or release; from a new `category` field per source in `config/sources.yaml`, exposed through the API), *Press*, *Community*. Add a "Primary sources only" filter chip.
+- **F4. Follow topics with no account and no tracking.** Follow a topic (a saved search) from any search page; stored only in the browser (localStorage); a "My topics" page shows each followed topic's top new stories since the last visit. Cap at 8 follows. Privacy is the selling point: nothing about the reader is stored server-side.
+- **F5. Daily briefing (`/briefing`).** A deterministic, extractive digest: top 5 stories and top 3 problems of the last 24 hours, print-friendly, with its own RSS entry. No LLM (no written summary; show titles, sources, who reported first and why each ranks).
+- **F6. News-site table stakes:** RSS/Atom + JSON Feed for the home feed, each topic and each problem category; OpenGraph/Twitter card meta per story and problem (title, source, time; no fake images); `sitemap.xml`, `robots.txt`; a PWA manifest and icons; keyboard shortcuts (`/` focus search, `j`/`k` move, `o` open) with a "?" help panel; skeleton loading and proper empty states. These make it feel like a real product, and RSS is what lets people actually subscribe.
+- **F7. Problem momentum (only when real).** A `problem_snapshots` table (migration 0007) written by a nightly job with `voice_count` and `demand`; a sparkline on problem pages **only after at least 3 days of real snapshots exist** (needs GCP running). Until then show nothing. Requires the migration step from Phase B item 9.
+- **F8. `/developers` page:** the API and MCP explained with copy-paste curl and MCP config, "used by Pro2Pro", and how to request a key (manual, by email). No self-serve key creation.
+- **F9. Version-aware chips:** show version tokens from titles (`v0.29.0`) and let search treat "vllm 0.29" precisely (the parser already extracts versions).
+- **F10. Evidence page `/quality`:** the search, classifier and clustering results as a public page with CIs and caveats (today they live only as cards on About).
+
+**Design rules for "looks real":** keep the black and neon-green theme; real content density (no lorem, no fake avatars beyond the deterministic source initials); consistent card anatomy; every interactive element has hover, focus and disabled states; check at 390, 768 and 1440 px (`node scripts/mobile_check.mjs` covers 390); never ship an empty state that looks broken; run `bash scripts/demo_preflight.sh` before every commit that touches `apps/web`.
+
+### Phase D: finish (last 45 min)
+1. Refresh the corpus (on GCP the scheduler does it; locally see the runbook's "Optional" section); update the numbers table in `docs/demo-runbook.md` from `/v1/stats`.
+2. Update `docs/demo-runbook.md` (new click path for F1 to F5, the live URL, a GCP failure playbook: cold start, rate limit, Neon suspend), regenerate the backup screenshots (`.data/shots/`, reduced motion), update the README and `docs/` (a short "what makes this different" page that states only verified claims).
+3. Update this file (all milestones), run the gate, commit, push, confirm CI green, confirm the deploy run green, confirm the live preflight passes.
+4. Definition of done: CI green on `main`; a public web URL passes `demo_preflight.sh` and the phone-width sweep; F1 to F6 live with tests; the feed is no longer dominated by one source (measured); the runbook matches what is deployed; nothing important lives only on this laptop except `.data/`.
+
+### Time boxes (a suggested order for one long session)
+A (30 min), then B (60 to 90 min; run it in parallel with C0 and F1 while the user does account steps and the deploy runs), then C0 (30), F1 (75), F2 (90, includes the judged check), F3 (45), F4 (45), F5 (30), F6 (60), Phase D (45). Cut from the bottom of that list, never from A, B, C0 or D.
 
 ---
 
@@ -638,21 +708,21 @@ docs/                 clustering.md, problems.md, search.md, demo-runbook.md, re
 ## 11. Prompt to start the next session
 
 ```text
-You are continuing XploreMore, my hiring-focused portfolio project. I demo it to top AI companies
-(OpenAI among them) on 2026-09-30. Read CONTINUE_SESSION.md first: the banner, §0.1, §4.20 and §7,
-then docs/demo-runbook.md. The local demo is the plan; it was verified headless on 2026-09-28.
+You are continuing XploreMore, my hiring-focused portfolio project. Read CONTINUE_SESSION.md
+completely before doing anything: the banner, the "READ FIRST: master plan" section, §4.20 to
+§4.23, §7 and §10. The plan is to finish the whole project in this one session, in this order:
+Phase A (fix the red CI on GitHub), Phase B (GCP go-live through GitHub Actions; I will do the
+account steps, you do everything else), Phase C (C0 feed diversity, then features F1 to F6),
+Phase D (docs, runbook, screenshots, final verification). Work continuously; don't stop for
+choices you can make from patterns already in this codebase. Ask me only for things only I can do
+(GCP/Neon/Upstash accounts, GitHub variables, pasting CI logs) and tell me exactly what to click.
 
-STEP 1 - Bring the demo stack up exactly as docs/demo-runbook.md §1 says (Docker, compose on 5433,
-API on :8765, web production build on :3100 with the .data/web_api_key key) and run
-`bash scripts/demo_preflight.sh`. If anything is red, fix it; if Docker hangs, tell me to restart it.
-STEP 2 - Only if I ask: refresh the corpus (runbook §1 "Optional"), re-run the preflight, and update
-the numbers in the runbook §2 table and CONTINUE_SESSION.md from /v1/stats (today's numbers only).
-STEP 3 - GCP only if I've finished the §7 account steps; ask me first, and abandon it if it isn't
-solid with a day of margin. Pushing the repo is my action; ask before doing anything with GitHub.
-
-RULES: as in §2 (no fabricated metrics, quote search numbers with CIs and the AI-judged caveat;
-commit only on a green gate checked directly, with the §0.9 env vars and 0 skipped; no LLM in the
-serving path; Write/Edit tools on Windows; Co-Authored-By trailer; update CONTINUE_SESSION.md after
-each milestone; short plain-English update after each milestone). Don't change the search serving
-path before the demo. Never claim something works live until you've checked it yourself.
+RULES: no fabricated metrics; every number comes from a committed report or a live check; quote
+search numbers with CIs and the AI-judged caveat; no LLM in the serving path; commit only on a
+green gate checked directly (run scripts/check.sh with the section 0.9 env vars, 0 skipped); never
+stop or restart my Docker containers without asking; never ask me to paste secrets into the chat;
+never claim something works live until you have checked it yourself; don't claim "first of its
+kind" in public copy without verifying; use the Co-Authored-By trailer the session gives you;
+Write/Edit tools on Windows; update CONTINUE_SESSION.md after each milestone; short plain-English
+update after each milestone. Give me the live URL at the end.
 ```
