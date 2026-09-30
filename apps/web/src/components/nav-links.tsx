@@ -7,6 +7,7 @@ const LINKS = [
   { href: "/", label: "News" },
   { href: "/problems", label: "Problems" },
   { href: "/search", label: "Search" },
+  { href: "/topics", label: "My topics" },
   { href: "/how-it-works", label: "About" },
 ];
 

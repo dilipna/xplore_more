@@ -8,6 +8,7 @@ const MAIN = [
   { href: "/", label: "Home", Icon: HomeIcon, match: (p: string) => p === "/" || p.startsWith("/feed") || p.startsWith("/stories") },
   { href: "/problems", label: "Problems", Icon: FlameIcon, match: (p: string) => p.startsWith("/problems") },
   { href: "/search", label: "Search", Icon: SearchIcon, match: (p: string) => p.startsWith("/search") },
+  { href: "/topics", label: "My topics", Icon: HashIcon, match: (p: string) => p.startsWith("/topics") },
   { href: "/how-it-works", label: "About", Icon: InfoIcon, match: (p: string) => p.startsWith("/how-it-works") },
 ];
 

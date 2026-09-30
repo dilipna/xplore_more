@@ -78,6 +78,7 @@ export function StoryCard({
   lead = false,
   why = false,
   delta,
+  badge,
 }: {
   story: StorySummary;
   rank?: number;
@@ -86,6 +87,8 @@ export function StoryCard({
   why?: boolean;
   /** Rank change against the default weights, when the reader has tuned them. */
   delta?: number | "new";
+  /** Extra marker in the header (for example "New since your last visit"). */
+  badge?: React.ReactNode;
 }) {
   const src = story.sources[0] ?? "";
   const when = story.published_at ?? story.first_seen_at;
@@ -108,6 +111,7 @@ export function StoryCard({
             {domainOf(story.url) && <> · {domainOf(story.url)}</>}
           </p>
         </div>
+        {badge}
         {lead ? (
           <span className="rounded-full bg-signal-400 px-2.5 py-0.5 text-[11px] font-semibold text-black">Top story</span>
         ) : rank && delta !== undefined ? (
