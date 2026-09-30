@@ -19,6 +19,10 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN pnpm build
 
 FROM node:24-alpine AS runtime
+# The server runs as `node server.js`. The bundled npm, corepack and yarn are never used at
+# runtime, and npm's own dependencies carry HIGH advisories in Trivy, so drop them.
+RUN rm -rf /usr/local/lib/node_modules /usr/local/bin/npm /usr/local/bin/npx \
+    /usr/local/bin/corepack /usr/local/bin/yarn /usr/local/bin/yarnpkg /opt/yarn-*
 WORKDIR /app
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \

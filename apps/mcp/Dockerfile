@@ -16,7 +16,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev --package xm-mcp --no-editable
 
 FROM python:3.13-slim
-RUN useradd --system --uid 10001 xm
+# The app runs from the copied uv venv. Removing the base image's unused pip also removes its
+# vendored copies of msgpack and pkg_resources, which Trivy flags (HIGH).
+RUN useradd --system --uid 10001 xm && python -m pip uninstall --yes --no-cache-dir pip
 COPY --from=build --chown=xm:xm /app/.venv /app/.venv
 ENV PATH=/app/.venv/bin:$PATH PYTHONUNBUFFERED=1 XM_MCP_HOST=0.0.0.0 XM_MCP_PORT=8080
 WORKDIR /app

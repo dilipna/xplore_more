@@ -18,7 +18,9 @@ ENV XM_EMBEDDING_CACHE_DIR=/app/models
 RUN /app/.venv/bin/python -c "from fastembed import TextEmbedding; TextEmbedding('BAAI/bge-small-en-v1.5', cache_dir='/app/models')"
 
 FROM python:3.13-slim
-RUN useradd --system --uid 10001 xm
+# The app runs from the copied uv venv. Removing the base image's unused pip also removes its
+# vendored copies of msgpack and pkg_resources, which Trivy flags (HIGH).
+RUN useradd --system --uid 10001 xm && python -m pip uninstall --yes --no-cache-dir pip
 COPY --from=build --chown=xm:xm /app/.venv /app/.venv
 COPY --from=build --chown=xm:xm /app/models /app/models
 COPY config/entities.yaml /app/config/entities.yaml
