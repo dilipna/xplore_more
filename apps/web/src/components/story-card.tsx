@@ -3,6 +3,7 @@ import type { RankSignals, StorySummary } from "@/lib/api";
 import { isRecent, relativeTime } from "@/lib/format";
 import { domainOf, initials, sourceColor, sourceName } from "@/lib/sources";
 import { DocIcon, ExternalIcon, LayersIcon } from "./icons";
+import { SourceBadge } from "./ui";
 
 export function SourceAvatar({ id, name, size = 36 }: { id: string; name?: string; size?: number }) {
   const color = sourceColor(id);
@@ -95,9 +96,12 @@ export function StoryCard({
       <header className="flex items-center gap-3">
         <SourceAvatar id={src} />
         <div className="min-w-0 flex-1 leading-tight">
-          <p className="truncate text-sm font-semibold text-fg-50">
-            {sourceName(src)}
-            {others > 0 && <span className="font-normal text-fg-500"> and {others} more</span>}
+          <p className="flex min-w-0 items-center gap-2 text-sm font-semibold text-fg-50">
+            <span className="truncate">
+              {sourceName(src)}
+              {others > 0 && <span className="font-normal text-fg-500"> and {others} more</span>}
+            </span>
+            <SourceBadge id={src} />
           </p>
           <p className="mt-0.5 text-xs text-fg-500">
             {relativeTime(when)}

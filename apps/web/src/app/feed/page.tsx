@@ -7,8 +7,9 @@ import { RightRail } from "@/components/right-rail";
 import { Shell } from "@/components/shell";
 import { StoryCard } from "@/components/story-card";
 import { Unavailable } from "@/components/ui";
-import { getFeed } from "@/lib/api";
+import { getFeed, type StorySummary } from "@/lib/api";
 import { DEFAULT_WEIGHTS, parseWeights, weightParams } from "@/lib/ranking";
+import { sourceCategory } from "@/lib/sources";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "All stories" };
@@ -34,9 +35,20 @@ export default async function FeedPage({
     getFeed(hours, LIMIT, weights),
     weights ? getFeed(hours, LIMIT) : Promise.resolve(null),
   ]);
-  const stories = result.data?.results ?? [];
-  const defaultRank = new Map((standard?.data?.results ?? []).map((s, i) => [s.id, i + 1]));
-  const tuned = new URLSearchParams(weightParams(weights)).toString();
+  // "Primary sources only": stories that at least one lab, company, project or paper reported.
+  const primaryOnly = params.primary === "1";
+  const keep = (list: StorySummary[]) =>
+    primaryOnly ? list.filter((s) => s.sources.some((id) => sourceCategory(id) === "primary")) : list;
+  const stories = keep(result.data?.results ?? []);
+  // Rank changes compare like with like: the default order under the same filter.
+  const defaultRank = new Map(keep(standard?.data?.results ?? []).map((s, i) => [s.id, i + 1]));
+  const query = (extra: Record<string, string>) =>
+    new URLSearchParams({
+      window: String(hours),
+      ...weightParams(weights),
+      ...(primaryOnly ? { primary: "1" } : {}),
+      ...extra,
+    }).toString();
 
   return (
     <Shell rail={<RightRail />}>
@@ -47,7 +59,7 @@ export default async function FeedPage({
         {WINDOWS.map((w) => (
           <Link
             key={w.hours}
-            href={`/feed?window=${w.hours}${tuned ? `&${tuned}` : ""}`}
+            href={`/feed?${query({ window: String(w.hours) })}`}
             className={`rounded-full px-3.5 py-1.5 text-sm font-semibold ${
               hours === w.hours ? "bg-signal-400 text-black" : "text-fg-400 hover:bg-field-850 hover:text-fg-50"
             }`}
@@ -55,12 +67,27 @@ export default async function FeedPage({
             {w.label}
           </Link>
         ))}
+        <Link
+          href={`/feed?${primaryOnly ? new URLSearchParams({ window: String(hours), ...weightParams(weights) }) : query({ primary: "1" })}`}
+          aria-pressed={primaryOnly}
+          className={`rounded-full border px-3.5 py-1.5 text-sm font-semibold ${
+            primaryOnly
+              ? "border-signal-400 bg-signal-400/10 text-signal-400"
+              : "border-field-600 text-fg-400 hover:border-signal-400/60 hover:text-fg-50"
+          }`}
+        >
+          Primary sources only
+        </Link>
       </div>
       <RankingPanel weights={weights ?? DEFAULT_WEIGHTS} />
       {!result.data ? (
         <Unavailable what="stories" />
       ) : stories.length === 0 ? (
-        <p className="text-fg-400">Nothing yet in this window. Try a longer one.</p>
+        <p className="text-fg-400">
+          {primaryOnly
+            ? "No story in this window was reported by a primary source. Try a longer window."
+            : "Nothing yet in this window. Try a longer one."}
+        </p>
       ) : (
         <div className="flex flex-col gap-3">
           {stories.map((s, i) => {

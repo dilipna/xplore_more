@@ -23,8 +23,10 @@ export function RankingPanel({ weights }: { weights: Weights }) {
 
   function navigate(next: Weights) {
     const params = new URLSearchParams();
-    const window = search.get("window");
-    if (window) params.set("window", window);
+    for (const keep of ["window", "primary"]) {
+      const value = search.get(keep);
+      if (value) params.set(keep, value);
+    }
     for (const [k, v] of Object.entries(weightParams(next))) params.set(k, v);
     const qs = params.toString();
     startTransition(() => router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false }));
