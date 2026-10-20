@@ -4,6 +4,23 @@
 
 > Status: runs locally end to end. The GCP deployment (Terraform, keyless GitHub Actions deploys, Cloud Run) is written and validated in CI, but not applied yet. Every number here links to a committed report with the command that reproduces it. No report, no number.
 
+## From problem discovery to a reviewed prototype
+
+[Recorded public workbench](https://protopro.vercel.app/discover) ·
+[Pro2Pro review workspace](https://protopro.vercel.app/workspace) ·
+[Handoff architecture and limitations](docs/evidence-to-product.md)
+
+Open `/workbench` locally or choose **Draft a product brief** on any problem detail
+page. Keep original evidence beside the target user, scope and acceptance criteria,
+then validate/export a draft JSON brief for Pro2Pro. Human approval is a separate
+step tied to the exact imported snapshot. Generated artifacts require separate
+functional observations and acceptance; no model runs in this workbench.
+
+The public edition is explicitly recorded and hosted within Pro2Pro's existing site.
+The full live XploreMore feed/API is still separate. No GCP resources were applied.
+`XM_SEARCH_MODE=lexical` supports deliberate API operation without embedding-model
+loading and discloses missing dense retrieval. The existing hybrid mode remains default.
+
 ## What it does differently
 
 These are descriptions of what each feature does, not claims about other sites.

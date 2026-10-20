@@ -113,6 +113,7 @@ export default async function ProblemPage({ params }: { params: Params }) {
             </div>
           </header>
 
+          <div className="mt-8 panel p-6"><Eyebrow>From evidence to a reviewed prototype</Eyebrow><p className="mt-3 text-sm text-fg-400">Carry this source snapshot into a bounded specification. Human approval stays separate from discovery.</p><Link href={`/workbench?problem=${p.id}`} className="mt-4 inline-block text-signal-300">Draft a product brief →</Link></div>
           <section className="mt-12 grid gap-8 lg:grid-cols-[1.1fr_1fr]">
             <div className="panel p-6">
               <Eyebrow>Why it ranks here</Eyebrow>
