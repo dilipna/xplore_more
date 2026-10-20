@@ -86,7 +86,8 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
             )}
           </div>
           <div className="relative min-w-0 border-t hairline md:border-t-0 md:border-l">
-            <MapHero />
+            <div className="mx-4 mt-6 rounded-xl border border-signal-700/60 bg-field-800 p-6"><p className="text-xs font-mono uppercase tracking-widest text-signal-300">XploreMore × Pro2Pro</p><h2 className="mt-2 text-xl font-semibold">From a reported problem to a reviewable build.</h2><p className="mt-2 text-sm text-fg-400">Inspect the source, define a small prototype, and export a brief for human approval.</p><Link href="/workbench" className="mt-4 inline-block text-signal-300">Open the evidence workbench →</Link></div>
+        <MapHero />
           </div>
         </div>
       </section>
