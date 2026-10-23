@@ -1,7 +1,11 @@
 # Trusted discovery: local engineering evidence
 
-Status: local development, October 22, 2026. No new publication, remote CI,
-production deployment or cloud resource creation is claimed.
+Initial local report: October 22, 2026, before publication and remote CI.
+
+October 23 update: the approved revision was published and remote CI exposed
+dependency advisories. Hosting remains uncreated. See the subsequent
+[security correction and release status](security-release-v1.md); the local
+results below describe the initial release and are not a claim that its CI passed.
 
 ## A rollback was reported as successful work
 

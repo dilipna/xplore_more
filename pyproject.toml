@@ -8,6 +8,10 @@ dependencies = ["xm-core", "xm-indexer", "xm-cluster", "xm-embed", "xm-search", 
 
 [tool.uv]
 package = false
+# FastEmbed's metadata still caps Pillow below its security-fixed major release.
+# XploreMore uses text embeddings only; cached model compatibility is measured by
+# tools/check_embedding_compatibility.py. See docs/reports/security-release-v1.md.
+override-dependencies = ["pillow==13.0.0"]
 
 [tool.uv.workspace]
 members = ["packages/*", "apps/indexer", "apps/api", "apps/mcp"]
