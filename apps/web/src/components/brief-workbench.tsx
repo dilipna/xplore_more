@@ -119,8 +119,8 @@ export default function BriefWorkbench({
           </div>
         </div>
         <p className="journey-note">
-          Recorded examples come from committed September 2026 source snapshots.
-          For a current record, open a problem and choose “Draft a product
+          The example button loads a September 2026 source snapshot.
+          To use a listed record, open a problem and choose “Draft a product
           brief.” Counts are reporting signals, not market validation.
         </p>
         {error && (
@@ -189,7 +189,7 @@ export default function BriefWorkbench({
                 <span>BEFORE YOU BUILD</span>
                 <h3>Separate the report from the proposed remedy.</h3>
                 <p className="journey-note">
-                  A request for approval support does not establish that this
+                  A public report does not establish that this
                   prototype is the right solution. Review the source, existing
                   alternatives and the intended user. Record assumptions in the
                   scope.
@@ -322,7 +322,7 @@ export default function BriefWorkbench({
       </div>
       <footer className="journey-footer">
         <span>Built by Dilip Nallamasa · XploreMore × Pro2Pro</span>
-        <a href="https://github.com/dilipna/xplore_more/blob/main/docs/evidence-to-product.md">
+        <a href="https://github.com/dilipna/xplore_more/blob/improve/reviewable-problem-briefs/docs/evidence-to-product.md">
           Methods & handoff contract ↗
         </a>
       </footer>
