@@ -68,7 +68,7 @@ export default function BriefWorkbench({
           <a href="https://github.com/dilipna/xplore_more">Source ↗</a>
         </nav>
       </header>
-      <main>
+      <div className="journey-content">
         <section className="journey-intro">
           <p className="journey-kicker">CONNECTED WORKFLOW / 01</p>
           <h1>
@@ -115,7 +115,7 @@ export default function BriefWorkbench({
             >
               Load recorded example
             </button>
-            <Link href="/problems">Choose a live problem →</Link>
+            <Link href="/problems">Choose a problem record →</Link>
           </div>
         </div>
         <p className="journey-note">
@@ -319,7 +319,7 @@ export default function BriefWorkbench({
             </article>
           </div>
         </section>
-      </main>
+      </div>
       <footer className="journey-footer">
         <span>Built by Dilip Nallamasa · XploreMore × Pro2Pro</span>
         <a href="https://github.com/dilipna/xplore_more/blob/main/docs/evidence-to-product.md">

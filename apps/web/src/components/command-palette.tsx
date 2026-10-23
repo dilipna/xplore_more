@@ -20,7 +20,7 @@ const PAGES = [
 type Row = { key: string; label: string; hint: string; href: string; kind: "page" | "story" | "search" };
 
 /** ⌘K / Ctrl+K: jump anywhere, or search stories as you type (hybrid search through a same-origin proxy). */
-export function CommandPalette() {
+export function CommandPalette({ recorded = true }: { recorded?: boolean }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
@@ -165,7 +165,7 @@ export function CommandPalette() {
         </ul>
         <div className="flex justify-between border-t hairline px-4 py-2 font-mono text-[10px] text-fg-600">
           <span>↑↓ move · ↵ open · esc close</span>
-          <span>hybrid search, no LLM</span>
+          <span>{recorded ? "captured titles · keyword search" : "hybrid search, no LLM"}</span>
         </div>
       </div>
     </div>

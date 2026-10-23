@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { SignalMap } from "@/components/signal-map";
 import { Unavailable } from "@/components/ui";
 import { getMap } from "@/lib/api";
+import { recordedMode } from "@/lib/web-mode";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -23,7 +24,9 @@ export default async function MapPage() {
             Signal <span className="neon-text text-signal-400">map</span>
           </h1>
           <p className="mt-2 text-sm leading-relaxed text-fg-400">
-            Every dot is a story from the last 7 days (green) or a problem engineers are reporting (amber). Dots sit
+            {recordedMode()
+              ? "Every dot comes from the dated capture: a story from its seven-day window (green) or a reported problem hypothesis (amber)."
+              : "Every dot is a story from the last 7 days (green) or a problem engineers are reporting (amber)."} Dots sit
             close together when their text means similar things. The islands are labelled with their most distinctive
             title words, so every label is a word taken from the titles, not generated.
           </p>
