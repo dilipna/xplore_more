@@ -24,8 +24,11 @@ pnpm start
 Set server-side `XM_WEB_MODE=connected` and `XM_API_URL` explicitly to use a
 running local API. See [operating modes](docs/operating-modes.md) and the
 [release validation record](docs/reports/trusted-discovery-v1.md).
-Local responsive/browser QA and standalone-container checks pass. This
-redevelopment remains local until approval for publication, remote CI and hosting.
+The initial revision passed local responsive/browser checks and was published to
+PR #1. Remote CI then identified dependency advisories. A corrected dependency
+release passes local tests, server checks and source/runtime security scans;
+its new browser recheck and publication approval remain pending. No standalone
+hosting project has been created. See the [security release record](docs/reports/security-release-v1.md).
 
 ## From problem discovery to a reviewed prototype
 
