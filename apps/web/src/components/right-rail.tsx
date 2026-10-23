@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { getProblems, getStats } from "@/lib/api";
+import { recordedMode } from "@/lib/web-mode";
 import { displayStatement, formatCount, platformInfo } from "@/lib/format";
 
 /** Trending problems and live corpus numbers, shown beside the feed. Real data only. */
 export async function RightRail({ showProblems = true }: { showProblems?: boolean }) {
   const [problems, stats] = await Promise.all([
-    showProblems ? getProblems({ min_voices: 2, limit: 5 }) : Promise.resolve(null),
+    showProblems ? getProblems({ min_voices: recordedMode() ? 1 : 2, limit: 5 }) : Promise.resolve(null),
     getStats(),
   ]);
   const s = stats.data;
@@ -14,7 +15,7 @@ export async function RightRail({ showProblems = true }: { showProblems?: boolea
       {problems?.data && problems.data.results.length > 0 && (
         <section className="panel overflow-hidden">
           <div className="flex items-baseline justify-between px-4 pt-4">
-            <h2 className="text-[15px] font-semibold">Trending problems</h2>
+            <h2 className="text-[15px] font-semibold">{recordedMode() ? "Problem hypotheses" : "Trending problems"}</h2>
             <Link href="/problems" className="text-xs text-signal-400 hover:text-signal-300">
               See all
             </Link>
@@ -34,7 +35,7 @@ export async function RightRail({ showProblems = true }: { showProblems?: boolea
                     )}
                   </Link>
                   <p className="mt-1 text-xs text-fg-500">
-                    <span className="text-signal-400">{p.voice_count} people</span> ·{" "}
+                    <span className="text-signal-400">{p.voice_count} {p.voice_count === 1 ? "reporter" : "reporters"}</span> ·{" "}
                     {p.platforms.map((x) => platformInfo(x).label).join(", ")}
                   </p>
                 </div>

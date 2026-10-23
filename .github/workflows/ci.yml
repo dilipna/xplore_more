@@ -47,7 +47,15 @@ jobs:
       - name: Type check
         run: uv run pyright
       - name: Tests (contracts, guarantees, schema drift)
-        run: uv run pytest -q
+        run: mkdir -p test-evidence && uv run pytest -q --basetemp=test-evidence/ci
+      - name: Preserve real-process recovery receipts
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: xploremore-recovery-${{ github.sha }}
+          path: test-evidence/**/recovery-receipt.json
+          if-no-files-found: warn
+          retention-days: 7
 
   go:
     runs-on: ubuntu-24.04

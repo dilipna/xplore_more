@@ -259,7 +259,7 @@ main article[data-kb-selected] {
   outline: 2px solid var(--j-accent);
   outline-offset: 4px;
 }
-.journey main,
+.journey .journey-content,
 .journey-nav,
 .journey-footer {
   max-width: 1220px;

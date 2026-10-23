@@ -1,8 +1,10 @@
+import { recordedMode } from "@/lib/web-mode";
+import { snapshot } from "@/lib/recorded-api";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PrintButton } from "@/components/print-button";
 import { PlatformBadge, SourceBadge, Unavailable } from "@/components/ui";
-import { type ArticleOut, getProblems, getStory, getTopStories } from "@/lib/api";
+import { type ArticleOut, getProblems, getStory, getStats, getTopStories } from "@/lib/api";
 import { categoryLabel } from "@/lib/format";
 import { sourceName } from "@/lib/sources";
 
@@ -24,17 +26,18 @@ function firstReport(articles: ArticleOut[]) {
 }
 
 export default async function BriefingPage() {
-  const [top, problems] = await Promise.all([getTopStories(), getProblems({ min_voices: 2, limit: PROBLEMS })]);
+  const [top, problems, stats] = await Promise.all([getTopStories(), getProblems({ min_voices: 2, limit: PROBLEMS }), getStats()]);
   const stories = (top.data?.results ?? []).slice(0, STORIES);
   const details = await Promise.all(stories.map((s) => getStory(s.id)));
-  const today = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+  const dated = recordedMode() ? snapshot.captured_at : stats.data?.as_of;
+  const today = dated ? new Date(dated).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" }) : "API timestamp unavailable";
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-10 print:max-w-none print:px-0 print:py-0">
       <header className="flex flex-wrap items-end justify-between gap-3 border-b hairline pb-5">
         <div>
           <p className="text-sm text-fg-500">{today}</p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight">Daily briefing</h1>
+          <h1 className="mt-1 text-3xl font-bold tracking-tight">{recordedMode() ? "Capture briefing" : "Daily briefing"}</h1>
           <p className="mt-2 max-w-xl text-sm leading-relaxed text-fg-400">
             The {STORIES} top stories of the last {top.windowHours === 72 ? "3 days (a quiet day: fewer than 8 stories in 24 hours)" : "24 hours"} and
             the {PROBLEMS} problems the most people are reporting. Everything here is picked by the same explainable ranking as the

@@ -151,3 +151,40 @@ async def test_full_text_search_and_vector_columns_are_populated(sessionmaker, e
         dims = (await s.execute(text("SELECT vector_dims(embedding::vector) FROM articles"))).scalar_one()
     assert [h.id for h in hits] == [article.article_id]
     assert dims == 384
+
+
+@pytest.mark.parametrize("with_good", [False, True])
+async def test_late_sql_failure_counts_only_committed_effects(
+    sessionmaker, embedder, clusterer, monkeypatch, with_good
+) -> None:
+    import xm_indexer.pipeline as pipeline
+
+    original = pipeline.assign
+    bad = make_article("https://example.com/late-failure")
+
+    async def fail_after_upsert(session, article, **kwargs):
+        if article.id == bad.article_id:
+            await session.execute(text("SELECT 1 / 0"))
+        return await original(session, article, **kwargs)
+
+    monkeypatch.setattr(pipeline, "assign", fail_after_upsert)
+    messages = [as_message(bad, "late-failure")]
+    if with_good:
+        messages.insert(0, as_message(make_article("https://example.com/committed"), "good"))
+    result = await process_batch(messages, sessionmaker=sessionmaker, embedder=embedder, clusterer=clusterer)
+    assert result.failed == 1
+    assert result.nack_ids == ["late-failure"]
+    assert result.ack_ids == (["good"] if with_good else [])
+    assert await count(sessionmaker, Article) == int(with_good)
+    assert await count(sessionmaker, ProcessedEvent) == int(with_good)
+    assert result.applied == int(with_good)
+    assert result.stories_created + result.stories_joined == int(with_good)
+
+    # A rolled-back idempotency claim must not discard the repaired retry.
+    monkeypatch.setattr(pipeline, "assign", original)
+    retry = await process_batch(
+        [as_message(bad, "retry")], sessionmaker=sessionmaker, embedder=embedder, clusterer=clusterer
+    )
+    assert (retry.applied, retry.duplicates, retry.failed) == (1, 0, 0)
+    assert retry.ack_ids == ["retry"]
+    assert await count(sessionmaker, Article) == int(with_good) + 1

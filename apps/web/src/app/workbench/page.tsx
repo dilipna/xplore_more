@@ -1,3 +1,5 @@
+import { recordedMode } from "@/lib/web-mode";
+import { snapshot } from "@/lib/recorded-api";
 import BriefWorkbench from "@/components/brief-workbench";
 import { getProblem } from "@/lib/api";
 import type { Brief } from "@/lib/brief";
@@ -19,7 +21,7 @@ export default async function Page({
         p = result.data;
       if (!p)
         error =
-          "The selected live problem could not be loaded. You can inspect a labeled recorded example instead.";
+          "The selected problem record could not be loaded. You can inspect a labeled recorded example instead.";
       else if (!p.evidence.length)
         error = "This record has no evidence to carry into a brief.";
       else
@@ -28,7 +30,7 @@ export default async function Page({
           source: {
             system: "xploremore",
             problem_id: p.id,
-            captured_at: new Date().toISOString(),
+            captured_at: recordedMode() ? snapshot.captured_at : new Date().toISOString(),
             statement: p.statement,
             evidence: p.evidence
               .slice(0, 10)
@@ -40,7 +42,7 @@ export default async function Page({
             voice_count: p.voice_count,
             source_count: p.source_count,
             limitations:
-              "Snapshot from the configured XploreMore API. Machine classification and clustering are provisional; counts do not establish customer demand.",
+              recordedMode() ? "Recorded local-pipeline capture. Original source dates are retained; classification and clustering are provisional, counts do not establish customer demand, and the source may no longer be unresolved." : "Snapshot from the configured XploreMore API. Machine classification and clustering are provisional; counts do not establish customer demand.",
           },
           spec: {
             target_user: "",

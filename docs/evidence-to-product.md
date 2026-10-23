@@ -8,9 +8,11 @@ human approval or a verified claim of customer demand.
 A recorded edition of this workbench is also packaged into Pro2Pro's existing web
 application at `/discover` for a public walkthrough. It is explicitly historical:
 there is no live XploreMore API behind that edition. The full XploreMore news,
-semantic map and discovery service remain a separate application. Both editions
-use the same source fixture and brief contract, and retain a link to the original
-source report. No cloud resources are provisioned for this feature.
+semantic map and discovery service remain a separate application. The newer
+standalone recorded edition uses its own dated pipeline capture; Pro2Pro's
+historical example remains unchanged. All editions use the same brief contract
+and retain links to original source reports. No cloud resources are provisioned
+for this feature. See [operating modes](operating-modes.md).
 
 ## User journey
 

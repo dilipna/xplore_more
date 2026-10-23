@@ -1,3 +1,4 @@
+import { recordedMode } from "@/lib/web-mode";
 import type { PulseResponse } from "@/lib/api";
 import { formatCount } from "@/lib/format";
 
@@ -14,7 +15,7 @@ export function PulseChart({ data }: { data: PulseResponse }) {
   return (
     <figure className="min-w-0">
       <figcaption className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-xs text-fg-500">
-        <span className="font-semibold text-fg-200">The last 72 hours, hour by hour</span>
+        <span className="font-semibold text-fg-200">{recordedMode() ? "72 hours before capture" : "The last 72 hours, hour by hour"}</span>
         <span className="font-mono">
           <span className="text-signal-400">{formatCount(articles)} articles</span> ·{" "}
           <span className="text-amber-300">{formatCount(discussions)} discussions</span>
@@ -52,9 +53,9 @@ export function PulseChart({ data }: { data: PulseResponse }) {
         </g>
       </svg>
       <div className="mt-1 flex justify-between font-mono text-[10px] text-fg-600">
-        <span>72 h ago</span>
+        <span>−72 h</span>
         <span>by publish time</span>
-        <span>now</span>
+        <span>{recordedMode() ? "capture time" : "now"}</span>
       </div>
     </figure>
   );

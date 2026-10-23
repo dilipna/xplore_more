@@ -9,7 +9,8 @@ export function SiteFooter() {
         <p>
           <span className="text-fg-200">XploreMore</span> · built by Dilip Nallamasa
         </p>
-        <div className="flex items-center gap-5">
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+          <Link href="/capture" className="hover:text-signal-300">Data & provenance</Link>
           <Link href="/how-it-works" className="hover:text-signal-300">
             About
           </Link>

@@ -5,7 +5,7 @@ import { Eyebrow, PageIntro } from "@/components/ui";
 export const metadata: Metadata = { title: "About" };
 
 const REPO_URL = process.env.XM_REPO_URL ?? "https://github.com/dilipna/xplore_more";
-const doc = (path: string) => `${REPO_URL}/blob/main/${path}`;
+const doc = (path: string) => `${REPO_URL}/blob/improve/reviewable-problem-briefs/${path}`;
 
 type Measurement = {
   area: string;
@@ -138,9 +138,9 @@ export default function HowItWorksPage() {
       </section>
 
       <section className="mx-auto max-w-6xl px-5 pb-12">
-        <h2 className="text-2xl font-semibold tracking-tight">Results</h2>
+        <h2 className="text-2xl font-semibold tracking-tight">Historical evaluation records</h2>
         <p className="mt-2 max-w-3xl text-fg-400">
-          Each number links to the report it came from. Where the labels were made by an AI assistant and not yet
+          These numbers describe the committed evaluation corpora, not the smaller public capture. Each links to its report. Where labels were made by an AI assistant and not yet
           checked by a person, the card says so.
         </p>
         <div className="mt-8 grid gap-4 md:grid-cols-2">

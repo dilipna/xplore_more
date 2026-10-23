@@ -1,3 +1,4 @@
+import { recordedMode } from "@/lib/web-mode";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AutoRefresh } from "@/components/live";
@@ -47,7 +48,7 @@ export default async function ProblemsPage({ searchParams }: { searchParams: Sea
 
   return (
     <Shell rail={<RightRail showProblems={false} />}>
-      <AutoRefresh seconds={60} />
+      <AutoRefresh seconds={60} enabled={!recordedMode()} />
       <section className="panel p-5">
         <h1 className="text-2xl font-bold tracking-tight">Problems people keep running into</h1>
         <p className="mt-1.5 text-sm text-fg-400">

@@ -4,6 +4,28 @@
 
 > Status: runs locally end to end. The GCP deployment (Terraform, keyless GitHub Actions deploys, Cloud Run) is written and validated in CI, but not applied yet. Every number here links to a committed report with the command that reproduces it. No report, no number.
 
+## Recorded website and connected local application
+
+The web app now defaults to a dated, self-contained capture: 36 source-linked
+stories and 17 machine-classified problem hypotheses from the actual local
+pipeline. It needs no hosted database, Redis, model API or cloud project.
+`/capture` explains the collection, limitations and downloadable data checksum.
+Search in this edition matches title keywords; connected mode uses the backend's
+hybrid retrieval. The historical retrieval evaluation below concerns a different
+frozen corpus and does not measure this small public capture.
+
+```bash
+cd apps/web
+pnpm install --frozen-lockfile
+pnpm test && pnpm lint && pnpm build
+pnpm start
+```
+
+Set server-side `XM_WEB_MODE=connected` and `XM_API_URL` explicitly to use a
+running local API. See [operating modes](docs/operating-modes.md) and the
+[release validation record](docs/reports/trusted-discovery-v1.md).
+This redevelopment remains local until release approval and browser QA complete.
+
 ## From problem discovery to a reviewed prototype
 
 [Recorded public workbench](https://protopro.vercel.app/discover) ·
@@ -16,8 +38,10 @@ then validate/export a draft JSON brief for Pro2Pro. Human approval is a separat
 step tied to the exact imported snapshot. Generated artifacts require separate
 functional observations and acceptance; no model runs in this workbench.
 
-The public edition is explicitly recorded and hosted within Pro2Pro's existing site.
-The full live XploreMore feed/API is still separate. No GCP resources were applied.
+The previously published discovery workbench is explicitly recorded and hosted
+within Pro2Pro's existing site. The new standalone XploreMore recorded edition is
+prepared locally; it has not replaced that deployment. The full connected
+XploreMore feed/API remains separate. No GCP resources were applied.
 `XM_SEARCH_MODE=lexical` supports deliberate API operation without embedding-model
 loading and discloses missing dense retrieval. The existing hybrid mode remains default.
 
@@ -26,7 +50,7 @@ loading and discloses missing dense retrieval. The existing hybrid mode remains 
 These are descriptions of what each feature does, not claims about other sites.
 
 - **The week, mapped by meaning (`/map`).** Every story and active problem is a dot on a radar-style canvas, placed by a t-SNE layout of its embedding (numpy, deterministic, cached). Islands are labelled with their most distinctive title words (class-based TF-IDF), so no label is generated. Hover a dot to see its nearest neighbours in meaning; click it to open it. The home page opens with it, next to a live chart of items per hour.
-- **⌘K anywhere:** a command palette that jumps to any page or searches stories as you type (hybrid search through a same-origin proxy, so the API key stays on the server).
+- **⌘K anywhere:** a command palette that jumps to any page or searches stories as you type (captured title keywords in recorded mode; hybrid search through a same-origin proxy in connected mode, so the API key stays on the server).
 - **You can see and change the ranking.** Every feed story shows why it ranks where it does: coverage, authority, community points and freshness, computed by the same function as the score. Sliders on `/feed` re-rank the feed, with rank-change arrows and a shareable URL. The weights are bounded and part of the cache key; the defaults equal the standard feed (tested).
 - **No single source takes over the top.** At most 2 stories per lead source in the top 10 and 3 in the top 20. Before the cap, the top 20 was 19/20 Hacker News; after it, the largest single source had 3/20, from 11 sources ([report](docs/reports/feed-diversity-v1.md)).
 - **Who reported first.** Multi-source stories show a race-to-report timeline and a badge per source (primary / press / independent / community). A "Primary sources only" filter keeps stories that a lab, company, project or paper published.
