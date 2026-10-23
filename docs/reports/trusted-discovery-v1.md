@@ -54,10 +54,43 @@ mode, exact download bytes and two ranking parity cases against the existing
 Python formula. Final web lint and a production build passed after the semantic
 HTML and wording corrections. Formula parity is not evidence of better ranking quality.
 
-Interactive/responsive browser QA remains incomplete. Automatic approval review
-blocked opening the localhost preview because its usage limit was reached.
-No screenshot, responsive pass, successful browser export or production readiness
-is claimed. Do not promote this release until browser verification is complete.
+Initial browser QA was blocked by an automatic approval-review usage limit.
+Access later resumed normally. The production preview was checked at 1440,
+768 and 390 pixels: forty route/layout observations had no horizontal overflow,
+one main landmark and one page heading. Source details, title search and its empty
+state, topic follow/unfollow and persistence after reload, ranking URL updates and
+reset, command-palette search/navigation/Escape, and map highlighting/layer
+controls worked. A new expandable list exposes all 48 mapped records as ordinary
+links; keyboard activation opened the correct record. Desktop and phone
+screenshots and the layout observations are retained in the local evidence package.
+
+The workbench rejected an incomplete scope. An actual browser download of a
+completed draft passed the shared JSON schema and preserved problem 7, its
+original GitHub issue URL and exact October 22 capture timestamp. The temporary
+QA scope is test input, not a claim that a compatibility checklist solves that
+report. Nothing was sent to Pro2Pro or approved for model execution.
+
+The production-server smoke test checks twelve HTML routes and six auxiliary
+routes, server-only credential non-disclosure, exact capture checksum, zero
+upstream requests in recorded mode, authenticated proxying in explicit connected
+mode, and HTTP 503 when that upstream is unavailable. It now runs after the web
+build in CI. Local results pass; remote CI for this revision is still pending.
+
+## A standalone-only redirect defect
+
+The first read-only container smoke check found that `/api/capture` built an
+absolute redirect using the server's internal bind host (`0.0.0.0`). This was
+invisible when using a localhost Next server. The correction returns a relative
+Location header, and the HTTP regression test requires that exact header.
+The rebuilt image then passed health, homepage and download checksum checks as
+UID 1000 in a read-only container with capabilities dropped. An earlier one-off
+Node probe crashed on the host; the subsequent PowerShell check exposed the
+redirect defect. Neither failed attempt is counted as a pass.
+
+The accessible Vercel team `asmq333` is on Hobby and lists five existing projects,
+none for XploreMore. No new project has been created. Source publication, remote
+CI and a separate recorded-site project require approval for the final commit.
+No connected backend, model service, GCP resource or paid hosting is proposed.
 
 Historical search results retain their assistant-judged, small-sample and
 snapshot limitations. `tools/reproduce_search.py` reruns that experiment into

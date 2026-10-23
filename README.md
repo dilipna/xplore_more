@@ -17,14 +17,15 @@ frozen corpus and does not measure this small public capture.
 ```bash
 cd apps/web
 pnpm install --frozen-lockfile
-pnpm test && pnpm lint && pnpm build
+pnpm test && pnpm lint && pnpm build && pnpm test:server
 pnpm start
 ```
 
 Set server-side `XM_WEB_MODE=connected` and `XM_API_URL` explicitly to use a
 running local API. See [operating modes](docs/operating-modes.md) and the
 [release validation record](docs/reports/trusted-discovery-v1.md).
-This redevelopment remains local until release approval and browser QA complete.
+Local responsive/browser QA and standalone-container checks pass. This
+redevelopment remains local until approval for publication, remote CI and hosting.
 
 ## From problem discovery to a reviewed prototype
 
