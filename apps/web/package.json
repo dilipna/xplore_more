@@ -7,10 +7,14 @@
     "dev": "next dev --port 3100",
     "build": "next build",
     "start": "next start --port 3100",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "node --test test/*.test.mjs",
+    "test:server": "node test/server-smoke.mjs"
   },
   "dependencies": {
-    "next": "16.3.7",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
+    "next": "16.4.1",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },
@@ -20,7 +24,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.3.7",
+    "eslint-config-next": "16.4.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

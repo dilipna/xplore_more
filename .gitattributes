@@ -4,3 +4,7 @@
 *.jpg binary
 *.gz binary
 *.onnx binary
+
+# Public capture checksums must survive Windows/Linux checkouts unchanged.
+apps/web/src/data/demo-snapshot*.json text eol=lf
+apps/web/public/capture-data/*.json text eol=lf

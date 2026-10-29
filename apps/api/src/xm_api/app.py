@@ -153,8 +153,8 @@ def create_app(
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         engine = make_engine(settings)
-        model = embedder
-        if model is None:
+        model = embedder if settings.search_mode == "hybrid" else None
+        if model is None and settings.search_mode == "hybrid":
             model = FastEmbedEmbedder(
                 settings.embedding_model, settings.embedding_dim, settings.embedding_cache_dir
             )

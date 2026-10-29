@@ -1,6 +1,6 @@
 name: deploy
 
-# Runs after CI goes green on main, or on demand.
+# Explicit manual infrastructure deployment. CI alone never applies paid resources.
 #
 #   1. build-and-push  build every image, push it tagged with the commit SHA, sign the pushed
 #                      digest keylessly with cosign (OIDC, no stored key), and Trivy-scan it.
@@ -19,10 +19,6 @@ name: deploy
 # GCP_ARTIFACT_REGISTRY (see infra/terraform/README.md).
 
 on:
-  workflow_run:
-    workflows: [ci]
-    branches: [main]
-    types: [completed]
   workflow_dispatch:
 
 permissions:
@@ -43,7 +39,7 @@ jobs:
     # Skipped (not failed) until the GCP repository variables exist; every later job needs this one.
     if: >-
       vars.GCP_WORKLOAD_IDENTITY_PROVIDER != '' &&
-      (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success')
+      github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
     environment: prod
     # No job outputs on purpose: a matrix job's outputs come from whichever leg finishes last,

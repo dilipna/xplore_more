@@ -5,6 +5,8 @@ import { KeyboardShortcuts } from "@/components/keyboard-shortcuts";
 import { SiteFooter } from "@/components/site-footer";
 import { NewsTicker } from "@/components/news-ticker";
 import { SiteHeader } from "@/components/site-header";
+import { recordedMode } from "@/lib/web-mode";
+import { CaptureBanner } from "@/components/capture-banner";
 import "./globals.css";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
@@ -16,7 +18,7 @@ export const metadata: Metadata = {
     template: "%s · XploreMore",
   },
   description:
-    "Top tech stories from 43 sources, one story per event, plus the problems engineers keep reporting on Hacker News, GitHub, Lobsters and Stack Exchange.",
+    "Source-linked technology stories and engineer-reported problems, with explainable ranking and a dated, inspectable public capture.",
   applicationName: "XploreMore",
   alternates: {
     types: {
@@ -36,11 +38,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en" className={`${inter.variable} ${jetbrains.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
         <SiteHeader />
+        {recordedMode() && <CaptureBanner />}
         <NewsTicker />
         <main className="flex-1">{children}</main>
         <SiteFooter />
         <KeyboardShortcuts />
-        <CommandPalette />
+        <CommandPalette recorded={recordedMode()} />
       </body>
     </html>
   );

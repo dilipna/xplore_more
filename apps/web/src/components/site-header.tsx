@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { recordedMode } from "@/lib/web-mode";
 import { getStats } from "@/lib/api";
 import { SearchIcon } from "./icons";
 import { SinceTicker } from "./live";
@@ -46,10 +47,10 @@ export async function SiteHeader() {
           <PaletteButton />
         </div>
         <div className="flex shrink-0 items-center gap-2 rounded-full border hairline px-3 py-1.5 text-xs">
-          {stats.data ? (
+          {recordedMode() ? <Link href="/capture" className="font-mono text-[10px] uppercase tracking-wider text-amber-300">Recorded edition ↗</Link> : stats.data ? (
             <>
               <span className="live-dot" aria-hidden="true" />
-              <span className="font-semibold text-signal-400">Live</span>
+              <span className="font-semibold text-signal-400">Connected</span>
               <span className="hidden text-fg-500 sm:inline">
                 <SinceTicker iso={live} prefix="· updated " />
               </span>
