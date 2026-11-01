@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     topic_story_updated: str = "story-updated"
 
     indexer_batch_size: int = Field(default=200, ge=1, le=1000)
+    search_mode: Literal["hybrid", "lexical"] = "hybrid"
     embedding_model: str = "BAAI/bge-small-en-v1.5"
     embedding_dim: int = 384
     embedding_cache_dir: str | None = None  # baked into the image in production

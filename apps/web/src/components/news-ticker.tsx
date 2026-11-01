@@ -1,3 +1,4 @@
+import { recordedMode } from "@/lib/web-mode";
 import Link from "next/link";
 import { getTopStories } from "@/lib/api";
 import { relativeTime } from "@/lib/format";
@@ -36,11 +37,11 @@ export async function NewsTicker() {
     <div className="border-b hairline bg-field-900/60 print:hidden">
       <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 sm:px-5">
         <span className="flex shrink-0 items-center gap-2 py-2 text-xs font-semibold text-signal-400">
-          <span className="live-dot" aria-hidden="true" />
-          Trending
+          <span className={recordedMode() ? "h-1.5 w-1.5 rounded-full bg-signal-400" : "live-dot"} aria-hidden="true" />
+          Top stories
         </span>
         <div className="ticker-mask min-w-0 flex-1 overflow-hidden py-2">
-          <ul className="ticker-track flex w-max animate-ticker" aria-label="Trending stories">
+          <ul className="ticker-track flex w-max animate-ticker" aria-label="Top stories">
             {items(false)}
             {items(true)}
           </ul>

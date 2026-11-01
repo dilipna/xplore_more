@@ -1,0 +1,3419 @@
+{
+  "version": 1,
+  "captured_at": "2026-10-22T20:38:20.827589+00:00",
+  "scope": "Bounded local pipeline capture; recorded data, not continuously refreshed",
+  "embedding_model": "BAAI/bge-small-en-v1.5 (local ONNX CPU)",
+  "search_mode": "keyword search over packaged titles; live hybrid retrieval requires connected mode",
+  "labels": "Problem classification is machine-generated; demand and usefulness are unverified",
+  "coverage": {
+    "exported_stories": 36,
+    "corpus_stories": 43,
+    "exported_problems": 17,
+    "feed_window_hours": 336
+  },
+  "stats": {
+    "as_of": "2026-10-22T20:38:20.240297Z",
+    "sources": 11,
+    "articles": 43,
+    "discussions": 28,
+    "voices": 27,
+    "platforms": [
+      "github",
+      "hn"
+    ],
+    "stories": 43,
+    "multi_source_stories": 0,
+    "problems": 17,
+    "multi_voice_problems": 0,
+    "last_indexed_at": "2026-10-22T20:35:06.566306Z"
+  },
+  "feed": {
+    "ranker": "heuristic/story-features-v1+source-cap-v1",
+    "weights": {
+      "sources": 1.2,
+      "authority": 1.0,
+      "hn_points": 0.35,
+      "half_life_hours": 18.0
+    },
+    "results": [
+      {
+        "id": 15,
+        "title": "Un nuevo comienzo",
+        "url": "https://tiberava.online/",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "hacker-news"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613672Z",
+        "published_at": "2026-10-22T20:28:41Z",
+        "score": 2.145557,
+        "signals": {
+          "coverage": 0.8318,
+          "authority": 0.7,
+          "community": 0.6271,
+          "freshness": 0.9938,
+          "hn_points": 5,
+          "hours_since_published": 0.16
+        }
+      },
+      {
+        "id": 14,
+        "title": "Portal Texas Used to ‘Rubber Stamp’ Data Centers Down After 404 Media Reporting",
+        "url": "https://404media.co/texas-commission-on-environmental-quality-portal-down",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "hacker-news"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613672Z",
+        "published_at": "2026-10-22T20:29:40Z",
+        "score": 1.905656,
+        "signals": {
+          "coverage": 0.8318,
+          "authority": 0.7,
+          "community": 0.3845,
+          "freshness": 0.9945,
+          "hn_points": 2,
+          "hours_since_published": 0.14
+        }
+      },
+      {
+        "id": 13,
+        "title": "How bug bounty sharpens one researcher’s security skills",
+        "url": "https://github.blog/security/how-bug-bounty-sharpens-one-researchers-security-skills",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "github-blog"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613825Z",
+        "published_at": "2026-10-22T17:21:30Z",
+        "score": 1.438122,
+        "signals": {
+          "coverage": 0.8318,
+          "authority": 0.8,
+          "community": 0.0,
+          "freshness": 0.8813,
+          "hn_points": 0,
+          "hours_since_published": 3.28
+        }
+      },
+      {
+        "id": 32,
+        "title": "OlmoEarth v1.3: State-of-the-art embeddings for the whole planet",
+        "url": "https://huggingface.co/blog/allenai/olmoearth-v1-3",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "huggingface-blog"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613679Z",
+        "published_at": "2026-10-22T16:11:31Z",
+        "score": 1.417088,
+        "signals": {
+          "coverage": 0.8318,
+          "authority": 0.85,
+          "community": 0.0,
+          "freshness": 0.8426,
+          "hn_points": 0,
+          "hours_since_published": 4.45
+        }
+      },
+      {
+        "id": 4,
+        "title": "Ensemble forecasting with IBM Granite time-series models",
+        "url": "https://huggingface.co/blog/ibm-research/granite-timeseries-ensemble-r1",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "huggingface-blog"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613679Z",
+        "published_at": "2026-10-22T07:51:31Z",
+        "score": 1.02809,
+        "signals": {
+          "coverage": 0.8318,
+          "authority": 0.85,
+          "community": 0.0,
+          "freshness": 0.6113,
+          "hn_points": 0,
+          "hours_since_published": 12.78
+        }
+      },
+      {
+        "id": 2,
+        "title": "Uber brings ChatGPT Work to all employees with OpenAI",
+        "url": "https://openai.com/index/uber-chatgpt-work-rollout",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "openai-news"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613755Z",
+        "published_at": "2026-10-22T00:00:00Z",
+        "score": 0.804803,
+        "signals": {
+          "coverage": 0.8318,
+          "authority": 0.95,
+          "community": 0.0,
+          "freshness": 0.4517,
+          "hn_points": 0,
+          "hours_since_published": 20.64
+        }
+      },
+      {
+        "id": 17,
+        "title": "Broad access through consistent standards",
+        "url": "https://openai.com/index/broad-access-through-consistent-standards",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "openai-news"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613755Z",
+        "published_at": "2026-10-21T21:00:00Z",
+        "score": 0.716998,
+        "signals": {
+          "coverage": 0.8318,
+          "authority": 0.95,
+          "community": 0.0,
+          "freshness": 0.4024,
+          "hn_points": 0,
+          "hours_since_published": 23.64
+        }
+      },
+      {
+        "id": 8,
+        "title": "The bridge to agent-scale Git infrastructure",
+        "url": "https://github.blog/engineering/architecture-optimization/the-bridge-to-agent-scale-git-infrastructure",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "github-blog"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613825Z",
+        "published_at": "2026-10-21T16:00:00Z",
+        "score": 0.541634,
+        "signals": {
+          "coverage": 0.8318,
+          "authority": 0.8,
+          "community": 0.0,
+          "freshness": 0.3319,
+          "hn_points": 0,
+          "hours_since_published": 28.64
+        }
+      },
+      {
+        "id": 31,
+        "title": "Release v0.32.0 · vllm-project/vllm",
+        "url": "https://github.com/vllm-project/vllm/releases/tag/v0.32.0",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "gh-vllm"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613689Z",
+        "published_at": "2026-10-18T10:23:45Z",
+        "score": 0.025609,
+        "signals": {
+          "coverage": 0.8318,
+          "authority": 0.7,
+          "community": 0.0,
+          "freshness": 0.0167,
+          "hn_points": 0,
+          "hours_since_published": 106.24
+        }
+      },
+      {
+        "id": 35,
+        "title": "Release v0.32.0rc3: [Bugfix] Fix NaN output of the Mamba2 chunk scan kernel on sm90 (#61718) · vllm-project/vllm",
+        "url": "https://github.com/vllm-project/vllm/releases/tag/v0.32.0rc3",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "gh-vllm"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613689Z",
+        "published_at": "2026-10-17T00:25:45Z",
+        "score": 0.006924,
+        "signals": {
+          "coverage": 0.8318,
+          "authority": 0.7,
+          "community": 0.0,
+          "freshness": 0.0045,
+          "hn_points": 0,
+          "hours_since_published": 140.21
+        }
+      },
+      {
+        "id": 19,
+        "title": "This New Device ‘Bricks’ Your Phone When You Enter Your Bedroom - CNET",
+        "url": "https://cnet.com/health/sleep/new-device-bricks-phone-when-enter-bedroom",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "hacker-news"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613672Z",
+        "published_at": "2026-10-22T20:24:19Z",
+        "score": 1.899124,
+        "signals": {
+          "coverage": 0.8318,
+          "authority": 0.7,
+          "community": 0.3845,
+          "freshness": 0.991,
+          "hn_points": 2,
+          "hours_since_published": 0.23
+        }
+      },
+      {
+        "id": 1,
+        "title": "How AT&T is rethinking in-house legal work with OpenAI",
+        "url": "https://openai.com/index/att-legal",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "openai-news"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613755Z",
+        "published_at": "2026-10-21T17:00:00Z",
+        "score": 0.614642,
+        "signals": {
+          "coverage": 0.8318,
+          "authority": 0.95,
+          "community": 0.0,
+          "freshness": 0.345,
+          "hn_points": 0,
+          "hours_since_published": 27.64
+        }
+      },
+      {
+        "id": 28,
+        "title": "NVIDIA Kumo Relational Outperforms Supervised Machine Learning on Relational Data, No Training Required",
+        "url": "https://huggingface.co/blog/nvidia/kumo-relational",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "huggingface-blog"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613679Z",
+        "published_at": "2026-10-21T18:26:30Z",
+        "score": 0.613264,
+        "signals": {
+          "coverage": 0.8318,
+          "authority": 0.85,
+          "community": 0.0,
+          "freshness": 0.3647,
+          "hn_points": 0,
+          "hours_since_published": 26.2
+        }
+      },
+      {
+        "id": 11,
+        "title": "How 3 Java Champions are using GitHub Copilot for increased productivity",
+        "url": "https://github.blog/ai-and-ml/github-copilot/how-3-java-champions-are-using-github-copilot-for-increased-productivity",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "github-blog"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613825Z",
+        "published_at": "2026-10-20T16:05:03Z",
+        "score": 0.215645,
+        "signals": {
+          "coverage": 0.8318,
+          "authority": 0.8,
+          "community": 0.0,
+          "freshness": 0.1322,
+          "hn_points": 0,
+          "hours_since_published": 52.55
+        }
+      },
+      {
+        "id": 5,
+        "title": "Why Is My Kubernetes Job Still Pending? Tracing Kueue Admission with Headlamp",
+        "url": "https://kubernetes.io/blog/2026/10/14/tracing-kueue-admission-with-headlamp",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "kubernetes-blog"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613874Z",
+        "published_at": "2026-10-14T18:35:00Z",
+        "score": 0.000927,
+        "signals": {
+          "coverage": 0.8318,
+          "authority": 0.8,
+          "community": 0.0,
+          "freshness": 0.0006,
+          "hn_points": 0,
+          "hours_since_published": 194.06
+        }
+      },
+      {
+        "id": 21,
+        "title": "We can now find flaws faster than anyone can fix them · Tolmo",
+        "url": "https://tolmo.com/blog/faster-than-anyone-can-fix-them",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "hacker-news"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613672Z",
+        "published_at": "2026-10-22T20:22:45Z",
+        "score": 1.897216,
+        "signals": {
+          "coverage": 0.8318,
+          "authority": 0.7,
+          "community": 0.3845,
+          "freshness": 0.99,
+          "hn_points": 2,
+          "hours_since_published": 0.26
+        }
+      },
+      {
+        "id": 6,
+        "title": "andros (@andros@activity.andros.dev)",
+        "url": "https://activity.andros.dev/@andros/statuses/01M5F2Q5013Q1MGPGV55ZYSP85",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "hacker-news"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613672Z",
+        "published_at": "2026-10-22T20:31:59Z",
+        "score": 1.767157,
+        "signals": {
+          "coverage": 0.8318,
+          "authority": 0.7,
+          "community": 0.2426,
+          "freshness": 0.9959,
+          "hn_points": 1,
+          "hours_since_published": 0.11
+        }
+      },
+      {
+        "id": 43,
+        "title": "OMNI Magazine Archive : Free Download, Borrow, and Streaming : Internet Archive",
+        "url": "https://archive.org/details/omni-archive",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "hacker-news"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613672Z",
+        "published_at": "2026-10-22T20:31:04Z",
+        "score": 1.766117,
+        "signals": {
+          "coverage": 0.8318,
+          "authority": 0.7,
+          "community": 0.2426,
+          "freshness": 0.9953,
+          "hn_points": 1,
+          "hours_since_published": 0.12
+        }
+      },
+      {
+        "id": 9,
+        "title": "How to Run Turing-Complete Malware in PyTorch's Backward Pass",
+        "url": "https://elonlit.com/scrivings/how-to-run-turing-complete-malware-in-pytorchs-backward-pass",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "hacker-news"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613672Z",
+        "published_at": "2026-10-22T20:29:58Z",
+        "score": 1.764871,
+        "signals": {
+          "coverage": 0.8318,
+          "authority": 0.7,
+          "community": 0.2426,
+          "freshness": 0.9946,
+          "hn_points": 1,
+          "hours_since_published": 0.14
+        }
+      },
+      {
+        "id": 16,
+        "title": "‘M*A*S*H’, ‘Top Gun’ actor passes away at 93",
+        "url": "https://ktla.com/entertainment/mash-top-gun-actor-passes-away-at-93",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "hacker-news"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613672Z",
+        "published_at": "2026-10-22T20:26:19Z",
+        "score": 1.760741,
+        "signals": {
+          "coverage": 0.8318,
+          "authority": 0.7,
+          "community": 0.2426,
+          "freshness": 0.9923,
+          "hn_points": 1,
+          "hours_since_published": 0.2
+        }
+      },
+      {
+        "id": 34,
+        "title": "Like Humans, Some Primates Become Cautious of Germs in the Wake of a Viral Outbreak",
+        "url": "https://today.ucsd.edu/story/like-humans-some-primates-become-cautious-of-germs-in-the-wake-of-a-viral-outbreak",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "hacker-news"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613672Z",
+        "published_at": "2026-10-22T20:24:40Z",
+        "score": 1.758878,
+        "signals": {
+          "coverage": 0.8318,
+          "authority": 0.7,
+          "community": 0.2426,
+          "freshness": 0.9913,
+          "hn_points": 1,
+          "hours_since_published": 0.23
+        }
+      },
+      {
+        "id": 22,
+        "title": "Linus Torvalds Eliminates Unsafe __get_user() & __put_user() Functions In Linux 7.4",
+        "url": "https://phoronix.com/news/Linus-Kills-Get-Put-User-Linux",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "hacker-news"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613672Z",
+        "published_at": "2026-10-22T20:24:04Z",
+        "score": 1.758201,
+        "signals": {
+          "coverage": 0.8318,
+          "authority": 0.7,
+          "community": 0.2426,
+          "freshness": 0.9909,
+          "hn_points": 1,
+          "hours_since_published": 0.24
+        }
+      },
+      {
+        "id": 23,
+        "title": "Custom Drone Light Shows for Events & Brands | Starbound Labs",
+        "url": "https://starboundlabs.com/",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "hacker-news"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613672Z",
+        "published_at": "2026-10-22T20:21:51Z",
+        "score": 1.755701,
+        "signals": {
+          "coverage": 0.8318,
+          "authority": 0.7,
+          "community": 0.2426,
+          "freshness": 0.9895,
+          "hn_points": 1,
+          "hours_since_published": 0.27
+        }
+      },
+      {
+        "id": 24,
+        "title": "GitHub - hexadec-0/OpenPanopticon: OpenPanopticon | Open source intelligence viewer for global situational awareness",
+        "url": "https://github.com/hexadec-0/OpenPanopticon",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "hacker-news"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613672Z",
+        "published_at": "2026-10-22T20:21:43Z",
+        "score": 1.755551,
+        "signals": {
+          "coverage": 0.8318,
+          "authority": 0.7,
+          "community": 0.2426,
+          "freshness": 0.9894,
+          "hn_points": 1,
+          "hours_since_published": 0.28
+        }
+      },
+      {
+        "id": 25,
+        "title": "Flaim Fantasy: your fantasy league, inside your AI.",
+        "url": "https://flaim.app/",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "hacker-news"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613672Z",
+        "published_at": "2026-10-22T20:20:53Z",
+        "score": 1.754612,
+        "signals": {
+          "coverage": 0.8318,
+          "authority": 0.7,
+          "community": 0.2426,
+          "freshness": 0.9889,
+          "hn_points": 1,
+          "hours_since_published": 0.29
+        }
+      },
+      {
+        "id": 27,
+        "title": "Replacing PyTorch with Julia and Reactant: One Year In – ∇ Selected Gradient Works",
+        "url": "https://csvance.dev/posts/2026-10-22-reactant-end-to-end",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "hacker-news"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613672Z",
+        "published_at": "2026-10-22T20:18:38Z",
+        "score": 1.75208,
+        "signals": {
+          "coverage": 0.8318,
+          "authority": 0.7,
+          "community": 0.2426,
+          "freshness": 0.9874,
+          "hn_points": 1,
+          "hours_since_published": 0.33
+        }
+      },
+      {
+        "id": 37,
+        "title": "How Specializing the Vocabulary of SLMs Can Cut Inference Cost by 77% in Real Applications",
+        "url": "https://huggingface.co/blog/Dharma-AI/vocabx-vocabulary-specialization",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "huggingface-blog"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613679Z",
+        "published_at": "2026-10-21T17:35:36Z",
+        "score": 0.593554,
+        "signals": {
+          "coverage": 0.8318,
+          "authority": 0.85,
+          "community": 0.0,
+          "freshness": 0.3529,
+          "hn_points": 0,
+          "hours_since_published": 27.05
+        }
+      },
+      {
+        "id": 40,
+        "title": "Profiling TorchNeuron (Part 1): System-level profiling on AWS Trainium.",
+        "url": "https://huggingface.co/blog/amazon/profiling-torchneuron-part-1",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "huggingface-blog"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613679Z",
+        "published_at": "2026-10-21T16:04:43Z",
+        "score": 0.559923,
+        "signals": {
+          "coverage": 0.8318,
+          "authority": 0.85,
+          "community": 0.0,
+          "freshness": 0.3329,
+          "hn_points": 0,
+          "hours_since_published": 28.56
+        }
+      },
+      {
+        "id": 10,
+        "title": "Granite Speech 5.0: Transcribe, Translate, and Attribute more Accurately and Faster",
+        "url": "https://huggingface.co/blog/ibm-granite/granite-speech-5",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "huggingface-blog"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613679Z",
+        "published_at": "2026-10-21T14:58:18Z",
+        "score": 0.536557,
+        "signals": {
+          "coverage": 0.8318,
+          "authority": 0.85,
+          "community": 0.0,
+          "freshness": 0.319,
+          "hn_points": 0,
+          "hours_since_published": 29.67
+        }
+      },
+      {
+        "id": 3,
+        "title": "Hugging Face ❤️ TorchTPU: TPUs, Natively",
+        "url": "https://huggingface.co/blog/hf-torchtpu",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "huggingface-blog"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613679Z",
+        "published_at": "2026-10-20T00:00:00Z",
+        "score": 0.119635,
+        "signals": {
+          "coverage": 0.8318,
+          "authority": 0.85,
+          "community": 0.0,
+          "freshness": 0.0711,
+          "hn_points": 0,
+          "hours_since_published": 68.64
+        }
+      },
+      {
+        "id": 18,
+        "title": "AnyLanguageModel 1.0: One Year of Local Models on Apple Platforms",
+        "url": "https://huggingface.co/blog/anylanguagemodel-1-0",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "huggingface-blog"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613679Z",
+        "published_at": "2026-10-20T00:00:00Z",
+        "score": 0.119635,
+        "signals": {
+          "coverage": 0.8318,
+          "authority": 0.85,
+          "community": 0.0,
+          "freshness": 0.0711,
+          "hn_points": 0,
+          "hours_since_published": 68.64
+        }
+      },
+      {
+        "id": 26,
+        "title": "How to continue a GitHub Copilot app session in VS Code",
+        "url": "https://github.blog/ai-and-ml/github-copilot/how-to-continue-a-github-copilot-app-session-in-vs-code",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "github-blog"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613825Z",
+        "published_at": "2026-10-19T18:47:22Z",
+        "score": 0.094975,
+        "signals": {
+          "coverage": 0.8318,
+          "authority": 0.8,
+          "community": 0.0,
+          "freshness": 0.0582,
+          "hn_points": 0,
+          "hours_since_published": 73.85
+        }
+      },
+      {
+        "id": 30,
+        "title": "The next developer interface is ambient intelligence",
+        "url": "https://github.blog/news-insights/company-news/the-next-developer-interface-is-ambient-intelligence",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "github-blog"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613825Z",
+        "published_at": "2026-10-15T19:39:27Z",
+        "score": 0.002436,
+        "signals": {
+          "coverage": 0.8318,
+          "authority": 0.8,
+          "community": 0.0,
+          "freshness": 0.0015,
+          "hn_points": 0,
+          "hours_since_published": 168.98
+        }
+      },
+      {
+        "id": 36,
+        "title": "Staying Evergreen: How we automated secure access and repo hygiene in a shared org",
+        "url": "https://github.blog/engineering/platform-security/staying-evergreen-how-we-automated-secure-access-and-repo-hygiene-in-a-shared-org",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "github-blog"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613825Z",
+        "published_at": "2026-10-15T18:00:00Z",
+        "score": 0.002285,
+        "signals": {
+          "coverage": 0.8318,
+          "authority": 0.8,
+          "community": 0.0,
+          "freshness": 0.0014,
+          "hn_points": 0,
+          "hours_since_published": 170.64
+        }
+      },
+      {
+        "id": 38,
+        "title": "GitHub availability report: September 2026",
+        "url": "https://github.blog/news-insights/company-news/github-availability-report-september-2026",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "github-blog"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613825Z",
+        "published_at": "2026-10-14T20:01:35Z",
+        "score": 0.00098,
+        "signals": {
+          "coverage": 0.8318,
+          "authority": 0.8,
+          "community": 0.0,
+          "freshness": 0.0006,
+          "hn_points": 0,
+          "hours_since_published": 192.61
+        }
+      },
+      {
+        "id": 42,
+        "title": "From 2,500 requests to 24: Rebuilding star history without the stargazers",
+        "url": "https://github.blog/engineering/architecture-optimization/from-2500-requests-to-24-rebuilding-star-history-without-the-stargazers",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "github-blog"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613825Z",
+        "published_at": "2026-10-14T19:11:33Z",
+        "score": 0.000949,
+        "signals": {
+          "coverage": 0.8318,
+          "authority": 0.8,
+          "community": 0.0,
+          "freshness": 0.0006,
+          "hn_points": 0,
+          "hours_since_published": 193.45
+        }
+      }
+    ]
+  },
+  "stories": [
+    {
+      "story": {
+        "id": 15,
+        "title": "Un nuevo comienzo",
+        "url": "https://tiberava.online/",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "hacker-news"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613672Z",
+        "published_at": "2026-10-22T20:28:41Z",
+        "score": null,
+        "signals": null
+      },
+      "articles": [
+        {
+          "id": "5e91e264c3f35f94e29d91e7f139d7f4a9d5eef6a041d4f8a40977eed8b2d3f3",
+          "title": "Un nuevo comienzo",
+          "url": "https://tiberava.online/",
+          "source_id": "hacker-news",
+          "source_name": "Hacker News",
+          "published_at": "2026-10-22T20:28:41Z",
+          "discovered_at": "2026-10-22T20:33:09.613672Z",
+          "content_origin": "page"
+        }
+      ]
+    },
+    {
+      "story": {
+        "id": 14,
+        "title": "Portal Texas Used to ‘Rubber Stamp’ Data Centers Down After 404 Media Reporting",
+        "url": "https://404media.co/texas-commission-on-environmental-quality-portal-down",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "hacker-news"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613672Z",
+        "published_at": "2026-10-22T20:29:40Z",
+        "score": null,
+        "signals": null
+      },
+      "articles": [
+        {
+          "id": "8db4ae57d6dcf848e2ab2c7e4f75ecaaa3796ad551d1ee1502fe05dbbc682906",
+          "title": "Portal Texas Used to ‘Rubber Stamp’ Data Centers Down After 404 Media Reporting",
+          "url": "https://404media.co/texas-commission-on-environmental-quality-portal-down",
+          "source_id": "hacker-news",
+          "source_name": "Hacker News",
+          "published_at": "2026-10-22T20:29:40Z",
+          "discovered_at": "2026-10-22T20:33:09.613672Z",
+          "content_origin": "page"
+        }
+      ]
+    },
+    {
+      "story": {
+        "id": 13,
+        "title": "How bug bounty sharpens one researcher’s security skills",
+        "url": "https://github.blog/security/how-bug-bounty-sharpens-one-researchers-security-skills",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "github-blog"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613825Z",
+        "published_at": "2026-10-22T17:21:30Z",
+        "score": null,
+        "signals": null
+      },
+      "articles": [
+        {
+          "id": "8566195c9f888e1fef6dfd98cf186649208cf774c7e2c58fadde57cb69ec3324",
+          "title": "How bug bounty sharpens one researcher’s security skills",
+          "url": "https://github.blog/security/how-bug-bounty-sharpens-one-researchers-security-skills",
+          "source_id": "github-blog",
+          "source_name": "GitHub Blog",
+          "published_at": "2026-10-22T17:21:30Z",
+          "discovered_at": "2026-10-22T20:33:09.613825Z",
+          "content_origin": "page"
+        }
+      ]
+    },
+    {
+      "story": {
+        "id": 32,
+        "title": "OlmoEarth v1.3: State-of-the-art embeddings for the whole planet",
+        "url": "https://huggingface.co/blog/allenai/olmoearth-v1-3",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "huggingface-blog"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613679Z",
+        "published_at": "2026-10-22T16:11:31Z",
+        "score": null,
+        "signals": null
+      },
+      "articles": [
+        {
+          "id": "67297d2df9a3d7f196c35fa6ebbaab936e2f788f3fe9d6bed07634b74dd71599",
+          "title": "OlmoEarth v1.3: State-of-the-art embeddings for the whole planet",
+          "url": "https://huggingface.co/blog/allenai/olmoearth-v1-3",
+          "source_id": "huggingface-blog",
+          "source_name": "Hugging Face Blog",
+          "published_at": "2026-10-22T16:11:31Z",
+          "discovered_at": "2026-10-22T20:33:09.613679Z",
+          "content_origin": "page"
+        }
+      ]
+    },
+    {
+      "story": {
+        "id": 4,
+        "title": "Ensemble forecasting with IBM Granite time-series models",
+        "url": "https://huggingface.co/blog/ibm-research/granite-timeseries-ensemble-r1",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "huggingface-blog"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613679Z",
+        "published_at": "2026-10-22T07:51:31Z",
+        "score": null,
+        "signals": null
+      },
+      "articles": [
+        {
+          "id": "0e5fad3ca5f8a881acf7d04bb62a3859c2c74e88d36ad866cc1ffd77a9610def",
+          "title": "Ensemble forecasting with IBM Granite time-series models",
+          "url": "https://huggingface.co/blog/ibm-research/granite-timeseries-ensemble-r1",
+          "source_id": "huggingface-blog",
+          "source_name": "Hugging Face Blog",
+          "published_at": "2026-10-22T07:51:31Z",
+          "discovered_at": "2026-10-22T20:33:09.613679Z",
+          "content_origin": "page"
+        }
+      ]
+    },
+    {
+      "story": {
+        "id": 2,
+        "title": "Uber brings ChatGPT Work to all employees with OpenAI",
+        "url": "https://openai.com/index/uber-chatgpt-work-rollout",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "openai-news"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613755Z",
+        "published_at": "2026-10-22T00:00:00Z",
+        "score": null,
+        "signals": null
+      },
+      "articles": [
+        {
+          "id": "eda525050cea8fce4b13823379a8b9659ff224375e0356616ea34596cdb17cc5",
+          "title": "Uber brings ChatGPT Work to all employees with OpenAI",
+          "url": "https://openai.com/index/uber-chatgpt-work-rollout",
+          "source_id": "openai-news",
+          "source_name": "OpenAI News",
+          "published_at": "2026-10-22T00:00:00Z",
+          "discovered_at": "2026-10-22T20:33:09.613755Z",
+          "content_origin": "feed"
+        }
+      ]
+    },
+    {
+      "story": {
+        "id": 17,
+        "title": "Broad access through consistent standards",
+        "url": "https://openai.com/index/broad-access-through-consistent-standards",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "openai-news"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613755Z",
+        "published_at": "2026-10-21T21:00:00Z",
+        "score": null,
+        "signals": null
+      },
+      "articles": [
+        {
+          "id": "3f1a11956436b167380065dcbfb11acfb4b7400895eeef122ae6e9ec1be674ee",
+          "title": "Broad access through consistent standards",
+          "url": "https://openai.com/index/broad-access-through-consistent-standards",
+          "source_id": "openai-news",
+          "source_name": "OpenAI News",
+          "published_at": "2026-10-21T21:00:00Z",
+          "discovered_at": "2026-10-22T20:33:09.613755Z",
+          "content_origin": "feed"
+        }
+      ]
+    },
+    {
+      "story": {
+        "id": 8,
+        "title": "The bridge to agent-scale Git infrastructure",
+        "url": "https://github.blog/engineering/architecture-optimization/the-bridge-to-agent-scale-git-infrastructure",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "github-blog"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613825Z",
+        "published_at": "2026-10-21T16:00:00Z",
+        "score": null,
+        "signals": null
+      },
+      "articles": [
+        {
+          "id": "885fe3c67de05637ce5b9612baa0a6e50e729bbbcf8015191def57f8d564f7ca",
+          "title": "The bridge to agent-scale Git infrastructure",
+          "url": "https://github.blog/engineering/architecture-optimization/the-bridge-to-agent-scale-git-infrastructure",
+          "source_id": "github-blog",
+          "source_name": "GitHub Blog",
+          "published_at": "2026-10-21T16:00:00Z",
+          "discovered_at": "2026-10-22T20:33:09.613825Z",
+          "content_origin": "page"
+        }
+      ]
+    },
+    {
+      "story": {
+        "id": 31,
+        "title": "Release v0.32.0 · vllm-project/vllm",
+        "url": "https://github.com/vllm-project/vllm/releases/tag/v0.32.0",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "gh-vllm"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613689Z",
+        "published_at": "2026-10-18T10:23:45Z",
+        "score": null,
+        "signals": null
+      },
+      "articles": [
+        {
+          "id": "83a753b4160cba93855aa4361255dc1036593f3714dcb4c0d1799bf3d520a424",
+          "title": "Release v0.32.0 · vllm-project/vllm",
+          "url": "https://github.com/vllm-project/vllm/releases/tag/v0.32.0",
+          "source_id": "gh-vllm",
+          "source_name": "vLLM releases",
+          "published_at": "2026-10-18T10:23:45Z",
+          "discovered_at": "2026-10-22T20:33:09.613689Z",
+          "content_origin": "page"
+        }
+      ]
+    },
+    {
+      "story": {
+        "id": 35,
+        "title": "Release v0.32.0rc3: [Bugfix] Fix NaN output of the Mamba2 chunk scan kernel on sm90 (#61718) · vllm-project/vllm",
+        "url": "https://github.com/vllm-project/vllm/releases/tag/v0.32.0rc3",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "gh-vllm"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613689Z",
+        "published_at": "2026-10-17T00:25:45Z",
+        "score": null,
+        "signals": null
+      },
+      "articles": [
+        {
+          "id": "13d109f5467363c930ba93d58a3055971feda2e98a6093332ff47afb6e227cf8",
+          "title": "Release v0.32.0rc3: [Bugfix] Fix NaN output of the Mamba2 chunk scan kernel on sm90 (#61718) · vllm-project/vllm",
+          "url": "https://github.com/vllm-project/vllm/releases/tag/v0.32.0rc3",
+          "source_id": "gh-vllm",
+          "source_name": "vLLM releases",
+          "published_at": "2026-10-17T00:25:45Z",
+          "discovered_at": "2026-10-22T20:33:09.613689Z",
+          "content_origin": "page"
+        }
+      ]
+    },
+    {
+      "story": {
+        "id": 19,
+        "title": "This New Device ‘Bricks’ Your Phone When You Enter Your Bedroom - CNET",
+        "url": "https://cnet.com/health/sleep/new-device-bricks-phone-when-enter-bedroom",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "hacker-news"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613672Z",
+        "published_at": "2026-10-22T20:24:19Z",
+        "score": null,
+        "signals": null
+      },
+      "articles": [
+        {
+          "id": "1af4aa45beba4637d837630a5c8c4b377fab7ece89c356f22ef8f3299755ce4d",
+          "title": "This New Device ‘Bricks’ Your Phone When You Enter Your Bedroom - CNET",
+          "url": "https://cnet.com/health/sleep/new-device-bricks-phone-when-enter-bedroom",
+          "source_id": "hacker-news",
+          "source_name": "Hacker News",
+          "published_at": "2026-10-22T20:24:19Z",
+          "discovered_at": "2026-10-22T20:33:09.613672Z",
+          "content_origin": "page"
+        }
+      ]
+    },
+    {
+      "story": {
+        "id": 1,
+        "title": "How AT&T is rethinking in-house legal work with OpenAI",
+        "url": "https://openai.com/index/att-legal",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "openai-news"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613755Z",
+        "published_at": "2026-10-21T17:00:00Z",
+        "score": null,
+        "signals": null
+      },
+      "articles": [
+        {
+          "id": "39cad894cdd240fbe2dba606200e547216d43a1655f56c86db3d6329a851a826",
+          "title": "How AT&T is rethinking in-house legal work with OpenAI",
+          "url": "https://openai.com/index/att-legal",
+          "source_id": "openai-news",
+          "source_name": "OpenAI News",
+          "published_at": "2026-10-21T17:00:00Z",
+          "discovered_at": "2026-10-22T20:33:09.613755Z",
+          "content_origin": "feed"
+        }
+      ]
+    },
+    {
+      "story": {
+        "id": 28,
+        "title": "NVIDIA Kumo Relational Outperforms Supervised Machine Learning on Relational Data, No Training Required",
+        "url": "https://huggingface.co/blog/nvidia/kumo-relational",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "huggingface-blog"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613679Z",
+        "published_at": "2026-10-21T18:26:30Z",
+        "score": null,
+        "signals": null
+      },
+      "articles": [
+        {
+          "id": "94a5f6526eada9bc0f52700eb51d921a09fcfe01b2b364c8982be81ac1418089",
+          "title": "NVIDIA Kumo Relational Outperforms Supervised Machine Learning on Relational Data, No Training Required",
+          "url": "https://huggingface.co/blog/nvidia/kumo-relational",
+          "source_id": "huggingface-blog",
+          "source_name": "Hugging Face Blog",
+          "published_at": "2026-10-21T18:26:30Z",
+          "discovered_at": "2026-10-22T20:33:09.613679Z",
+          "content_origin": "page"
+        }
+      ]
+    },
+    {
+      "story": {
+        "id": 11,
+        "title": "How 3 Java Champions are using GitHub Copilot for increased productivity",
+        "url": "https://github.blog/ai-and-ml/github-copilot/how-3-java-champions-are-using-github-copilot-for-increased-productivity",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "github-blog"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613825Z",
+        "published_at": "2026-10-20T16:05:03Z",
+        "score": null,
+        "signals": null
+      },
+      "articles": [
+        {
+          "id": "c59142aad3a717b875d2006884606848f9530a186a95383c4c7e572935374417",
+          "title": "How 3 Java Champions are using GitHub Copilot for increased productivity",
+          "url": "https://github.blog/ai-and-ml/github-copilot/how-3-java-champions-are-using-github-copilot-for-increased-productivity",
+          "source_id": "github-blog",
+          "source_name": "GitHub Blog",
+          "published_at": "2026-10-20T16:05:03Z",
+          "discovered_at": "2026-10-22T20:33:09.613825Z",
+          "content_origin": "page"
+        }
+      ]
+    },
+    {
+      "story": {
+        "id": 5,
+        "title": "Why Is My Kubernetes Job Still Pending? Tracing Kueue Admission with Headlamp",
+        "url": "https://kubernetes.io/blog/2026/10/14/tracing-kueue-admission-with-headlamp",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "kubernetes-blog"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613874Z",
+        "published_at": "2026-10-14T18:35:00Z",
+        "score": null,
+        "signals": null
+      },
+      "articles": [
+        {
+          "id": "15138aab23bfbb834e46159cf2a02854c5d1989c6d85489249b20b0f3f1e5753",
+          "title": "Why Is My Kubernetes Job Still Pending? Tracing Kueue Admission with Headlamp",
+          "url": "https://kubernetes.io/blog/2026/10/14/tracing-kueue-admission-with-headlamp",
+          "source_id": "kubernetes-blog",
+          "source_name": "Kubernetes Blog",
+          "published_at": "2026-10-14T18:35:00Z",
+          "discovered_at": "2026-10-22T20:33:09.613874Z",
+          "content_origin": "page"
+        }
+      ]
+    },
+    {
+      "story": {
+        "id": 21,
+        "title": "We can now find flaws faster than anyone can fix them · Tolmo",
+        "url": "https://tolmo.com/blog/faster-than-anyone-can-fix-them",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "hacker-news"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613672Z",
+        "published_at": "2026-10-22T20:22:45Z",
+        "score": null,
+        "signals": null
+      },
+      "articles": [
+        {
+          "id": "db42f80d2a83e4d7894efc743585d35de75422f52a0346801e39c7c2fd868c0a",
+          "title": "We can now find flaws faster than anyone can fix them · Tolmo",
+          "url": "https://tolmo.com/blog/faster-than-anyone-can-fix-them",
+          "source_id": "hacker-news",
+          "source_name": "Hacker News",
+          "published_at": "2026-10-22T20:22:45Z",
+          "discovered_at": "2026-10-22T20:33:09.613672Z",
+          "content_origin": "page"
+        }
+      ]
+    },
+    {
+      "story": {
+        "id": 6,
+        "title": "andros (@andros@activity.andros.dev)",
+        "url": "https://activity.andros.dev/@andros/statuses/01M5F2Q5013Q1MGPGV55ZYSP85",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "hacker-news"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613672Z",
+        "published_at": "2026-10-22T20:31:59Z",
+        "score": null,
+        "signals": null
+      },
+      "articles": [
+        {
+          "id": "fea198d3df078e15dc13878c64d79a0395b4f1be11be75d452767b99333fd5ef",
+          "title": "andros (@andros@activity.andros.dev)",
+          "url": "https://activity.andros.dev/@andros/statuses/01M5F2Q5013Q1MGPGV55ZYSP85",
+          "source_id": "hacker-news",
+          "source_name": "Hacker News",
+          "published_at": "2026-10-22T20:31:59Z",
+          "discovered_at": "2026-10-22T20:33:09.613672Z",
+          "content_origin": "page"
+        }
+      ]
+    },
+    {
+      "story": {
+        "id": 43,
+        "title": "OMNI Magazine Archive : Free Download, Borrow, and Streaming : Internet Archive",
+        "url": "https://archive.org/details/omni-archive",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "hacker-news"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613672Z",
+        "published_at": "2026-10-22T20:31:04Z",
+        "score": null,
+        "signals": null
+      },
+      "articles": [
+        {
+          "id": "b5e61910612c6b189f42b215462f4c675b6e17f9e6d15f26ff67703b939c7dcf",
+          "title": "OMNI Magazine Archive : Free Download, Borrow, and Streaming : Internet Archive",
+          "url": "https://archive.org/details/omni-archive",
+          "source_id": "hacker-news",
+          "source_name": "Hacker News",
+          "published_at": "2026-10-22T20:31:04Z",
+          "discovered_at": "2026-10-22T20:33:09.613672Z",
+          "content_origin": "page"
+        }
+      ]
+    },
+    {
+      "story": {
+        "id": 9,
+        "title": "How to Run Turing-Complete Malware in PyTorch's Backward Pass",
+        "url": "https://elonlit.com/scrivings/how-to-run-turing-complete-malware-in-pytorchs-backward-pass",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "hacker-news"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613672Z",
+        "published_at": "2026-10-22T20:29:58Z",
+        "score": null,
+        "signals": null
+      },
+      "articles": [
+        {
+          "id": "73144bec7f413503a8fbac5780dbc94dbc811104aaf73a0fa17e9350077d0e49",
+          "title": "How to Run Turing-Complete Malware in PyTorch's Backward Pass",
+          "url": "https://elonlit.com/scrivings/how-to-run-turing-complete-malware-in-pytorchs-backward-pass",
+          "source_id": "hacker-news",
+          "source_name": "Hacker News",
+          "published_at": "2026-10-22T20:29:58Z",
+          "discovered_at": "2026-10-22T20:33:09.613672Z",
+          "content_origin": "page"
+        }
+      ]
+    },
+    {
+      "story": {
+        "id": 16,
+        "title": "‘M*A*S*H’, ‘Top Gun’ actor passes away at 93",
+        "url": "https://ktla.com/entertainment/mash-top-gun-actor-passes-away-at-93",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "hacker-news"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613672Z",
+        "published_at": "2026-10-22T20:26:19Z",
+        "score": null,
+        "signals": null
+      },
+      "articles": [
+        {
+          "id": "dc3b4a5542b242261c82cd4ce6bbfe8d44e08c84ff8a6b16e62cea0b2b69cdea",
+          "title": "‘M*A*S*H’, ‘Top Gun’ actor passes away at 93",
+          "url": "https://ktla.com/entertainment/mash-top-gun-actor-passes-away-at-93",
+          "source_id": "hacker-news",
+          "source_name": "Hacker News",
+          "published_at": "2026-10-22T20:26:19Z",
+          "discovered_at": "2026-10-22T20:33:09.613672Z",
+          "content_origin": "page"
+        }
+      ]
+    },
+    {
+      "story": {
+        "id": 34,
+        "title": "Like Humans, Some Primates Become Cautious of Germs in the Wake of a Viral Outbreak",
+        "url": "https://today.ucsd.edu/story/like-humans-some-primates-become-cautious-of-germs-in-the-wake-of-a-viral-outbreak",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "hacker-news"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613672Z",
+        "published_at": "2026-10-22T20:24:40Z",
+        "score": null,
+        "signals": null
+      },
+      "articles": [
+        {
+          "id": "7bfc44ab8c9099b7977a9c6d4b69e4a1fec0035b67ad71d4f5b975f12403e7ad",
+          "title": "Like Humans, Some Primates Become Cautious of Germs in the Wake of a Viral Outbreak",
+          "url": "https://today.ucsd.edu/story/like-humans-some-primates-become-cautious-of-germs-in-the-wake-of-a-viral-outbreak",
+          "source_id": "hacker-news",
+          "source_name": "Hacker News",
+          "published_at": "2026-10-22T20:24:40Z",
+          "discovered_at": "2026-10-22T20:33:09.613672Z",
+          "content_origin": "page"
+        }
+      ]
+    },
+    {
+      "story": {
+        "id": 22,
+        "title": "Linus Torvalds Eliminates Unsafe __get_user() & __put_user() Functions In Linux 7.4",
+        "url": "https://phoronix.com/news/Linus-Kills-Get-Put-User-Linux",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "hacker-news"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613672Z",
+        "published_at": "2026-10-22T20:24:04Z",
+        "score": null,
+        "signals": null
+      },
+      "articles": [
+        {
+          "id": "8a8a82af64d6f5d4f68fbec267b47f18501425356495ba83fa7777a0c2785960",
+          "title": "Linus Torvalds Eliminates Unsafe __get_user() & __put_user() Functions In Linux 7.4",
+          "url": "https://phoronix.com/news/Linus-Kills-Get-Put-User-Linux",
+          "source_id": "hacker-news",
+          "source_name": "Hacker News",
+          "published_at": "2026-10-22T20:24:04Z",
+          "discovered_at": "2026-10-22T20:33:09.613672Z",
+          "content_origin": "page"
+        }
+      ]
+    },
+    {
+      "story": {
+        "id": 23,
+        "title": "Custom Drone Light Shows for Events & Brands | Starbound Labs",
+        "url": "https://starboundlabs.com/",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "hacker-news"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613672Z",
+        "published_at": "2026-10-22T20:21:51Z",
+        "score": null,
+        "signals": null
+      },
+      "articles": [
+        {
+          "id": "5b08d864200806a3ef2f775e27689b08deaa662a4a4ada05a07d36b74f39bed5",
+          "title": "Custom Drone Light Shows for Events & Brands | Starbound Labs",
+          "url": "https://starboundlabs.com/",
+          "source_id": "hacker-news",
+          "source_name": "Hacker News",
+          "published_at": "2026-10-22T20:21:51Z",
+          "discovered_at": "2026-10-22T20:33:09.613672Z",
+          "content_origin": "page"
+        }
+      ]
+    },
+    {
+      "story": {
+        "id": 24,
+        "title": "GitHub - hexadec-0/OpenPanopticon: OpenPanopticon | Open source intelligence viewer for global situational awareness",
+        "url": "https://github.com/hexadec-0/OpenPanopticon",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "hacker-news"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613672Z",
+        "published_at": "2026-10-22T20:21:43Z",
+        "score": null,
+        "signals": null
+      },
+      "articles": [
+        {
+          "id": "bba91fa0838d4e5cc3c32c6caabb57496da4dac3e849d1056c750765b84d1eac",
+          "title": "GitHub - hexadec-0/OpenPanopticon: OpenPanopticon | Open source intelligence viewer for global situational awareness",
+          "url": "https://github.com/hexadec-0/OpenPanopticon",
+          "source_id": "hacker-news",
+          "source_name": "Hacker News",
+          "published_at": "2026-10-22T20:21:43Z",
+          "discovered_at": "2026-10-22T20:33:09.613672Z",
+          "content_origin": "page"
+        }
+      ]
+    },
+    {
+      "story": {
+        "id": 25,
+        "title": "Flaim Fantasy: your fantasy league, inside your AI.",
+        "url": "https://flaim.app/",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "hacker-news"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613672Z",
+        "published_at": "2026-10-22T20:20:53Z",
+        "score": null,
+        "signals": null
+      },
+      "articles": [
+        {
+          "id": "d29e073b03531a4dfc9f74784d7a105b980bdff79963f83ffe5d089f51374137",
+          "title": "Flaim Fantasy: your fantasy league, inside your AI.",
+          "url": "https://flaim.app/",
+          "source_id": "hacker-news",
+          "source_name": "Hacker News",
+          "published_at": "2026-10-22T20:20:53Z",
+          "discovered_at": "2026-10-22T20:33:09.613672Z",
+          "content_origin": "page"
+        }
+      ]
+    },
+    {
+      "story": {
+        "id": 27,
+        "title": "Replacing PyTorch with Julia and Reactant: One Year In – ∇ Selected Gradient Works",
+        "url": "https://csvance.dev/posts/2026-10-22-reactant-end-to-end",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "hacker-news"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613672Z",
+        "published_at": "2026-10-22T20:18:38Z",
+        "score": null,
+        "signals": null
+      },
+      "articles": [
+        {
+          "id": "eaa45fc1036f83f712be72251db2b663c420c71c89d0a187b93a3da0c2dbdf3a",
+          "title": "Replacing PyTorch with Julia and Reactant: One Year In – ∇ Selected Gradient Works",
+          "url": "https://csvance.dev/posts/2026-10-22-reactant-end-to-end",
+          "source_id": "hacker-news",
+          "source_name": "Hacker News",
+          "published_at": "2026-10-22T20:18:38Z",
+          "discovered_at": "2026-10-22T20:33:09.613672Z",
+          "content_origin": "page"
+        }
+      ]
+    },
+    {
+      "story": {
+        "id": 37,
+        "title": "How Specializing the Vocabulary of SLMs Can Cut Inference Cost by 77% in Real Applications",
+        "url": "https://huggingface.co/blog/Dharma-AI/vocabx-vocabulary-specialization",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "huggingface-blog"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613679Z",
+        "published_at": "2026-10-21T17:35:36Z",
+        "score": null,
+        "signals": null
+      },
+      "articles": [
+        {
+          "id": "40a01666d562060bfdf96e1bee46311ea36b1fbc4128b476c54664266fe1cab8",
+          "title": "How Specializing the Vocabulary of SLMs Can Cut Inference Cost by 77% in Real Applications",
+          "url": "https://huggingface.co/blog/Dharma-AI/vocabx-vocabulary-specialization",
+          "source_id": "huggingface-blog",
+          "source_name": "Hugging Face Blog",
+          "published_at": "2026-10-21T17:35:36Z",
+          "discovered_at": "2026-10-22T20:33:09.613679Z",
+          "content_origin": "page"
+        }
+      ]
+    },
+    {
+      "story": {
+        "id": 40,
+        "title": "Profiling TorchNeuron (Part 1): System-level profiling on AWS Trainium.",
+        "url": "https://huggingface.co/blog/amazon/profiling-torchneuron-part-1",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "huggingface-blog"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613679Z",
+        "published_at": "2026-10-21T16:04:43Z",
+        "score": null,
+        "signals": null
+      },
+      "articles": [
+        {
+          "id": "5b4e08461387ba3b44832eb32623a231bc98422af2b9c0aa208f73f388840205",
+          "title": "Profiling TorchNeuron (Part 1): System-level profiling on AWS Trainium.",
+          "url": "https://huggingface.co/blog/amazon/profiling-torchneuron-part-1",
+          "source_id": "huggingface-blog",
+          "source_name": "Hugging Face Blog",
+          "published_at": "2026-10-21T16:04:43Z",
+          "discovered_at": "2026-10-22T20:33:09.613679Z",
+          "content_origin": "page"
+        }
+      ]
+    },
+    {
+      "story": {
+        "id": 10,
+        "title": "Granite Speech 5.0: Transcribe, Translate, and Attribute more Accurately and Faster",
+        "url": "https://huggingface.co/blog/ibm-granite/granite-speech-5",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "huggingface-blog"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613679Z",
+        "published_at": "2026-10-21T14:58:18Z",
+        "score": null,
+        "signals": null
+      },
+      "articles": [
+        {
+          "id": "c2ed162a157709f5cb47598d7a4a9ff0ca7927682ea3c9a0e259f86971bb2de7",
+          "title": "Granite Speech 5.0: Transcribe, Translate, and Attribute more Accurately and Faster",
+          "url": "https://huggingface.co/blog/ibm-granite/granite-speech-5",
+          "source_id": "huggingface-blog",
+          "source_name": "Hugging Face Blog",
+          "published_at": "2026-10-21T14:58:18Z",
+          "discovered_at": "2026-10-22T20:33:09.613679Z",
+          "content_origin": "page"
+        }
+      ]
+    },
+    {
+      "story": {
+        "id": 3,
+        "title": "Hugging Face ❤️ TorchTPU: TPUs, Natively",
+        "url": "https://huggingface.co/blog/hf-torchtpu",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "huggingface-blog"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613679Z",
+        "published_at": "2026-10-20T00:00:00Z",
+        "score": null,
+        "signals": null
+      },
+      "articles": [
+        {
+          "id": "39e60f901a735303e0c0ae9b731fee2baf79f5edd599caf7944297514c7c53bb",
+          "title": "Hugging Face ❤️ TorchTPU: TPUs, Natively",
+          "url": "https://huggingface.co/blog/hf-torchtpu",
+          "source_id": "huggingface-blog",
+          "source_name": "Hugging Face Blog",
+          "published_at": "2026-10-20T00:00:00Z",
+          "discovered_at": "2026-10-22T20:33:09.613679Z",
+          "content_origin": "page"
+        }
+      ]
+    },
+    {
+      "story": {
+        "id": 18,
+        "title": "AnyLanguageModel 1.0: One Year of Local Models on Apple Platforms",
+        "url": "https://huggingface.co/blog/anylanguagemodel-1-0",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "huggingface-blog"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613679Z",
+        "published_at": "2026-10-20T00:00:00Z",
+        "score": null,
+        "signals": null
+      },
+      "articles": [
+        {
+          "id": "41fb25a47d12d204a957e1afcc5f8bbcaa2e18e833e937826e6c4d8fb5abdfdb",
+          "title": "AnyLanguageModel 1.0: One Year of Local Models on Apple Platforms",
+          "url": "https://huggingface.co/blog/anylanguagemodel-1-0",
+          "source_id": "huggingface-blog",
+          "source_name": "Hugging Face Blog",
+          "published_at": "2026-10-20T00:00:00Z",
+          "discovered_at": "2026-10-22T20:33:09.613679Z",
+          "content_origin": "page"
+        }
+      ]
+    },
+    {
+      "story": {
+        "id": 26,
+        "title": "How to continue a GitHub Copilot app session in VS Code",
+        "url": "https://github.blog/ai-and-ml/github-copilot/how-to-continue-a-github-copilot-app-session-in-vs-code",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "github-blog"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613825Z",
+        "published_at": "2026-10-19T18:47:22Z",
+        "score": null,
+        "signals": null
+      },
+      "articles": [
+        {
+          "id": "1be45fb0ef68a5f78aff9b0c3266fee630ee825083130359fdbcd0f3a60737cf",
+          "title": "How to continue a GitHub Copilot app session in VS Code",
+          "url": "https://github.blog/ai-and-ml/github-copilot/how-to-continue-a-github-copilot-app-session-in-vs-code",
+          "source_id": "github-blog",
+          "source_name": "GitHub Blog",
+          "published_at": "2026-10-19T18:47:22Z",
+          "discovered_at": "2026-10-22T20:33:09.613825Z",
+          "content_origin": "page"
+        }
+      ]
+    },
+    {
+      "story": {
+        "id": 30,
+        "title": "The next developer interface is ambient intelligence",
+        "url": "https://github.blog/news-insights/company-news/the-next-developer-interface-is-ambient-intelligence",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "github-blog"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613825Z",
+        "published_at": "2026-10-15T19:39:27Z",
+        "score": null,
+        "signals": null
+      },
+      "articles": [
+        {
+          "id": "feaefaa2e2292ba8ee0af1f5ba945d86bde107dd0fa3c05afc85a94711e186b8",
+          "title": "The next developer interface is ambient intelligence",
+          "url": "https://github.blog/news-insights/company-news/the-next-developer-interface-is-ambient-intelligence",
+          "source_id": "github-blog",
+          "source_name": "GitHub Blog",
+          "published_at": "2026-10-15T19:39:27Z",
+          "discovered_at": "2026-10-22T20:33:09.613825Z",
+          "content_origin": "page"
+        }
+      ]
+    },
+    {
+      "story": {
+        "id": 36,
+        "title": "Staying Evergreen: How we automated secure access and repo hygiene in a shared org",
+        "url": "https://github.blog/engineering/platform-security/staying-evergreen-how-we-automated-secure-access-and-repo-hygiene-in-a-shared-org",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "github-blog"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613825Z",
+        "published_at": "2026-10-15T18:00:00Z",
+        "score": null,
+        "signals": null
+      },
+      "articles": [
+        {
+          "id": "1281d0f6e7757847581ee7554d73fe86b1f6e03ec8e8d9c8ba1b92d7c7c4537d",
+          "title": "Staying Evergreen: How we automated secure access and repo hygiene in a shared org",
+          "url": "https://github.blog/engineering/platform-security/staying-evergreen-how-we-automated-secure-access-and-repo-hygiene-in-a-shared-org",
+          "source_id": "github-blog",
+          "source_name": "GitHub Blog",
+          "published_at": "2026-10-15T18:00:00Z",
+          "discovered_at": "2026-10-22T20:33:09.613825Z",
+          "content_origin": "page"
+        }
+      ]
+    },
+    {
+      "story": {
+        "id": 38,
+        "title": "GitHub availability report: September 2026",
+        "url": "https://github.blog/news-insights/company-news/github-availability-report-september-2026",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "github-blog"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613825Z",
+        "published_at": "2026-10-14T20:01:35Z",
+        "score": null,
+        "signals": null
+      },
+      "articles": [
+        {
+          "id": "abaa4fc3e5e2f32da5feb93ed4f8da3c1b7f9adafd697ed54fa79478c3a7eec1",
+          "title": "GitHub availability report: September 2026",
+          "url": "https://github.blog/news-insights/company-news/github-availability-report-september-2026",
+          "source_id": "github-blog",
+          "source_name": "GitHub Blog",
+          "published_at": "2026-10-14T20:01:35Z",
+          "discovered_at": "2026-10-22T20:33:09.613825Z",
+          "content_origin": "page"
+        }
+      ]
+    },
+    {
+      "story": {
+        "id": 42,
+        "title": "From 2,500 requests to 24: Rebuilding star history without the stargazers",
+        "url": "https://github.blog/engineering/architecture-optimization/from-2500-requests-to-24-rebuilding-star-history-without-the-stargazers",
+        "source_count": 1,
+        "article_count": 1,
+        "sources": [
+          "github-blog"
+        ],
+        "first_seen_at": "2026-10-22T20:33:09.613825Z",
+        "published_at": "2026-10-14T19:11:33Z",
+        "score": null,
+        "signals": null
+      },
+      "articles": [
+        {
+          "id": "5d15c391e24287d68058dc537aeeeb59aa41360b83b329adf831d54dd40b62fb",
+          "title": "From 2,500 requests to 24: Rebuilding star history without the stargazers",
+          "url": "https://github.blog/engineering/architecture-optimization/from-2500-requests-to-24-rebuilding-star-history-without-the-stargazers",
+          "source_id": "github-blog",
+          "source_name": "GitHub Blog",
+          "published_at": "2026-10-14T19:11:33Z",
+          "discovered_at": "2026-10-22T20:33:09.613825Z",
+          "content_origin": "page"
+        }
+      ]
+    }
+  ],
+  "problems": [
+    {
+      "id": 5,
+      "statement": "[Feature]: Batch Invariant Feature and Performance Optimization",
+      "category": "missing_capability",
+      "demand_score": 1.9449,
+      "voice_count": 1,
+      "source_count": 1,
+      "platforms": [
+        "github"
+      ],
+      "first_seen": "2026-10-22T20:33:10.339237Z",
+      "last_seen": "2026-10-22T20:33:10.339237Z",
+      "entities": [
+        "h100",
+        "vllm"
+      ],
+      "relevance": null,
+      "evidence": [
+        {
+          "source_id": "github-issues-ai",
+          "platform": "github",
+          "url": "https://github.com/vllm-project/vllm/issues/27433",
+          "excerpt": "[Feature]: Batch Invariant Feature and Performance Optimization. ## 🚀 The feature, motivation and pitch We have basically support Batch Invariant …",
+          "engagement": {
+            "points": 23,
+            "comments": 102,
+            "reactions": 40
+          },
+          "date": "2025-10-23T19:38:03Z",
+          "p_problem": 0.813
+        }
+      ],
+      "member_count": 1,
+      "effective_voices": 0.8134,
+      "demand_factors": {
+        "voices": 0.5952,
+        "sources": 1.3466,
+        "recency": 0.9999,
+        "engagement": 2.0224,
+        "category": 1.2
+      },
+      "scorer_version": "problem-prior-2026-09-13c"
+    },
+    {
+      "id": 9,
+      "statement": "[Feature]: SM8x (Ampere A100/A800) support for DeepSeek-V4-Flash / DeepSeek-V4-Flash-0731 DSpark",
+      "category": "missing_capability",
+      "demand_score": 1.9254,
+      "voice_count": 1,
+      "source_count": 1,
+      "platforms": [
+        "github"
+      ],
+      "first_seen": "2026-10-22T20:33:10.339237Z",
+      "last_seen": "2026-10-22T20:33:10.339237Z",
+      "entities": [
+        "cuda",
+        "deepseek",
+        "pytorch",
+        "vllm"
+      ],
+      "relevance": null,
+      "evidence": [
+        {
+          "source_id": "github-issues-ai",
+          "platform": "github",
+          "url": "https://github.com/vllm-project/vllm/issues/50576",
+          "excerpt": "[Feature]: SM8x (Ampere A100/A800) support for DeepSeek-V4-Flash / DeepSeek-V4-Flash-0731 DSpark. ### 🚀 The feature, motivation and pitch DeepSeek released [DeepSeek-V4-Flash-0731](https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731) …",
+          "engagement": {
+            "points": 16,
+            "comments": 118,
+            "reactions": 29
+          },
+          "date": "2026-07-31T14:42:04Z",
+          "p_problem": 0.804
+        }
+      ],
+      "member_count": 1,
+      "effective_voices": 0.8038,
+      "demand_factors": {
+        "voices": 0.5899,
+        "sources": 1.3466,
+        "recency": 0.9999,
+        "engagement": 2.02,
+        "category": 1.2
+      },
+      "scorer_version": "problem-prior-2026-09-13c"
+    },
+    {
+      "id": 15,
+      "statement": "[Feature]: Tracking Whisper feature requests",
+      "category": "missing_capability",
+      "demand_score": 1.7822,
+      "voice_count": 1,
+      "source_count": 1,
+      "platforms": [
+        "github"
+      ],
+      "first_seen": "2026-10-22T20:33:10.339237Z",
+      "last_seen": "2026-10-22T20:33:10.339237Z",
+      "entities": [
+        "vllm",
+        "whisper"
+      ],
+      "relevance": null,
+      "evidence": [
+        {
+          "source_id": "github-issues-ai",
+          "platform": "github",
+          "url": "https://github.com/vllm-project/vllm/issues/25750",
+          "excerpt": "[Feature]: Tracking Whisper feature requests. ### 🚀 The feature, motivation and pitch This issue is for keeping track of the …",
+          "engagement": {
+            "points": 17,
+            "comments": 27,
+            "reactions": 17
+          },
+          "date": "2025-09-26T07:54:28Z",
+          "p_problem": 0.83
+        }
+      ],
+      "member_count": 1,
+      "effective_voices": 0.8299,
+      "demand_factors": {
+        "voices": 0.6043,
+        "sources": 1.3466,
+        "recency": 0.9999,
+        "engagement": 1.8254,
+        "category": 1.2
+      },
+      "scorer_version": "problem-prior-2026-09-13c"
+    },
+    {
+      "id": 3,
+      "statement": "[Feature]: Any plans to add nvidia/parakeet-tdt-0.6b-v3 to vllm?",
+      "category": "missing_capability",
+      "demand_score": 1.7804,
+      "voice_count": 1,
+      "source_count": 1,
+      "platforms": [
+        "github"
+      ],
+      "first_seen": "2026-10-22T20:33:10.339237Z",
+      "last_seen": "2026-10-22T20:33:10.339237Z",
+      "entities": [
+        "nvidia",
+        "vllm"
+      ],
+      "relevance": null,
+      "evidence": [
+        {
+          "source_id": "github-issues-ai",
+          "platform": "github",
+          "url": "https://github.com/vllm-project/vllm/issues/23943",
+          "excerpt": "[Feature]: Any plans to add nvidia/parakeet-tdt-0.6b-v3 to vllm?. ### 🚀 The feature, motivation and pitch Hello, Based on this and …",
+          "engagement": {
+            "points": 46,
+            "comments": 26,
+            "reactions": 46
+          },
+          "date": "2025-08-29T14:05:43Z",
+          "p_problem": 0.757
+        }
+      ],
+      "member_count": 1,
+      "effective_voices": 0.7566,
+      "demand_factors": {
+        "voices": 0.5634,
+        "sources": 1.3466,
+        "recency": 0.9999,
+        "engagement": 1.9558,
+        "category": 1.2
+      },
+      "scorer_version": "problem-prior-2026-09-13c"
+    },
+    {
+      "id": 4,
+      "statement": "[RFC]: Changes in vLLM Model Development",
+      "category": "missing_capability",
+      "demand_score": 1.775,
+      "voice_count": 1,
+      "source_count": 1,
+      "platforms": [
+        "github"
+      ],
+      "first_seen": "2026-10-22T20:33:10.339237Z",
+      "last_seen": "2026-10-22T20:33:10.339237Z",
+      "entities": [
+        "vllm"
+      ],
+      "relevance": null,
+      "evidence": [
+        {
+          "source_id": "github-issues-ai",
+          "platform": "github",
+          "url": "https://github.com/vllm-project/vllm/issues/42770",
+          "excerpt": "[RFC]: Changes in vLLM Model Development. ### Motivation. vLLM has long pursued the goal of building a unified, fast inference …",
+          "engagement": {
+            "points": 23,
+            "comments": 22,
+            "reactions": 41
+          },
+          "date": "2026-05-15T19:17:56Z",
+          "p_problem": 0.787
+        }
+      ],
+      "member_count": 1,
+      "effective_voices": 0.7865,
+      "demand_factors": {
+        "voices": 0.5803,
+        "sources": 1.3466,
+        "recency": 0.9999,
+        "engagement": 1.8932,
+        "category": 1.2
+      },
+      "scorer_version": "problem-prior-2026-09-13c"
+    },
+    {
+      "id": 7,
+      "statement": "[Feature]: Vulkan support",
+      "category": "missing_capability",
+      "demand_score": 1.7242,
+      "voice_count": 1,
+      "source_count": 1,
+      "platforms": [
+        "github"
+      ],
+      "first_seen": "2026-10-22T20:33:10.339237Z",
+      "last_seen": "2026-10-22T20:33:10.339237Z",
+      "entities": [
+        "llama-cpp",
+        "vllm"
+      ],
+      "relevance": null,
+      "evidence": [
+        {
+          "source_id": "github-issues-ai",
+          "platform": "github",
+          "url": "https://github.com/vllm-project/vllm/issues/21182",
+          "excerpt": "[Feature]: Vulkan support. ### 🚀 The feature, motivation and pitch I started hacking on vLLM recently for RamaLama and other …",
+          "engagement": {
+            "points": 37,
+            "comments": 32,
+            "reactions": 39
+          },
+          "date": "2025-07-18T11:21:44Z",
+          "p_problem": 0.734
+        }
+      ],
+      "member_count": 1,
+      "effective_voices": 0.7342,
+      "demand_factors": {
+        "voices": 0.5505,
+        "sources": 1.3466,
+        "recency": 0.9999,
+        "engagement": 1.9383,
+        "category": 1.2
+      },
+      "scorer_version": "problem-prior-2026-09-13c"
+    },
+    {
+      "id": 8,
+      "statement": "[Feature]: Someone please upstream this gfx1201/RDNA4 FP8 Patch into vllm-rocm",
+      "category": "cost_or_performance",
+      "demand_score": 1.7101,
+      "voice_count": 1,
+      "source_count": 1,
+      "platforms": [
+        "github"
+      ],
+      "first_seen": "2026-10-22T20:33:10.339237Z",
+      "last_seen": "2026-10-22T20:33:10.339237Z",
+      "entities": [],
+      "relevance": null,
+      "evidence": [
+        {
+          "source_id": "github-issues-ai",
+          "platform": "github",
+          "url": "https://github.com/vllm-project/vllm/issues/28649",
+          "excerpt": "[Feature]: Someone please upstream this gfx1201/RDNA4 FP8 Patch into vllm-rocm. Mea cupla - I missed the fall through case where …",
+          "engagement": {
+            "points": 15,
+            "comments": 47,
+            "reactions": 29
+          },
+          "date": "2025-11-13T13:23:35Z",
+          "p_problem": 0.834
+        }
+      ],
+      "member_count": 1,
+      "effective_voices": 0.8336,
+      "demand_factors": {
+        "voices": 0.6063,
+        "sources": 1.3466,
+        "recency": 0.9999,
+        "engagement": 1.9044,
+        "category": 1.1
+      },
+      "scorer_version": "problem-prior-2026-09-13c"
+    },
+    {
+      "id": 16,
+      "statement": "[Roadmap]: PD Disaggregation with `NixlConnector` Roadmap",
+      "category": "missing_capability",
+      "demand_score": 1.679,
+      "voice_count": 1,
+      "source_count": 1,
+      "platforms": [
+        "github"
+      ],
+      "first_seen": "2026-10-22T20:33:10.339237Z",
+      "last_seen": "2026-10-22T20:33:10.339237Z",
+      "entities": [
+        "vllm"
+      ],
+      "relevance": null,
+      "evidence": [
+        {
+          "source_id": "github-issues-ai",
+          "platform": "github",
+          "url": "https://github.com/vllm-project/vllm/issues/33702",
+          "excerpt": "[Roadmap]: PD Disaggregation with `NixlConnector` Roadmap. ## Description This RFC tracks the current state and planned improvements for Prefill-Decode (P/D) …",
+          "engagement": {
+            "points": 11,
+            "comments": 8,
+            "reactions": 17
+          },
+          "date": "2026-02-03T14:55:43Z",
+          "p_problem": 0.828
+        }
+      ],
+      "member_count": 1,
+      "effective_voices": 0.8283,
+      "demand_factors": {
+        "voices": 0.6034,
+        "sources": 1.3466,
+        "recency": 0.9999,
+        "engagement": 1.7222,
+        "category": 1.2
+      },
+      "scorer_version": "problem-prior-2026-09-13c"
+    },
+    {
+      "id": 6,
+      "statement": "support batch processing",
+      "category": "missing_capability",
+      "demand_score": 1.6264,
+      "voice_count": 1,
+      "source_count": 1,
+      "platforms": [
+        "github"
+      ],
+      "first_seen": "2026-10-22T20:33:10.339237Z",
+      "last_seen": "2026-10-22T20:33:10.339237Z",
+      "entities": [
+        "anthropic",
+        "openai"
+      ],
+      "relevance": null,
+      "evidence": [
+        {
+          "source_id": "github-issues-ai",
+          "platform": "github",
+          "url": "https://github.com/pydantic/pydantic-ai/issues/1771",
+          "excerpt": "support batch processing. ### Description to reduce pricing, I think it's good to support batch process. some models support that. …",
+          "engagement": {
+            "points": 35,
+            "comments": 6,
+            "reactions": 35
+          },
+          "date": "2025-05-19T20:02:51Z",
+          "p_problem": 0.714
+        }
+      ],
+      "member_count": 1,
+      "effective_voices": 0.7137,
+      "demand_factors": {
+        "voices": 0.5386,
+        "sources": 1.3466,
+        "recency": 0.9999,
+        "engagement": 1.8688,
+        "category": 1.2
+      },
+      "scorer_version": "problem-prior-2026-09-13c"
+    },
+    {
+      "id": 11,
+      "statement": "[Roadmap] Rust Frontend Feature Parity",
+      "category": "missing_capability",
+      "demand_score": 1.6203,
+      "voice_count": 1,
+      "source_count": 1,
+      "platforms": [
+        "github"
+      ],
+      "first_seen": "2026-10-22T20:33:10.339237Z",
+      "last_seen": "2026-10-22T20:33:10.339237Z",
+      "entities": [
+        "python",
+        "rust",
+        "vllm"
+      ],
+      "relevance": null,
+      "evidence": [
+        {
+          "source_id": "github-issues-ai",
+          "platform": "github",
+          "url": "https://github.com/vllm-project/vllm/issues/44280",
+          "excerpt": "[Roadmap] Rust Frontend Feature Parity. ## Motivation The Rust frontend has landed in the vLLM repository as a drop-in alternative …",
+          "engagement": {
+            "points": 0,
+            "comments": 46,
+            "reactions": 22
+          },
+          "date": "2026-06-02T05:28:21Z",
+          "p_problem": 0.721
+        }
+      ],
+      "member_count": 1,
+      "effective_voices": 0.7211,
+      "demand_factors": {
+        "voices": 0.543,
+        "sources": 1.3466,
+        "recency": 0.9999,
+        "engagement": 1.8468,
+        "category": 1.2
+      },
+      "scorer_version": "problem-prior-2026-09-13c"
+    },
+    {
+      "id": 12,
+      "statement": "Support Anthropic and OpenAI Skills built-in tool",
+      "category": "missing_capability",
+      "demand_score": 1.5449,
+      "voice_count": 1,
+      "source_count": 1,
+      "platforms": [
+        "github"
+      ],
+      "first_seen": "2026-10-22T20:33:10.339237Z",
+      "last_seen": "2026-10-22T20:33:10.339237Z",
+      "entities": [
+        "anthropic",
+        "openai"
+      ],
+      "relevance": null,
+      "evidence": [
+        {
+          "source_id": "github-issues-ai",
+          "platform": "github",
+          "url": "https://github.com/pydantic/pydantic-ai/issues/3365",
+          "excerpt": "Support Anthropic and OpenAI Skills built-in tool. ### Description Add support for native and custom anthropic skills via API as …",
+          "engagement": {
+            "points": 14,
+            "comments": 23,
+            "reactions": 19
+          },
+          "date": "2025-11-07T01:07:27Z",
+          "p_problem": 0.697
+        }
+      ],
+      "member_count": 1,
+      "effective_voices": 0.6967,
+      "demand_factors": {
+        "voices": 0.5287,
+        "sources": 1.3466,
+        "recency": 0.9999,
+        "engagement": 1.8086,
+        "category": 1.2
+      },
+      "scorer_version": "problem-prior-2026-09-13c"
+    },
+    {
+      "id": 13,
+      "statement": "[Bug]: MTP speculative decoding crash with illegal memory access on long sequences (Qwen3.6-27B-FP8, v0.19.1)",
+      "category": "bug_or_reliability",
+      "demand_score": 1.5203,
+      "voice_count": 1,
+      "source_count": 1,
+      "platforms": [
+        "github"
+      ],
+      "first_seen": "2026-10-22T20:33:10.339237Z",
+      "last_seen": "2026-10-22T20:33:10.339237Z",
+      "entities": [
+        "vllm"
+      ],
+      "relevance": null,
+      "evidence": [
+        {
+          "source_id": "github-issues-ai",
+          "platform": "github",
+          "url": "https://github.com/vllm-project/vllm/issues/40756",
+          "excerpt": "[Bug]: MTP speculative decoding crash with illegal memory access on long sequences (Qwen3.6-27B-FP8, v0.19.1). ### Your current environment <details> <summary>The …",
+          "engagement": {
+            "points": 10,
+            "comments": 45,
+            "reactions": 18
+          },
+          "date": "2026-04-24T02:28:03Z",
+          "p_problem": 0.834
+        }
+      ],
+      "member_count": 1,
+      "effective_voices": 0.8345,
+      "demand_factors": {
+        "voices": 0.6068,
+        "sources": 1.3466,
+        "recency": 0.9999,
+        "engagement": 1.8608,
+        "category": 1.0
+      },
+      "scorer_version": "problem-prior-2026-09-13c"
+    },
+    {
+      "id": 17,
+      "statement": "[RFC]: Increase vLLM Review Capacity with a Reviewer Role",
+      "category": "workflow_friction",
+      "demand_score": 1.502,
+      "voice_count": 1,
+      "source_count": 1,
+      "platforms": [
+        "github"
+      ],
+      "first_seen": "2026-10-22T20:33:10.339237Z",
+      "last_seen": "2026-10-22T20:33:10.339237Z",
+      "entities": [
+        "vllm"
+      ],
+      "relevance": null,
+      "evidence": [
+        {
+          "source_id": "github-issues-ai",
+          "platform": "github",
+          "url": "https://github.com/vllm-project/vllm/issues/58253",
+          "excerpt": "[RFC]: Increase vLLM Review Capacity with a Reviewer Role. ## Motivation vLLM’s contribution volume exceeds its available review and triage …",
+          "engagement": {
+            "points": 15,
+            "comments": 3,
+            "reactions": 15
+          },
+          "date": "2026-09-23T03:09:49Z",
+          "p_problem": 0.766
+        }
+      ],
+      "member_count": 1,
+      "effective_voices": 0.7662,
+      "demand_factors": {
+        "voices": 0.5688,
+        "sources": 1.3466,
+        "recency": 0.9999,
+        "engagement": 1.7053,
+        "category": 1.15
+      },
+      "scorer_version": "problem-prior-2026-09-13c"
+    },
+    {
+      "id": 10,
+      "statement": "[Feature]: DRY Sampling",
+      "category": "cost_or_performance",
+      "demand_score": 1.4876,
+      "voice_count": 1,
+      "source_count": 1,
+      "platforms": [
+        "github"
+      ],
+      "first_seen": "2026-10-22T20:33:10.339237Z",
+      "last_seen": "2026-10-22T20:33:10.339237Z",
+      "entities": [],
+      "relevance": null,
+      "evidence": [
+        {
+          "source_id": "github-issues-ai",
+          "platform": "github",
+          "url": "https://github.com/vllm-project/vllm/issues/8581",
+          "excerpt": "[Feature]: DRY Sampling. ### 🚀 The feature, motivation and pitch DRY is a sampler that completely mitigates repetitions. This is …",
+          "engagement": {
+            "points": 22,
+            "comments": 32,
+            "reactions": 22
+          },
+          "date": "2024-09-18T23:05:42Z",
+          "p_problem": 0.712
+        }
+      ],
+      "member_count": 1,
+      "effective_voices": 0.7117,
+      "demand_factors": {
+        "voices": 0.5375,
+        "sources": 1.3466,
+        "recency": 0.9999,
+        "engagement": 1.8688,
+        "category": 1.1
+      },
+      "scorer_version": "problem-prior-2026-09-13c"
+    },
+    {
+      "id": 14,
+      "statement": "[RFC]: Native Text Watermarking Support",
+      "category": "missing_capability",
+      "demand_score": 1.4721,
+      "voice_count": 1,
+      "source_count": 1,
+      "platforms": [
+        "github"
+      ],
+      "first_seen": "2026-10-22T20:33:10.339237Z",
+      "last_seen": "2026-10-22T20:33:10.339237Z",
+      "entities": [
+        "eu",
+        "vllm"
+      ],
+      "relevance": null,
+      "evidence": [
+        {
+          "source_id": "github-issues-ai",
+          "platform": "github",
+          "url": "https://github.com/vllm-project/vllm/issues/53916",
+          "excerpt": "[RFC]: Native Text Watermarking Support. # Motivation Text watermarking for LLMs is a process by which we perturb the output …",
+          "engagement": {
+            "points": 5,
+            "comments": 8,
+            "reactions": 17
+          },
+          "date": "2026-08-26T15:49:58Z",
+          "p_problem": 0.716
+        }
+      ],
+      "member_count": 1,
+      "effective_voices": 0.7162,
+      "demand_factors": {
+        "voices": 0.5401,
+        "sources": 1.3466,
+        "recency": 0.9999,
+        "engagement": 1.6868,
+        "category": 1.2
+      },
+      "scorer_version": "problem-prior-2026-09-13c"
+    },
+    {
+      "id": 1,
+      "statement": "Ask HN: Anyone patching servers by prompting AI instead of SSH/remote desktop?",
+      "category": "workflow_friction",
+      "demand_score": 1.0767,
+      "voice_count": 1,
+      "source_count": 1,
+      "platforms": [
+        "hn"
+      ],
+      "first_seen": "2026-10-22T20:33:10.339316Z",
+      "last_seen": "2026-10-22T20:33:10.339316Z",
+      "entities": [
+        "claude"
+      ],
+      "relevance": null,
+      "evidence": [
+        {
+          "source_id": "hn-ask",
+          "platform": "hn",
+          "url": "https://news.ycombinator.com/item?id=50192671",
+          "excerpt": "Ask HN: Anyone patching servers by prompting AI instead of SSH/remote desktop?. I did exactly this yesterday and it worked …",
+          "engagement": {
+            "points": 1,
+            "comments": 2,
+            "reactions": null
+          },
+          "date": "2026-10-22T08:19:23Z",
+          "p_problem": 0.724
+        }
+      ],
+      "member_count": 1,
+      "effective_voices": 0.7236,
+      "demand_factors": {
+        "voices": 0.5444,
+        "sources": 1.3466,
+        "recency": 0.9999,
+        "engagement": 1.2773,
+        "category": 1.15
+      },
+      "scorer_version": "problem-prior-2026-09-13c"
+    },
+    {
+      "id": 2,
+      "statement": "Ask HN: Is OpenAI down? Nonstop 429s on pro subscription",
+      "category": "cost_or_performance",
+      "demand_score": 0.9857,
+      "voice_count": 1,
+      "source_count": 1,
+      "platforms": [
+        "hn"
+      ],
+      "first_seen": "2026-10-22T20:33:10.339316Z",
+      "last_seen": "2026-10-22T20:33:10.339316Z",
+      "entities": [
+        "openai"
+      ],
+      "relevance": null,
+      "evidence": [
+        {
+          "source_id": "hn-ask",
+          "platform": "hn",
+          "url": "https://news.ycombinator.com/item?id=50190282",
+          "excerpt": "Ask HN: Is OpenAI down? Nonstop 429s on pro subscription. The past few days I’ve had several periods where agent …",
+          "engagement": {
+            "points": 1,
+            "comments": 1,
+            "reactions": null
+          },
+          "date": "2026-10-22T02:05:56Z",
+          "p_problem": 0.726
+        }
+      ],
+      "member_count": 1,
+      "effective_voices": 0.7256,
+      "demand_factors": {
+        "voices": 0.5456,
+        "sources": 1.3466,
+        "recency": 0.9999,
+        "engagement": 1.2197,
+        "category": 1.1
+      },
+      "scorer_version": "problem-prior-2026-09-13c"
+    }
+  ],
+  "map": {
+    "as_of": "2026-10-22T20:38:20.697036Z",
+    "window_hours": 168,
+    "points": [
+      {
+        "kind": "story",
+        "id": 1,
+        "x": 0.7111,
+        "y": 0.0123,
+        "weight": 0.2865,
+        "title": "How AT&T is rethinking in-house legal work with OpenAI",
+        "meta": "openai-news",
+        "island": 3
+      },
+      {
+        "kind": "story",
+        "id": 2,
+        "x": -1.0,
+        "y": 0.1337,
+        "weight": 0.3751,
+        "title": "Uber brings ChatGPT Work to all employees with OpenAI",
+        "meta": "openai-news",
+        "island": 4
+      },
+      {
+        "kind": "story",
+        "id": 3,
+        "x": -0.011,
+        "y": -0.0048,
+        "weight": 0.0558,
+        "title": "Hugging Face ❤️ TorchTPU: TPUs, Natively",
+        "meta": "huggingface-blog",
+        "island": 8
+      },
+      {
+        "kind": "story",
+        "id": 4,
+        "x": 0.032,
+        "y": -0.0183,
+        "weight": 0.4792,
+        "title": "Ensemble forecasting with IBM Granite time-series models",
+        "meta": "huggingface-blog",
+        "island": 1
+      },
+      {
+        "kind": "story",
+        "id": 6,
+        "x": 0.0331,
+        "y": -0.003,
+        "weight": 0.8236,
+        "title": "andros (@andros@activity.andros.dev)",
+        "meta": "hacker-news",
+        "island": 1
+      },
+      {
+        "kind": "story",
+        "id": 8,
+        "x": -0.0179,
+        "y": 0.0033,
+        "weight": 0.2524,
+        "title": "The bridge to agent-scale Git infrastructure",
+        "meta": "github-blog",
+        "island": 8
+      },
+      {
+        "kind": "story",
+        "id": 9,
+        "x": -0.004,
+        "y": -0.0234,
+        "weight": 0.8226,
+        "title": "How to Run Turing-Complete Malware in PyTorch's Backward Pass",
+        "meta": "hacker-news",
+        "island": 9
+      },
+      {
+        "kind": "story",
+        "id": 10,
+        "x": 0.0275,
+        "y": -0.0199,
+        "weight": 0.2501,
+        "title": "Granite Speech 5.0: Transcribe, Translate, and Attribute more Accurately and Faster",
+        "meta": "huggingface-blog",
+        "island": 1
+      },
+      {
+        "kind": "story",
+        "id": 11,
+        "x": 0.0186,
+        "y": -0.032,
+        "weight": 0.1005,
+        "title": "How 3 Java Champions are using GitHub Copilot for increased productivity",
+        "meta": "github-blog",
+        "island": 2
+      },
+      {
+        "kind": "story",
+        "id": 13,
+        "x": 0.0154,
+        "y": -0.0278,
+        "weight": 0.6703,
+        "title": "How bug bounty sharpens one researcher’s security skills",
+        "meta": "github-blog",
+        "island": 2
+      },
+      {
+        "kind": "story",
+        "id": 14,
+        "x": 0.0188,
+        "y": 0.0264,
+        "weight": 0.8882,
+        "title": "Portal Texas Used to ‘Rubber Stamp’ Data Centers Down After 404 Media Reporting",
+        "meta": "hacker-news",
+        "island": 5
+      },
+      {
+        "kind": "story",
+        "id": 15,
+        "x": 0.0033,
+        "y": -0.034,
+        "weight": 1.0,
+        "title": "Un nuevo comienzo",
+        "meta": "hacker-news",
+        "island": 2
+      },
+      {
+        "kind": "story",
+        "id": 16,
+        "x": -0.0257,
+        "y": 0.036,
+        "weight": 0.8206,
+        "title": "‘M*A*S*H’, ‘Top Gun’ actor passes away at 93",
+        "meta": "hacker-news",
+        "island": 0
+      },
+      {
+        "kind": "story",
+        "id": 17,
+        "x": -0.0189,
+        "y": 0.0276,
+        "weight": 0.3342,
+        "title": "Broad access through consistent standards",
+        "meta": "openai-news",
+        "island": 0
+      },
+      {
+        "kind": "story",
+        "id": 18,
+        "x": 0.02,
+        "y": -0.0082,
+        "weight": 0.0558,
+        "title": "AnyLanguageModel 1.0: One Year of Local Models on Apple Platforms",
+        "meta": "huggingface-blog",
+        "island": 1
+      },
+      {
+        "kind": "story",
+        "id": 19,
+        "x": 0.0188,
+        "y": 0.013,
+        "weight": 0.8851,
+        "title": "This New Device ‘Bricks’ Your Phone When You Enter Your Bedroom - CNET",
+        "meta": "hacker-news",
+        "island": 5
+      },
+      {
+        "kind": "story",
+        "id": 21,
+        "x": 0.0282,
+        "y": 0.0234,
+        "weight": 0.8843,
+        "title": "We can now find flaws faster than anyone can fix them · Tolmo",
+        "meta": "hacker-news",
+        "island": 5
+      },
+      {
+        "kind": "story",
+        "id": 22,
+        "x": -0.0094,
+        "y": 0.0026,
+        "weight": 0.8195,
+        "title": "Linus Torvalds Eliminates Unsafe __get_user() & __put_user() Functions In Linux 7.4",
+        "meta": "hacker-news",
+        "island": 8
+      },
+      {
+        "kind": "story",
+        "id": 23,
+        "x": 0.0116,
+        "y": 0.0146,
+        "weight": 0.8183,
+        "title": "Custom Drone Light Shows for Events & Brands | Starbound Labs",
+        "meta": "hacker-news",
+        "island": 5
+      },
+      {
+        "kind": "story",
+        "id": 24,
+        "x": -0.0034,
+        "y": 0.0008,
+        "weight": 0.8182,
+        "title": "GitHub - hexadec-0/OpenPanopticon: OpenPanopticon | Open source intelligence viewer for global situational awareness",
+        "meta": "hacker-news",
+        "island": 6
+      },
+      {
+        "kind": "story",
+        "id": 25,
+        "x": 0.035,
+        "y": 0.0089,
+        "weight": 0.8178,
+        "title": "Flaim Fantasy: your fantasy league, inside your AI.",
+        "meta": "hacker-news",
+        "island": 5
+      },
+      {
+        "kind": "story",
+        "id": 26,
+        "x": 0.0232,
+        "y": -0.035,
+        "weight": 0.0443,
+        "title": "How to continue a GitHub Copilot app session in VS Code",
+        "meta": "github-blog",
+        "island": 2
+      },
+      {
+        "kind": "story",
+        "id": 27,
+        "x": 0.0034,
+        "y": -0.018,
+        "weight": 0.8166,
+        "title": "Replacing PyTorch with Julia and Reactant: One Year In – ∇ Selected Gradient Works",
+        "meta": "hacker-news",
+        "island": 7
+      },
+      {
+        "kind": "story",
+        "id": 28,
+        "x": 0.0004,
+        "y": 0.0077,
+        "weight": 0.2858,
+        "title": "NVIDIA Kumo Relational Outperforms Supervised Machine Learning on Relational Data, No Training Required",
+        "meta": "huggingface-blog",
+        "island": 6
+      },
+      {
+        "kind": "story",
+        "id": 31,
+        "x": 0.0088,
+        "y": -0.0069,
+        "weight": 0.0119,
+        "title": "Release v0.32.0 · vllm-project/vllm",
+        "meta": "gh-vllm",
+        "island": 7
+      },
+      {
+        "kind": "story",
+        "id": 32,
+        "x": 0.0099,
+        "y": -0.0159,
+        "weight": 0.6605,
+        "title": "OlmoEarth v1.3: State-of-the-art embeddings for the whole planet",
+        "meta": "huggingface-blog",
+        "island": 7
+      },
+      {
+        "kind": "story",
+        "id": 34,
+        "x": -0.0121,
+        "y": 0.045,
+        "weight": 0.8198,
+        "title": "Like Humans, Some Primates Become Cautious of Germs in the Wake of a Viral Outbreak",
+        "meta": "hacker-news",
+        "island": 0
+      },
+      {
+        "kind": "story",
+        "id": 35,
+        "x": -0.0125,
+        "y": -0.0128,
+        "weight": 0.0032,
+        "title": "Release v0.32.0rc3: [Bugfix] Fix NaN output of the Mamba2 chunk scan kernel on sm90 (#61718) · vllm-project/vllm",
+        "meta": "gh-vllm",
+        "island": 8
+      },
+      {
+        "kind": "story",
+        "id": 37,
+        "x": 0.0202,
+        "y": -0.0151,
+        "weight": 0.2766,
+        "title": "How Specializing the Vocabulary of SLMs Can Cut Inference Cost by 77% in Real Applications",
+        "meta": "huggingface-blog",
+        "island": 1
+      },
+      {
+        "kind": "story",
+        "id": 40,
+        "x": 0.0035,
+        "y": -0.0242,
+        "weight": 0.261,
+        "title": "Profiling TorchNeuron (Part 1): System-level profiling on AWS Trainium.",
+        "meta": "huggingface-blog",
+        "island": 2
+      },
+      {
+        "kind": "story",
+        "id": 43,
+        "x": -0.0228,
+        "y": -0.0151,
+        "weight": 0.8232,
+        "title": "OMNI Magazine Archive : Free Download, Borrow, and Streaming : Internet Archive",
+        "meta": "hacker-news",
+        "island": 8
+      },
+      {
+        "kind": "problem",
+        "id": 5,
+        "x": 0.0004,
+        "y": -0.0125,
+        "weight": 1.0,
+        "title": "[Feature]: Batch Invariant Feature and Performance Optimization",
+        "meta": "missing_capability",
+        "island": 7
+      },
+      {
+        "kind": "problem",
+        "id": 9,
+        "x": -0.0059,
+        "y": -0.0089,
+        "weight": 0.99,
+        "title": "[Feature]: SM8x (Ampere A100/A800) support for DeepSeek-V4-Flash / DeepSeek-V4-Flash-0731 DSpark",
+        "meta": "missing_capability",
+        "island": 8
+      },
+      {
+        "kind": "problem",
+        "id": 15,
+        "x": 0.0167,
+        "y": -0.0008,
+        "weight": 0.9164,
+        "title": "[Feature]: Tracking Whisper feature requests",
+        "meta": "missing_capability",
+        "island": 7
+      },
+      {
+        "kind": "problem",
+        "id": 3,
+        "x": 0.0121,
+        "y": 0.0031,
+        "weight": 0.9154,
+        "title": "[Feature]: Any plans to add nvidia/parakeet-tdt-0.6b-v3 to vllm?",
+        "meta": "missing_capability",
+        "island": 6
+      },
+      {
+        "kind": "problem",
+        "id": 4,
+        "x": 0.0043,
+        "y": -0.0098,
+        "weight": 0.9127,
+        "title": "[RFC]: Changes in vLLM Model Development",
+        "meta": "missing_capability",
+        "island": 7
+      },
+      {
+        "kind": "problem",
+        "id": 7,
+        "x": 0.0065,
+        "y": 0.0031,
+        "weight": 0.8865,
+        "title": "[Feature]: Vulkan support",
+        "meta": "missing_capability",
+        "island": 6
+      },
+      {
+        "kind": "problem",
+        "id": 8,
+        "x": -0.0005,
+        "y": -0.005,
+        "weight": 0.8793,
+        "title": "[Feature]: Someone please upstream this gfx1201/RDNA4 FP8 Patch into vllm-rocm",
+        "meta": "cost_or_performance",
+        "island": 6
+      },
+      {
+        "kind": "problem",
+        "id": 16,
+        "x": 0.0046,
+        "y": -0.003,
+        "weight": 0.8633,
+        "title": "[Roadmap]: PD Disaggregation with `NixlConnector` Roadmap",
+        "meta": "missing_capability",
+        "island": 6
+      },
+      {
+        "kind": "problem",
+        "id": 6,
+        "x": 0.0033,
+        "y": 0.018,
+        "weight": 0.8362,
+        "title": "support batch processing",
+        "meta": "missing_capability",
+        "island": 6
+      },
+      {
+        "kind": "problem",
+        "id": 11,
+        "x": 0.013,
+        "y": -0.0087,
+        "weight": 0.8331,
+        "title": "[Roadmap] Rust Frontend Feature Parity",
+        "meta": "missing_capability",
+        "island": 7
+      },
+      {
+        "kind": "problem",
+        "id": 12,
+        "x": -0.0011,
+        "y": 0.0209,
+        "weight": 0.7944,
+        "title": "Support Anthropic and OpenAI Skills built-in tool",
+        "meta": "missing_capability",
+        "island": 0
+      },
+      {
+        "kind": "problem",
+        "id": 13,
+        "x": -0.006,
+        "y": -0.0174,
+        "weight": 0.7817,
+        "title": "[Bug]: MTP speculative decoding crash with illegal memory access on long sequences (Qwen3.6-27B-FP8, v0.19.1)",
+        "meta": "bug_or_reliability",
+        "island": 9
+      },
+      {
+        "kind": "problem",
+        "id": 17,
+        "x": -0.0208,
+        "y": -0.0045,
+        "weight": 0.7723,
+        "title": "[RFC]: Increase vLLM Review Capacity with a Reviewer Role",
+        "meta": "workflow_friction",
+        "island": 8
+      },
+      {
+        "kind": "problem",
+        "id": 10,
+        "x": 0.0264,
+        "y": -0.011,
+        "weight": 0.7649,
+        "title": "[Feature]: DRY Sampling",
+        "meta": "cost_or_performance",
+        "island": 1
+      },
+      {
+        "kind": "problem",
+        "id": 14,
+        "x": -0.0133,
+        "y": -0.0245,
+        "weight": 0.7569,
+        "title": "[RFC]: Native Text Watermarking Support",
+        "meta": "missing_capability",
+        "island": 9
+      },
+      {
+        "kind": "problem",
+        "id": 1,
+        "x": 0.0286,
+        "y": 0.0125,
+        "weight": 0.5536,
+        "title": "Ask HN: Anyone patching servers by prompting AI instead of SSH/remote desktop?",
+        "meta": "workflow_friction",
+        "island": 5
+      },
+      {
+        "kind": "problem",
+        "id": 2,
+        "x": 0.0264,
+        "y": 0.0078,
+        "weight": 0.5068,
+        "title": "Ask HN: Is OpenAI down? Nonstop 429s on pro subscription",
+        "meta": "cost_or_performance",
+        "island": 5
+      }
+    ],
+    "islands": [
+      {
+        "id": 1,
+        "label": "granite · models",
+        "x": 0.0266,
+        "y": -0.0126,
+        "size": 6
+      },
+      {
+        "id": 2,
+        "label": "copilot",
+        "x": 0.0128,
+        "y": -0.0306,
+        "size": 5
+      },
+      {
+        "id": 5,
+        "label": "anyone · down",
+        "x": 0.0239,
+        "y": 0.0152,
+        "size": 7
+      },
+      {
+        "id": 7,
+        "label": "vllm",
+        "x": 0.0081,
+        "y": -0.0104,
+        "size": 7
+      },
+      {
+        "id": 8,
+        "label": "vllm",
+        "x": -0.0143,
+        "y": -0.0057,
+        "size": 7
+      }
+    ]
+  },
+  "pulse": {
+    "as_of": "2026-10-22T20:38:20.823073Z",
+    "buckets": [
+      {
+        "hour": "2026-10-19T21:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-19T22:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-19T23:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-20T00:00:00Z",
+        "articles": 2,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-20T01:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-20T02:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-20T03:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-20T04:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-20T05:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-20T06:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-20T07:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-20T08:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-20T09:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-20T10:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-20T11:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-20T12:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-20T13:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-20T14:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-20T15:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-20T16:00:00Z",
+        "articles": 1,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-20T17:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-20T18:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-20T19:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-20T20:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-20T21:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-20T22:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-20T23:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-21T00:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-21T01:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-21T02:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-21T03:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-21T04:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-21T05:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-21T06:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-21T07:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-21T08:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-21T09:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-21T10:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-21T11:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-21T12:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-21T13:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-21T14:00:00Z",
+        "articles": 1,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-21T15:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-21T16:00:00Z",
+        "articles": 2,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-21T17:00:00Z",
+        "articles": 2,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-21T18:00:00Z",
+        "articles": 1,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-21T19:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-21T20:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-21T21:00:00Z",
+        "articles": 1,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-21T22:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-21T23:00:00Z",
+        "articles": 0,
+        "discussions": 3
+      },
+      {
+        "hour": "2026-10-22T00:00:00Z",
+        "articles": 1,
+        "discussions": 1
+      },
+      {
+        "hour": "2026-10-22T01:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-22T02:00:00Z",
+        "articles": 0,
+        "discussions": 3
+      },
+      {
+        "hour": "2026-10-22T03:00:00Z",
+        "articles": 0,
+        "discussions": 2
+      },
+      {
+        "hour": "2026-10-22T04:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-22T05:00:00Z",
+        "articles": 0,
+        "discussions": 1
+      },
+      {
+        "hour": "2026-10-22T06:00:00Z",
+        "articles": 0,
+        "discussions": 1
+      },
+      {
+        "hour": "2026-10-22T07:00:00Z",
+        "articles": 1,
+        "discussions": 1
+      },
+      {
+        "hour": "2026-10-22T08:00:00Z",
+        "articles": 0,
+        "discussions": 1
+      },
+      {
+        "hour": "2026-10-22T09:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-22T10:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-22T11:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-22T12:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-22T13:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-22T14:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-22T15:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-22T16:00:00Z",
+        "articles": 1,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-22T17:00:00Z",
+        "articles": 1,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-22T18:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-22T19:00:00Z",
+        "articles": 0,
+        "discussions": 0
+      },
+      {
+        "hour": "2026-10-22T20:00:00Z",
+        "articles": 14,
+        "discussions": 0
+      }
+    ]
+  }
+}

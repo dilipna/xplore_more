@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "source": {
+    "system": "xploremore",
+    "problem_id": 1614,
+    "captured_at": "2026-09-15T22:48:35+00:00",
+    "statement": "AssistantAgent may ask for approval before executing a tool",
+    "evidence": [
+      {
+        "url": "https://github.com/microsoft/autogen/issues/4894",
+        "title": "AssistantAgent may ask for approval before executing a tool",
+        "excerpt": "If user approval for the tool is needed, the approval needs to be builtin to the tool itself."
+      }
+    ],
+    "voice_count": 1,
+    "source_count": 1,
+    "limitations": "Historical September 2026 snapshot from committed XploreMore records. Machine-labeled; customer demand and solution usefulness are unverified."
+  },
+  "spec": {
+    "target_user": "Developers reviewing proposed agent actions",
+    "goal": "Review action proposals before marking them approved",
+    "delivery": "browser_tool",
+    "in_scope": [
+      "Queue proposed actions",
+      "Record explicit approve or reject decisions",
+      "Export a review log"
+    ],
+    "out_of_scope": [
+      "Executing tools",
+      "Sending email",
+      "Production authentication"
+    ],
+    "acceptance": [
+      {
+        "given": "A pending proposal",
+        "when": "The review page opens",
+        "then": "No decision is recorded automatically"
+      },
+      {
+        "given": "A proposal is rejected",
+        "when": "The page is refreshed",
+        "then": "The recorded rejection remains visible"
+      },
+      {
+        "given": "A decision was already recorded",
+        "when": "The same decision is submitted again",
+        "then": "Only one decision is recorded"
+      }
+    ]
+  }
+}

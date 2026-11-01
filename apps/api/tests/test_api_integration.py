@@ -297,3 +297,17 @@ def test_pulse_counts_items_per_hour(seeded, migrated_database, embedder) -> Non
     assert len(body["buckets"]) == 6
     # Seeded articles were published 1-3 hours ago (the 120-day-old one is outside the window).
     assert sum(b["articles"] for b in body["buckets"]) == 3
+
+
+def test_lexical_mode_never_constructs_or_loads_an_embedding_model(migrated_database, monkeypatch):
+    import xm_api.app as api_module
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("Lexical mode must not load a model")
+
+    monkeypatch.setattr(api_module, "FastEmbedEmbedder", forbidden)
+    settings = Settings(database_url=SecretStr(migrated_database), search_mode="lexical")
+    with TestClient(create_app(settings)) as client:
+        response = client.get("/v1/search", params={"q": "Kubernetes"})
+    assert response.status_code == 200
+    assert "dense_unavailable" in response.json()["degraded"]

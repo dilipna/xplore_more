@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { SignalMap } from "@/components/signal-map";
 import { Unavailable } from "@/components/ui";
 import { getMap } from "@/lib/api";
+import { recordedMode } from "@/lib/web-mode";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -23,7 +25,9 @@ export default async function MapPage() {
             Signal <span className="neon-text text-signal-400">map</span>
           </h1>
           <p className="mt-2 text-sm leading-relaxed text-fg-400">
-            Every dot is a story from the last 7 days (green) or a problem engineers are reporting (amber). Dots sit
+            {recordedMode()
+              ? "Every dot comes from the dated capture: a story from its seven-day window (green) or a reported problem hypothesis (amber)."
+              : "Every dot is a story from the last 7 days (green) or a problem engineers are reporting (amber)."} Dots sit
             close together when their text means similar things. The islands are labelled with their most distinctive
             title words, so every label is a word taken from the titles, not generated.
           </p>
@@ -59,9 +63,33 @@ export default async function MapPage() {
       <p className="mt-3 text-xs leading-relaxed text-fg-600">
         How it&apos;s made: each story&apos;s lead article and each problem&apos;s centroid is a bge-small-en-v1.5 embedding.
         The server lays them out with t-SNE and groups the layout with k-means; labels use class-based TF-IDF over
-        the titles. Only nearness means anything; the axes don&apos;t. It&apos;s recomputed at most every few minutes and
-        is deterministic for the same data.
+        the titles. Only nearness means anything; the axes don&apos;t. {recordedMode()
+          ? "This edition preserves the coordinates from its dated capture."
+          : "The layout is recomputed at most every few minutes and is deterministic for the same data."}
       </p>
+      {d && (
+        <details className="panel mt-5 p-5">
+          <summary className="cursor-pointer font-semibold text-fg-50">
+            Browse mapped records ({d.points.length})
+          </summary>
+          <p className="mt-3 text-sm text-fg-400">
+            Open the same records using links, without pointing at a map dot.
+          </p>
+          <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+            {d.points.map((point) => (
+              <li key={`${point.kind}-${point.id}`} className="min-w-0">
+                <Link
+                  href={`/${point.kind === "story" ? "stories" : "problems"}/${point.id}`}
+                  className="block rounded-lg border hairline p-3 text-sm text-fg-200 hover:border-signal-400 hover:text-signal-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-400 [overflow-wrap:anywhere]"
+                >
+                  <span className="mb-1 block font-mono text-[10px] uppercase text-fg-500">{point.kind}</span>
+                  {point.title}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
     </div>
   );
 }

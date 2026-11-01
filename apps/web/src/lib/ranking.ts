@@ -16,7 +16,7 @@ export const KNOBS: { key: WeightKey; param: string; label: string; help: string
     key: "sources",
     param: "w_sources",
     label: "Coverage",
-    help: "How much it counts when several independent sources report the same story.",
+    help: "How much it counts when several distinct sources report the same story.",
     min: 0,
     max: 3,
     step: 0.1,

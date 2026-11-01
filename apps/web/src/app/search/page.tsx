@@ -1,3 +1,4 @@
+import { recordedMode } from "@/lib/web-mode";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { FollowButton } from "@/components/follow";
@@ -32,7 +33,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   const serverTotal = stages.reduce((sum, s) => sum + s.ms, 0);
   const maxStage = Math.max(1, ...stages.map((s) => s.ms));
 
-  const timing = result?.data ? (
+  const timing = result?.data && !recordedMode() ? (
     <aside className="panel h-fit p-5 xl:sticky xl:top-24">
       <Eyebrow>Under the hood</Eyebrow>
       <p className="mt-2 text-xs leading-relaxed text-fg-500">
@@ -73,8 +74,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
       <section className="panel p-5">
         <h1 className="text-2xl font-bold tracking-tight">Search</h1>
         <p className="mt-1.5 text-sm text-fg-400">
-          Matches words and meaning at the same time, so a question finds the right story even when it uses different
-          words. Coverage of the same event comes back as one result.
+          {recordedMode() ? "Search keywords across the captured story titles. This edition runs without a model or live API; semantic search is available in the full local service." : "Matches words and meaning at the same time. Coverage of the same event comes back as one result."}
         </p>
         <form action="/search" method="get" className="mt-4 flex gap-2">
           <input
@@ -115,7 +115,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
                 <p className="text-sm text-fg-400">
                   {result.data.results.length} results for &ldquo;{q}&rdquo;
                   {result.data.degraded.length > 0 && (
-                    <span className="text-amber-300"> (keyword matches only right now)</span>
+                    <span className="text-amber-300"> (keyword matches in this capture)</span>
                   )}
                 </p>
                 <FollowButton topic={q} />

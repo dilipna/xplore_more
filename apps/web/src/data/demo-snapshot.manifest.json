@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "captured_at": "2026-10-22T20:38:20.827589+00:00",
+  "snapshot_sha256": "07cb38fa90096df7394208af54f374b22c2bb8d5d31574918ad87763e85a8bf5",
+  "coverage": {
+    "exported_stories": 36,
+    "corpus_stories": 43,
+    "exported_problems": 17,
+    "feed_window_hours": 336
+  },
+  "pipeline_sha256_lf": "0b6d63d8c801282439efbdcd293b972e91022800dbc66a43f4cb575db0fd2436",
+  "transport": "Go poller + local Pub/Sub emulator + Go ingestor + Python indexer + Postgres",
+  "model_calls": "Local open embedding model only; no paid inference API",
+  "limitations": [
+    "Bounded local pipeline capture; recorded data, not continuously refreshed",
+    "keyword search over packaged titles; live hybrid retrieval requires connected mode",
+    "Problem classification is machine-generated; demand and usefulness are unverified"
+  ]
+}

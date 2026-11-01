@@ -1,3 +1,4 @@
+import { recordedMode } from "@/lib/web-mode";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { FeedPulse } from "@/components/feed-pulse";
@@ -15,7 +16,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "All stories" };
 
 const WINDOWS = [
-  { hours: 24, label: "Today" },
+  { hours: 24, label: "24 hours" },
   { hours: 72, label: "3 days" },
   { hours: 168, label: "This week" },
 ];
@@ -52,7 +53,7 @@ export default async function FeedPage({
 
   return (
     <Shell rail={<RightRail />}>
-      <AutoRefresh seconds={60} />
+      <AutoRefresh seconds={60} enabled={!recordedMode()} />
       <FeedPulse ids={stories.map((s) => s.id)} />
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <h1 className="mr-2 text-xl font-bold tracking-tight">All stories</h1>

@@ -30,13 +30,14 @@ export function SinceTicker({ iso, prefix = "" }: { iso: string | null; prefix?:
 }
 
 /** Quietly re-fetches the server-rendered page every `seconds` while the tab is visible. */
-export function AutoRefresh({ seconds = 60 }: { seconds?: number }) {
+export function AutoRefresh({ seconds = 60, enabled = true }: { seconds?: number; enabled?: boolean }) {
   const router = useRouter();
   useEffect(() => {
+    if (!enabled) return;
     const id = setInterval(() => {
       if (document.visibilityState === "visible") router.refresh();
     }, seconds * 1000);
     return () => clearInterval(id);
-  }, [router, seconds]);
+  }, [router, seconds, enabled]);
   return null;
 }

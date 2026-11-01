@@ -1,6 +1,6 @@
 /**
- * The system in two lanes: an event-driven ingest path (at-least-once delivery made
- * exactly-once by idempotency) and a serving path with no LLM anywhere in it.
+ * The system in two lanes: an event-driven ingest path (at-least-once delivery with
+ * transaction-bound idempotent database effects) and a serving path with no LLM anywhere in it.
  */
 
 type Box = { x: number; y: number; w: number; title: string; lines: string[]; accent?: boolean; zone?: boolean };

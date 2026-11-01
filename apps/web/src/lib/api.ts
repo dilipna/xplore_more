@@ -8,6 +8,8 @@
  */
 
 import { cache } from "react";
+import { recordedMode } from "./web-mode";
+import { recordedResult } from "./recorded-api";
 import { type Weights, weightParams } from "./ranking";
 
 export type ProblemCategory =
@@ -154,6 +156,7 @@ export async function apiGet<T>(
   path: string,
   params: Record<string, string | number | undefined | null> = {},
 ): Promise<ApiResult<T>> {
+  if (recordedMode()) return recordedResult(path, params) as ApiResult<T>;
   const url = new URL(API_URL + path);
   for (const [key, value] of Object.entries(params)) {
     if (value !== undefined && value !== null && value !== "") url.searchParams.set(key, String(value));

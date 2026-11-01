@@ -55,3 +55,10 @@ Thumbs.db
 
 # Eval caches
 evals/**/.cache/
+
+# Versioned source fixtures and browser contract
+!apps/web/src/data/
+!apps/web/src/data/*.json
+
+# Isolated failure-campaign receipts (uploaded by CI)
+test-evidence/

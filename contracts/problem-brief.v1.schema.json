@@ -1,0 +1,212 @@
+{
+  "$defs": {
+    "AcceptanceCriterion": {
+      "additionalProperties": false,
+      "properties": {
+        "given": {
+          "maxLength": 1000,
+          "minLength": 1,
+          "title": "Given",
+          "type": "string"
+        },
+        "when": {
+          "maxLength": 1000,
+          "minLength": 1,
+          "title": "When",
+          "type": "string"
+        },
+        "then": {
+          "maxLength": 1000,
+          "minLength": 1,
+          "title": "Then",
+          "type": "string"
+        }
+      },
+      "required": [
+        "given",
+        "when",
+        "then"
+      ],
+      "title": "AcceptanceCriterion",
+      "type": "object"
+    },
+    "Evidence": {
+      "additionalProperties": false,
+      "properties": {
+        "url": {
+          "format": "uri",
+          "maxLength": 2083,
+          "minLength": 1,
+          "pattern": "^https?://",
+          "title": "Url",
+          "type": "string"
+        },
+        "excerpt": {
+          "maxLength": 1000,
+          "minLength": 1,
+          "title": "Excerpt",
+          "type": "string"
+        },
+        "title": {
+          "default": "",
+          "maxLength": 300,
+          "title": "Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "url",
+        "excerpt"
+      ],
+      "title": "Evidence",
+      "type": "object"
+    },
+    "ProblemSource": {
+      "additionalProperties": false,
+      "properties": {
+        "system": {
+          "const": "xploremore",
+          "default": "xploremore",
+          "title": "System",
+          "type": "string"
+        },
+        "problem_id": {
+          "exclusiveMinimum": 0,
+          "title": "Problem Id",
+          "type": "integer"
+        },
+        "captured_at": {
+          "format": "date-time",
+          "title": "Captured At",
+          "type": "string"
+        },
+        "statement": {
+          "maxLength": 1000,
+          "minLength": 1,
+          "title": "Statement",
+          "type": "string"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/Evidence"
+          },
+          "maxItems": 10,
+          "minItems": 1,
+          "title": "Evidence",
+          "type": "array"
+        },
+        "voice_count": {
+          "minimum": 1,
+          "title": "Voice Count",
+          "type": "integer"
+        },
+        "source_count": {
+          "minimum": 1,
+          "title": "Source Count",
+          "type": "integer"
+        },
+        "limitations": {
+          "default": "Machine-classified public reports; counts and grouping require human review.",
+          "maxLength": 1000,
+          "minLength": 1,
+          "title": "Limitations",
+          "type": "string"
+        }
+      },
+      "required": [
+        "problem_id",
+        "captured_at",
+        "statement",
+        "evidence",
+        "voice_count",
+        "source_count"
+      ],
+      "title": "ProblemSource",
+      "type": "object"
+    },
+    "ProductSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "target_user": {
+          "maxLength": 1000,
+          "minLength": 1,
+          "title": "Target User",
+          "type": "string"
+        },
+        "goal": {
+          "maxLength": 1000,
+          "minLength": 1,
+          "title": "Goal",
+          "type": "string"
+        },
+        "delivery": {
+          "const": "browser_tool",
+          "default": "browser_tool",
+          "title": "Delivery",
+          "type": "string"
+        },
+        "in_scope": {
+          "items": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 6,
+          "minItems": 1,
+          "title": "In Scope",
+          "type": "array"
+        },
+        "out_of_scope": {
+          "items": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 6,
+          "minItems": 1,
+          "title": "Out Of Scope",
+          "type": "array"
+        },
+        "acceptance": {
+          "items": {
+            "$ref": "#/$defs/AcceptanceCriterion"
+          },
+          "maxItems": 6,
+          "minItems": 1,
+          "title": "Acceptance",
+          "type": "array"
+        }
+      },
+      "required": [
+        "target_user",
+        "goal",
+        "in_scope",
+        "out_of_scope",
+        "acceptance"
+      ],
+      "title": "ProductSpec",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "source": {
+      "$ref": "#/$defs/ProblemSource"
+    },
+    "spec": {
+      "$ref": "#/$defs/ProductSpec"
+    }
+  },
+  "required": [
+    "source",
+    "spec"
+  ],
+  "title": "ProblemBrief",
+  "type": "object"
+}

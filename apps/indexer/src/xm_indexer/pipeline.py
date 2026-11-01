@@ -47,6 +47,16 @@ from xm_problems.policy import problem_scorer
 log = logging.getLogger(__name__)
 
 CONSUMER = "indexer"
+_COMMITTED_COUNTERS = (
+    "applied",
+    "duplicates",
+    "stories_created",
+    "stories_joined",
+    "discussions",
+    "problems_admitted",
+    "problems_created",
+    "problems_joined",
+)
 
 
 @dataclass(frozen=True)
@@ -234,6 +244,7 @@ async def process_batch(
             # and outside any savepoint so a failed message cannot release it.
             await acquire_problem_lock(session)
         for (message, envelope), vector in zip(parsed, vectors, strict=True):
+            effects = BatchResult()
             try:
                 async with session.begin_nested():
                     is_new = await claim(
@@ -243,15 +254,15 @@ async def process_batch(
                         event_id=envelope.id,
                     )
                     if not is_new:
-                        result.duplicates += 1
+                        effects.duplicates += 1
                     else:
                         article = envelope.data
                         duplicate_of, existing_story, existing_problem = await _upsert_article(
                             session, article, vector
                         )
-                        result.applied += 1
+                        effects.applied += 1
                         if article.discussion is not None:
-                            result.discussions += 1
+                            effects.discussions += 1
                             decision = await classify_discussion(
                                 session,
                                 article_id=article.article_id,
@@ -266,9 +277,9 @@ async def process_batch(
                                 existing_problem=existing_problem,
                                 clusterer=clusterer,
                             )
-                            result.problems_admitted += decision in {"created", "joined", "kept"}
-                            result.problems_created += decision == "created"
-                            result.problems_joined += decision == "joined"
+                            effects.problems_admitted += decision in {"created", "joined", "kept"}
+                            effects.problems_created += decision == "created"
+                            effects.problems_joined += decision == "joined"
                         elif existing_story is None:
                             outcome = await assign(
                                 session,
@@ -277,9 +288,13 @@ async def process_batch(
                                 hasher=clusterer.hasher,
                             )
                             if outcome.created:
-                                result.stories_created += 1
+                                effects.stories_created += 1
                             else:
-                                result.stories_joined += 1
+                                effects.stories_joined += 1
+                # A later SQL error rolls back the entire message savepoint. Publish
+                # its counters only after that savepoint has exited successfully.
+                for name in _COMMITTED_COUNTERS:
+                    setattr(result, name, getattr(result, name) + getattr(effects, name))
                 pending_ack.append(message.ack_id)
             except SQLAlchemyError:
                 log.exception("failed to apply event, nacking", extra={"event_id": str(envelope.id)})

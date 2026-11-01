@@ -13,6 +13,7 @@ echo "==> go: fmt";                test -z "$(scripts/go.sh fmt ./... | tr -d '[
 echo "==> go: vet";                scripts/go.sh vet ./...
 echo "==> go: test";               scripts/go.sh test ./...
 echo "==> web: install";           (cd apps/web && pnpm install --frozen-lockfile --silent)
+echo "==> web: contract";          (cd apps/web && pnpm test)
 echo "==> web: lint";              (cd apps/web && pnpm lint)
 echo "==> web: typecheck + build"; (cd apps/web && pnpm build >/dev/null)
 echo "all checks passed"

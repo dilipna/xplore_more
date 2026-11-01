@@ -4,6 +4,7 @@ and across instances), degraded responses, Redis outage, and the API wiring."""
 from __future__ import annotations
 
 import asyncio
+import os
 import uuid
 
 import pytest
@@ -18,7 +19,7 @@ from xm_indexer.invalidate import bump_response_cache_generation
 
 pytestmark = pytest.mark.integration
 
-REDIS_URL = "redis://localhost:6379/0"
+REDIS_URL = os.environ.get("XM_TEST_REDIS_URL", "redis://localhost:6379/0")
 
 
 class Body(BaseModel):
